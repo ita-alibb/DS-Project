@@ -38,38 +38,12 @@ public class BrokerModel {
         return INSTANCE;
     }
 
-    /**
-     * Create a queue with the provided queueKey
-     */
-    private void createQueue(String queueKey) {
-        this.queues.put(queueKey, new IndexedQueue());
+    public void acquireLock(){
+        processCommandLock.lock();
     }
 
-    /**
-     * Append the data to the provided queueKey
-     * @throws IllegalArgumentException if the queue is not found
-     */
-    private void appendData(String queueKey, int data) throws IllegalArgumentException {
-        var queue = this.queues.get(queueKey);
-        if (queue == null) {
-            throw new IllegalArgumentException("Queue not found");
-        }
-
-        queue.appendData(data);
-    }
-
-    /**
-     * Read the data from the queue and return it
-     * @throws IllegalArgumentException if the queue is not found
-     * @throws IndexOutOfBoundsException if the client has already read all the queue
-     */
-    private int readData(String queueKey, int clientID) throws IllegalArgumentException, IndexOutOfBoundsException {
-        var queue = this.queues.get(queueKey);
-        if (queue == null) {
-            throw new IllegalArgumentException("Queue not found");
-        }
-
-        return queue.readData(clientID+"");
+    public void releaseLock(){
+        processCommandLock.unlock();
     }
 
     /**
@@ -110,11 +84,37 @@ public class BrokerModel {
         return new QueueResponse(command.getCommandID(), data);
     }
 
-    public void acquireLock(){
-        processCommandLock.lock();
+    /**
+     * Create a queue with the provided queueKey
+     */
+    private void createQueue(String queueKey) {
+        this.queues.put(queueKey, new IndexedQueue());
     }
 
-    public void releaseLock(){
-        processCommandLock.unlock();
+    /**
+     * Append the data to the provided queueKey
+     * @throws IllegalArgumentException if the queue is not found
+     */
+    private void appendData(String queueKey, int data) throws IllegalArgumentException {
+        var queue = this.queues.get(queueKey);
+        if (queue == null) {
+            throw new IllegalArgumentException("Queue not found");
+        }
+
+        queue.appendData(data);
+    }
+
+    /**
+     * Read the data from the queue and return it
+     * @throws IllegalArgumentException if the queue is not found
+     * @throws IndexOutOfBoundsException if the client has already read all the queue
+     */
+    private int readData(String queueKey, int clientID) throws IllegalArgumentException, IndexOutOfBoundsException {
+        var queue = this.queues.get(queueKey);
+        if (queue == null) {
+            throw new IllegalArgumentException("Queue not found");
+        }
+
+        return queue.readData(clientID+"");
     }
 }

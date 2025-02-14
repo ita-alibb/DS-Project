@@ -54,4 +54,12 @@ public class ConnectionResponse extends ConnectionMessage {
     public int getLeaderPort() {
         return leaderPort;
     }
+
+    public boolean isRedirect() {
+        return isRedirect;
+    }
+
+    public List<String> getOtherBrokers() {
+        return otherBrokers;
+    }
 }

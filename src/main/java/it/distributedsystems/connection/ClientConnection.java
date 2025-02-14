@@ -1,9 +1,7 @@
 package it.distributedsystems.connection;
 
 import it.distributedsystems.messages.*;
-import it.distributedsystems.messages.queue.ConnectionMessage;
-import it.distributedsystems.messages.queue.QueueCommand;
-import it.distributedsystems.messages.queue.QueueResponse;
+import it.distributedsystems.messages.queue.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,7 +11,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.*;
 
 /**
@@ -24,6 +21,12 @@ public class ClientConnection implements Runnable{
      * The clientID, it's -1 at the beginning, then it is updated with the one sent from the leader (only one change per lifetime)
      */
     private static int clientID = -1;
+
+    /**
+     * List keeping formatted {IP}:{Port} of other brokers (to use if current leader fails to connect)
+     */
+    private static List<String> otherBrokers;
+
     /**
      * The client socket
      */
@@ -50,44 +53,55 @@ public class ClientConnection implements Runnable{
     private final LinkedBlockingQueue<QueueResponse> asynchronousResponseQueue = new LinkedBlockingQueue<>();
 
     public ClientConnection(String serverIp, String tcpPort) {
-        try {
-            initConnection(serverIp,Integer.parseInt(tcpPort));
-        } catch (IOException e) {
-            System.out.println("Error initializing connection");
-        }
+        initConnection(serverIp,Integer.parseInt(tcpPort));
     }
 
-    private void initConnection(String serverIp, int tcpPort) throws IOException {
-        String[] connectionResponse;
+    private void initConnection(String serverIp, int tcpPort) {
+        ConnectionResponse connectionResponse;
+        int i=1;
+        boolean retry = false;
         do {
-            System.out.printf("Client started with host %s and port %d %n", serverIp,tcpPort);
-            // establish connection to server
-            this.socket = new Socket(serverIp,tcpPort);
+            try {
 
-            this.out = new PrintWriter(this.socket.getOutputStream(), true);
-            this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+                System.out.printf("Try connection with Broker %s and port %d \n", serverIp, tcpPort);
+                // establish connection to server
+                this.socket = new Socket(serverIp, tcpPort);
 
-            //Connection established
-            //Send my id (if -1 it means I need the first id from the leader
-            out.println(new ConnectionMessage(clientID).toJson());
-            out.flush();//ensure sending
+                this.out = new PrintWriter(this.socket.getOutputStream(), true);
+                this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
 
-            //Wait for response 2 possible:
-            // - "id:{clientID}" everything went well and I get the id (if I already have an id I will get the same),
-            // - "leaderIP:{ip}:{port}" I was trying to connect to a follower, and so I get the leader IP and port
-            // TODO: QUI SI DEVE FARE UNA CLASSE PER QUESTE RISPOSTE, PERCHE' DEVONO CONTENERA ANCHE LA LISTA DI IP:PORT DI OGNI ALTRO FOLLOWER NOTO AL LEADER. SERVE IN CASO DI CADUTA DEL LEADER PER SAPERE CHI IL CLIENT DEVE CONTATTARE
-            connectionResponse = in.readLine().split(":");
-            if (Objects.equals(connectionResponse[0].toLowerCase(), "leaderip")){
-                serverIp = connectionResponse[1];
-                tcpPort = Integer.parseInt(connectionResponse[2]);
-            } else {
-                clientID = Integer.parseInt(connectionResponse[1]);
+                //Connection established
+                //Send my id (if -1 it means I need the first id from the leader
+                out.println(new ConnectionMessage(clientID).toJson());
+                out.flush();//ensure sending
+
+                connectionResponse = (ConnectionResponse) GsonDeserializer.deserialize(in.readLine());
+
+                if (connectionResponse.isRedirect()) {
+                    serverIp = connectionResponse.getLeaderIP();
+                    tcpPort = connectionResponse.getLeaderPort();
+                } else {
+                    clientID = connectionResponse.getClientID();
+                    otherBrokers = connectionResponse.getOtherBrokers();
+                }
+
+                retry = connectionResponse.isRedirect();
+            } catch (Exception e) {//the current broker is down, try another one (should not happen at first start because we give the valid leader as argument of the program
+                System.out.println("Exception on trying to connect to Leader, try with another Broker");
+                var address = otherBrokers.get(1).split(":");
+                serverIp = address[0];
+                tcpPort = Integer.parseInt(address[1]);
+                retry = true;
             }
-        } while (!Objects.equals(connectionResponse[0].toLowerCase(), "leaderip"));
+        } while (retry);
     }
 
     public static int getClientId() {
         return clientID;
+    }
+
+    public static List<String> getOtherBrokers() {
+        return otherBrokers;
     }
 
     /**
