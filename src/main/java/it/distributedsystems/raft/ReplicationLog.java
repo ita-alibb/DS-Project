@@ -1,7 +1,7 @@
 package it.distributedsystems.raft;
 
-import it.distributedsystems.messages.client.ClientCommand;
-import it.distributedsystems.messages.client.CommandType;
+import it.distributedsystems.messages.queue.CommandType;
+import it.distributedsystems.messages.queue.QueueCommand;
 
 import java.io.*;
 import java.util.regex.*;
@@ -48,11 +48,11 @@ public class ReplicationLog {
      * @param brokerID the broker id, will be the name of the file
      * @param command the new command to append
      */
-    public static void appendCommandInFile(String brokerID, int epoch, ClientCommand command) {
+    public static void appendCommandInFile(String brokerID, int epoch, QueueCommand command) {
         String line = switch (command.getType()) {
-            case CREATE_QUEUE -> String.format("%s;%s;CREATE_QUEUE(%s)", epoch, command.getSenderID(), command.getQueueKey());
-            case APPEND_DATA -> String.format("%s;%s;APPEND_DATA(%s,%s)", epoch, command.getSenderID(), command.getQueueKey(), command.getData());
-            case READ_DATA -> String.format("%s;%s;READ_DATA(%s)", epoch, command.getSenderID(), command.getQueueKey());
+            case CREATE_QUEUE -> String.format("%s;%s;CREATE_QUEUE(%s)", epoch, command.getClientID(), command.getQueueKey());
+            case APPEND_DATA -> String.format("%s;%s;APPEND_DATA(%s,%s)", epoch, command.getClientID(), command.getQueueKey(), command.getData());
+            case READ_DATA -> String.format("%s;%s;READ_DATA(%s)", epoch, command.getClientID(), command.getQueueKey());
         };
 
         // Append the line to the file
@@ -89,7 +89,7 @@ public class ReplicationLog {
         }
     }
 
-    private static ClientCommand extractCommand(String formattedLine) throws InvalidObjectException {
+    private static QueueCommand extractCommand(String formattedLine) throws InvalidObjectException {
         // Regex pattern for all three formats
         String regex = "(.+);(.+);(CREATE_QUEUE|APPEND_DATA|READ_DATA)\\(([^,]*)(?:,([^,]*))?\\)";
 
@@ -112,7 +112,7 @@ public class ReplicationLog {
             };
 
             //TODO: al momento parseInt non e' safe, io farei una versione safe che restituisce null in caso non sia parsable
-            return new ClientCommand(senderID, type, queueKey, Integer.parseInt(data.strip()));
+            return new QueueCommand(Integer.parseInt(senderID), type, queueKey, Integer.parseInt(data.strip()));
         } else {
             throw new InvalidObjectException("No match for whole regex");
         }

@@ -1,7 +1,7 @@
 package it.distributedsystems.raft;
 
-import it.distributedsystems.messages.*;
-import it.distributedsystems.messages.client.ClientCommand;
+import it.distributedsystems.messages.queue.QueueCommand;
+import it.distributedsystems.messages.queue.QueueResponse;
 import it.distributedsystems.utils.IndexedQueue;
 
 import java.util.Dictionary;
@@ -75,8 +75,8 @@ public class BrokerModel {
     /**
      * Calls the method processCommandInternal, ensuring that who calls it has acquired the lock
      */
-    public BaseResponse processCommand(ClientCommand command) {
-        BaseResponse response;
+    public QueueResponse processCommand(QueueCommand command) {
+        QueueResponse response;
         // Check if current thread already holds the lock. Here enters if you do not lock it manually.
         if (!processCommandLock.isHeldByCurrentThread()) {
             processCommandLock.lock();
@@ -93,20 +93,21 @@ public class BrokerModel {
         return response;
     }
 
-    private BaseResponse processCommandInternal(ClientCommand command) {
+    private QueueResponse processCommandInternal(QueueCommand command) {
+        Integer data = null;
         try {
             switch (command.getType()) {
                 case CREATE_QUEUE : createQueue(command.getQueueKey()); break;
                 case APPEND_DATA : appendData(command.getQueueKey(), command.getData()); break;
-                case READ_DATA : readData(command.getQueueKey(), command.getSenderID()); break;
+                case READ_DATA : data = readData(command.getQueueKey(), command.getClientID()); break;
             }
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
-            return new BaseResponse(command.getSenderID(), command.commandId, e.getMessage(), true);
+            return new QueueResponse(command.getCommandID(), e.getMessage());
         } catch (Exception e) {
-            return new BaseResponse(command.getSenderID(),command.commandId,e.getClass().toString(), true);
+            return new QueueResponse(command.getCommandID(), e.getClass().toString());
         }
 
-        return new BaseResponse(command.getSenderID(), command.commandId);
+        return new QueueResponse(command.getCommandID(), data);
     }
 
     public void acquireLock(){

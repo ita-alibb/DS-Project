@@ -5,29 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/ClientApp.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/client/DataResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/BaseDeserializableMessage.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/ConnectionMessage.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/MessageDeserializerType.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/QueueCommand.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/QueueResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/RedirectResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/it/distributedsystems/GsonTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/it/distributedsystems/jsonMessages/ConnectionMessage.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/it/distributedsystems/jsonMessages/ConnectionResponse.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/it/distributedsystems/jsonMessages/QueueCommand.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/it/distributedsystems/jsonMessages/QueueResponse.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/BaseCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/BaseCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/BaseResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/BaseResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/BrokerCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/broker/BrokerCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/ClientCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/client/ClientCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/CommandType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/client/CommandType.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/DataResponse.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/GsonDeserializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/GsonDeserializer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ConnectionTCP.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/BaseCommand.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/BaseResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/GsonDeserializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/GsonDeserializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/broker/BrokerCommand.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/client/ClientCommand.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/client/CommandType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/CommandType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/client/DataResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/BaseDeserializableMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/BaseDeserializableMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/ConnectionMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/ConnectionMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/MessageDeserializerType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/MessageDeserializerType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/QueueCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/QueueResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/RedirectResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/ConnectionResponse.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerStatus.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,11 +60,15 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.Main.executor": "Run",
+    "JUnit.GsonTest.BaseDeserializableMessageTest.executor": "Debug",
+    "JUnit.GsonTest.ConnectionMessageTest.executor": "Run",
+    "JUnit.GsonTest.QueueResponseTest.executor": "Debug",
+    "JUnit.GsonTest.executor": "Run",
     "Maven.rqs-cli-app [test].executor": "Run",
     "Maven.rqs-cli-app [verify].executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "task/setup",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/aliba/Documents/GitHub/DS-Project",
     "node.js.detected.package.eslint": "true",
@@ -73,7 +79,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Application.StartClient">
+  <component name="RunManager" selected="JUnit.GsonTest.QueueResponseTest">
     <configuration name="Main" type="Application" factoryName="Application" singleton="false">
       <option name="MAIN_CLASS_NAME" value="it.distributedsystems.App" />
       <module name="rqs-cli-app" />
@@ -89,10 +95,85 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="GsonTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="rqs-cli-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="it.distributedsystems.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="it.distributedsystems" />
+      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.GsonTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GsonTest.BaseDeserializableMessageTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="rqs-cli-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="it.distributedsystems.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="it.distributedsystems" />
+      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.GsonTest" />
+      <option name="METHOD_NAME" value="BaseDeserializableMessageTest" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GsonTest.ConnectionMessageTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="rqs-cli-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="it.distributedsystems.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="it.distributedsystems" />
+      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.GsonTest" />
+      <option name="METHOD_NAME" value="ConnectionMessageTest" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GsonTest.QueueResponseTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="rqs-cli-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="it.distributedsystems.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="it.distributedsystems" />
+      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.GsonTest" />
+      <option name="METHOD_NAME" value="QueueResponseTest" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <list>
       <item itemvalue="Application.Main" />
       <item itemvalue="Application.StartClient" />
+      <item itemvalue="JUnit.GsonTest" />
+      <item itemvalue="JUnit.GsonTest.BaseDeserializableMessageTest" />
+      <item itemvalue="JUnit.GsonTest.ConnectionMessageTest" />
+      <item itemvalue="JUnit.GsonTest.QueueResponseTest" />
     </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.GsonTest.QueueResponseTest" />
+        <item itemvalue="JUnit.GsonTest" />
+        <item itemvalue="JUnit.GsonTest.ConnectionMessageTest" />
+        <item itemvalue="JUnit.GsonTest.BaseDeserializableMessageTest" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -113,11 +194,37 @@
       <workItem from="1739362388282" duration="17815000" />
       <workItem from="1739449470221" duration="1768000" />
       <workItem from="1739465355504" duration="17203000" />
-      <workItem from="1739527501871" duration="4691000" />
+      <workItem from="1739527501871" duration="10530000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/test/java/it/distributedsystems/GsonTest.java</url>
+          <line>18</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/test/java/it/distributedsystems/GsonTest.java</url>
+          <line>99</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java</url>
+          <line>38</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java</url>
+          <line>28</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

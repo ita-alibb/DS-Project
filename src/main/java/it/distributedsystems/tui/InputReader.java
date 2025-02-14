@@ -1,7 +1,8 @@
 package it.distributedsystems.tui;
 
-import it.distributedsystems.messages.client.*;
 import it.distributedsystems.connection.ClientConnection;
+import it.distributedsystems.messages.queue.CommandType;
+import it.distributedsystems.messages.queue.QueueCommand;
 
 import java.util.Scanner;
 import java.util.concurrent.*;
@@ -49,7 +50,7 @@ public class InputReader implements Runnable {
      * @param input     The command given by the player
      */
     private void executeCommand(String input) {
-        ClientCommand command;
+        QueueCommand command;
         boolean error = false;
 
         var args = input.split("\\s+");
@@ -60,7 +61,7 @@ public class InputReader implements Runnable {
                 if (args.length != 2) {
                     error = true;
                 } else {
-                    command = new ClientCommand(ClientConnection.getClientId(),CommandType.CREATE_QUEUE,args[1],null);
+                    command = new QueueCommand(ClientConnection.getClientId(), CommandType.CREATE_QUEUE,args[1],null);
                 }
             }; break;
 
@@ -70,7 +71,7 @@ public class InputReader implements Runnable {
                     error = true;
                 } else {
                     //TODO: al momento parseInt non e' safe, io farei una versione safe che restituisce null in caso non sia parsable
-                    command = new ClientCommand(ClientConnection.getClientId(),CommandType.APPEND_DATA,args[1],Integer.parseInt(args[2]));
+                    command = new QueueCommand(ClientConnection.getClientId(),CommandType.APPEND_DATA,args[1],Integer.parseInt(args[2]));
                 }
             }; break;
 
@@ -79,7 +80,7 @@ public class InputReader implements Runnable {
                 if (args.length != 2) {
                     error = true;
                 } else {
-                    command = new ClientCommand(ClientConnection.getClientId(),CommandType.READ_DATA,args[1],null);
+                    command = new QueueCommand(ClientConnection.getClientId(),CommandType.READ_DATA,args[1],null);
                 }
             }; break;
 
@@ -91,7 +92,7 @@ public class InputReader implements Runnable {
             System.out.print("> ");
         } else {
             //send the command
-
+            //TODO: ClientConnection.send(command);
         }
         readLine();
     }

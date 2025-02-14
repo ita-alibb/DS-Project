@@ -1,7 +1,8 @@
 package it.distributedsystems.connection;
 
-import it.distributedsystems.messages.BaseCommand;
 import it.distributedsystems.messages.GsonDeserializer;
+import it.distributedsystems.messages.queue.BaseDeserializableMessage;
+import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.raft.BrokerStatus;
 
 import java.io.*;
@@ -53,12 +54,12 @@ public class BrokerConnection {
     /**
      * Centralized queue that receives every message from the (possibly) different clients
      */
-    private final BlockingQueue<BaseCommand> commandsQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<QueueCommand> commandsQueue = new LinkedBlockingQueue<>();
 
     /**
      * Centralized queue that receives every message from the Brokers
      */
-    private final BlockingQueue<BaseCommand> raftCommandsQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<BaseDeserializableMessage> raftCommandsQueue = new LinkedBlockingQueue<>();
 
     public BrokerConnection(int tcpPort) {
         try{
@@ -92,12 +93,12 @@ public class BrokerConnection {
                 Socket clientSocket = this.clientServerSocket.accept();
                 System.out.println("New client connected: " + clientSocket.getInetAddress());
 
-                if (!BrokerStatus.Leader) {
+                /* TODO: if (!BrokerStatus.Leader) {
                     //I am NOT the leader so i can't connect with the client.
                     //Send back the IP/Port of the leader
                     //Close the socket
                     continue; //do not submit in the clientsPool
-                }
+                }*/
 
                 //Handle the assign of an ID.
                 //Send back the client ID. (nextClientId++)
@@ -118,11 +119,15 @@ public class BrokerConnection {
      */
     public void brokerAccept() {
         while (true) {
-            Socket brokerSocket = this.brokerServerSocket.accept();
-            System.out.println("New broker connected: " + brokerSocket.getInetAddress());
+            try {
+                Socket brokerSocket = this.brokerServerSocket.accept();
+                System.out.println("New broker connected: " + brokerSocket.getInetAddress());
 
-            // Start a new thread to handle the client
-            brokersPool.submit(() -> handleReceivedMessage(brokerSocket, false));
+                // Start a new thread to handle the client
+                brokersPool.submit(() -> handleReceivedMessage(brokerSocket, false));
+            } catch (IOException e) {
+                System.out.println("Error while waiting for broker connection");
+            }
         }
     }
 
@@ -136,11 +141,11 @@ public class BrokerConnection {
             String incomingMessage;
             while ((incomingMessage = in.readLine()) != null) {
                 if (isClient) {
-                    BaseCommand cmd = GsonDeserializer.deserializeCommand(incomingMessage);
+                    QueueCommand cmd = (QueueCommand) GsonDeserializer.deserialize(incomingMessage);
                     // Add the message to the shared queue of clients
                     commandsQueue.add(cmd);
                 } else {
-                    BaseCommand cmd = GsonDeserializer.deserializeCommand(incomingMessage);
+                    BaseDeserializableMessage cmd = GsonDeserializer.deserialize(incomingMessage);
                     // Add the message to the shared queue of brokers
                     raftCommandsQueue.add(cmd);
                 }

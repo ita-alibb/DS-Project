@@ -1,6 +1,4 @@
-package it.distributedsystems.messages.newmessages;
-
-import it.distributedsystems.messages.client.CommandType;
+package it.distributedsystems.messages.queue;
 
 /**
  * This class represent the command sent from the client to the Leader to operate in the queues
@@ -33,6 +31,9 @@ public class QueueCommand extends ConnectionMessage {
         this.data = data; // not null only for AppendData
     }
 
+    public int getCommandID() {
+        return commandID;
+    }
 
     public CommandType getType() {
         return type;

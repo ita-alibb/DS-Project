@@ -1,7 +1,9 @@
 package it.distributedsystems.connection;
 
 import it.distributedsystems.messages.*;
-import it.distributedsystems.messages.client.DataResponse;
+import it.distributedsystems.messages.queue.ConnectionMessage;
+import it.distributedsystems.messages.queue.QueueCommand;
+import it.distributedsystems.messages.queue.QueueResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,7 +47,7 @@ public class ClientConnection implements Runnable{
     private final List<Integer> sentCommandIds = Collections.synchronizedList(new ArrayList<>());
 
 
-    private final LinkedBlockingQueue<BaseResponse> asynchronousResponseQueue = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<QueueResponse> asynchronousResponseQueue = new LinkedBlockingQueue<>();
 
     public ClientConnection(String serverIp, String tcpPort) {
         try {
@@ -67,7 +69,7 @@ public class ClientConnection implements Runnable{
 
             //Connection established
             //Send my id (if -1 it means I need the first id from the leader
-            out.println(clientID);
+            out.println(new ConnectionMessage(clientID).toJson());
             out.flush();//ensure sending
 
             //Wait for response 2 possible:
@@ -106,7 +108,7 @@ public class ClientConnection implements Runnable{
                 /*System.out.println("received: " + jsonResponse);*/
 
                 try {
-                    BaseResponse res = GsonDeserializer.deserializeResponse(jsonResponse);
+                    QueueResponse res = (QueueResponse) GsonDeserializer.deserialize(jsonResponse); //I am sure that here only queue response command can arrive
 
                     //put the response in the queue, will be processed by the processResponseThread
                     this.asynchronousResponseQueue.put(res);
@@ -130,8 +132,9 @@ public class ClientConnection implements Runnable{
             try {
                 var response = this.asynchronousResponseQueue.take();
 
-                if (response instanceof DataResponse) {
-                    //TODO: get the data and process it (show in the tui something like LastReadData: x, and you here update that value that is the one shown in the tui)
+                if (response.getData() != null) { //this means it is a response to ReadData: Show the data
+                    //TODO: get the data and process it (show in the tui something like LastReadData: x,
+                    // and you here update that value that is the one shown in the tui)
                 }
 
                 //remove the command id from the uncommited command list:
@@ -147,10 +150,10 @@ public class ClientConnection implements Runnable{
      *
      * @param command the command to send
      */
-    private synchronized void sendAsync(BaseCommand command) {
+    private synchronized void sendAsync(QueueCommand command) {
         try {
             this.out.println(command.toJson());
-            this.sentCommandIds.add(command.commandId);
+            this.sentCommandIds.add(command.getCommandID());
         } catch (Exception e) {
             System.out.println("Exception on sending request to server; exception: " + e.getMessage());
         }

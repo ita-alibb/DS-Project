@@ -1,6 +1,4 @@
-package it.distributedsystems.messages.newmessages;
-
-import com.google.gson.Gson;
+package it.distributedsystems.messages.queue;
 
 /**
  * This class represent the base message sent from client to Brokers, it contains the clientID.

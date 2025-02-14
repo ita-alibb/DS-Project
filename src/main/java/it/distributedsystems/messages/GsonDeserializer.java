@@ -1,13 +1,7 @@
 package it.distributedsystems.messages;
 
 import com.google.gson.Gson;
-import it.distributedsystems.messages.broker.BrokerCommand;
-import it.distributedsystems.messages.client.ClientCommand;
-import it.distributedsystems.messages.client.CommandType;
-import it.distributedsystems.messages.client.DataResponse;
-import it.distributedsystems.messages.newmessages.*;
-
-import java.io.InvalidObjectException;
+import it.distributedsystems.messages.queue.*;
 
 public class GsonDeserializer {
     /**
@@ -21,7 +15,7 @@ public class GsonDeserializer {
             case CONNECTION_MESSAGE -> gson.fromJson(json, ConnectionMessage.class);
             case QUEUE_COMMAND -> gson.fromJson(json, QueueCommand.class);
             case QUEUE_RESPONSE -> gson.fromJson(json, QueueResponse.class);
-            case REDIRECT_RESPONSE -> gson.fromJson(json, RedirectResponse.class);
+            case CONNECTION_RESPONSE -> gson.fromJson(json, ConnectionResponse.class);
         };
     }
 /*

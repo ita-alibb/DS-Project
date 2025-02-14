@@ -1,8 +1,8 @@
-package it.distributedsystems.messages.newmessages;
+package it.distributedsystems.messages.queue;
 
 public enum MessageDeserializerType {
     CONNECTION_MESSAGE,
     QUEUE_COMMAND,
     QUEUE_RESPONSE,
-    REDIRECT_RESPONSE
+    CONNECTION_RESPONSE
 }

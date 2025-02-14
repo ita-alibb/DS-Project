@@ -1,4 +1,4 @@
-package it.distributedsystems.messages.newmessages;
+package it.distributedsystems.messages.queue;
 
 import com.google.gson.Gson;
 
