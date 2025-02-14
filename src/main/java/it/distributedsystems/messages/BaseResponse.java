@@ -1,4 +1,4 @@
-package it.distributedsystems.commands;
+package it.distributedsystems.messages;
 
 import com.google.gson.Gson;
 
@@ -6,7 +6,12 @@ public class BaseResponse {
     /**
      * The id of the sender of the message
      */
-    private String senderID;
+    private int clientId;
+
+    /**
+     * The id of the command to which the response refers
+     */
+    private int commandId;
 
     /**
      * Status, if null al good
@@ -18,14 +23,16 @@ public class BaseResponse {
      */
     public boolean error;
 
-    public BaseResponse(String senderID) {
-        this.senderID = senderID;
+    public BaseResponse(int clientId, int commandId) {
+        this.clientId = clientId;
+        this.commandId = commandId;
         this.status = null;
         this.error = false;
     }
 
-    public BaseResponse(String senderID, String status, boolean error) {
-        this.senderID = senderID;
+    public BaseResponse(int clientId, int commandId, String status, boolean error) {
+        this.clientId = clientId;
+        this.commandId = commandId;
         this.status = status;
         this.error = error;
     }
@@ -39,8 +46,12 @@ public class BaseResponse {
         return gson.toJson(this);
     }
 
-    public String getSenderID() {
-        return senderID;
+    public int getClientId() {
+        return clientId;
+    }
+
+    public int getCommandId() {
+        return commandId;
     }
 
     public String getStatus() {

@@ -1,0 +1,98 @@
+package it.distributedsystems.tui;
+
+import it.distributedsystems.messages.client.*;
+import it.distributedsystems.connection.ClientConnection;
+
+import java.util.Scanner;
+import java.util.concurrent.*;
+
+/**
+ * This class is used to read the input stream.
+ */
+public class InputReader implements Runnable {
+    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final Scanner scanner;
+
+    private InputReader() {
+        this.scanner = new Scanner(System.in);
+    }
+
+    /**
+     * Runs this operation.
+     */
+    @Override
+    public void run() {
+        try {
+            //Choose Strategy
+            String input;
+            do {
+                input = scanner.nextLine();
+            } while (input == null);
+
+            this.executeCommand(input);
+        } catch (Exception e) {
+            System.out.println("Error: incorrect command");
+            System.out.print("> ");
+            readLine();
+        }
+    }
+
+    /**
+     * The method used to handle only one thread in Stream.in.
+     */
+    public static void readLine() {
+        executorService.execute(new InputReader());
+    }
+
+    /**
+     * The method to set the Strategy and execute it.
+     * @param input     The command given by the player
+     */
+    private void executeCommand(String input) {
+        ClientCommand command;
+        boolean error = false;
+
+        var args = input.split("\\s+");
+
+        switch (args[0]) {
+            case "C" : {
+                //create queue, I expect C {queueKey}
+                if (args.length != 2) {
+                    error = true;
+                } else {
+                    command = new ClientCommand(ClientConnection.getClientId(),CommandType.CREATE_QUEUE,args[1],null);
+                }
+            }; break;
+
+            case "A": {
+                //append data, I expect A {queueKey} {data}
+                if (args.length != 3) {
+                    error = true;
+                } else {
+                    //TODO: al momento parseInt non e' safe, io farei una versione safe che restituisce null in caso non sia parsable
+                    command = new ClientCommand(ClientConnection.getClientId(),CommandType.APPEND_DATA,args[1],Integer.parseInt(args[2]));
+                }
+            }; break;
+
+            case "R": {
+                //read data, I expect R {queueKey}
+                if (args.length != 2) {
+                    error = true;
+                } else {
+                    command = new ClientCommand(ClientConnection.getClientId(),CommandType.READ_DATA,args[1],null);
+                }
+            }; break;
+
+            default: error = true;
+        }
+
+        if (error) {
+            System.out.println("Unknown command: " + input + " retry:");
+            System.out.print("> ");
+        } else {
+            //send the command
+
+        }
+        readLine();
+    }
+}

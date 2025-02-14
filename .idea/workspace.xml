@@ -5,20 +5,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/BaseCommand.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/BaseResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/BrokerCommand.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/ClientCommand.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/CommandType.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/DataResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/GsonDeserializer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ConnectionTCP.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/IndexedQueue.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/ClientApp.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/client/DataResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/BaseDeserializableMessage.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/ConnectionMessage.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/MessageDeserializerType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/QueueCommand.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/QueueResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/newmessages/RedirectResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/BaseCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/BaseCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/BaseResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/BaseResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/BrokerCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/broker/BrokerCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/ClientCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/client/ClientCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/CommandType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/client/CommandType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/DataResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/commands/GsonDeserializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/GsonDeserializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ConnectionTCP.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,6 +38,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Enum" />
+        <option value="Interface" />
         <option value="Class" />
       </list>
     </option>
@@ -36,10 +46,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 6
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="2swMrmfGZQtL4kJSD2uDRNChVzq" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -54,7 +64,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/aliba/Documents/GitHub/IS24-AM52",
+    "last_opened_file_path": "C:/Users/aliba/Documents/GitHub/DS-Project",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -63,7 +73,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.StartClient">
     <configuration name="Main" type="Application" factoryName="Application" singleton="false">
       <option name="MAIN_CLASS_NAME" value="it.distributedsystems.App" />
       <module name="rqs-cli-app" />
@@ -71,6 +81,18 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="StartClient" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.ClientApp" />
+      <module name="rqs-cli-app" />
+      <option name="PROGRAM_PARAMETERS" value="localhost 6000" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.Main" />
+      <item itemvalue="Application.StartClient" />
+    </list>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -88,7 +110,10 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1739362386795</updated>
-      <workItem from="1739362388282" duration="17772000" />
+      <workItem from="1739362388282" duration="17815000" />
+      <workItem from="1739449470221" duration="1768000" />
+      <workItem from="1739465355504" duration="17203000" />
+      <workItem from="1739527501871" duration="4691000" />
     </task>
     <servers />
   </component>

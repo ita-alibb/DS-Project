@@ -1,6 +1,7 @@
 package it.distributedsystems.raft;
 
-import it.distributedsystems.commands.*;
+import it.distributedsystems.messages.*;
+import it.distributedsystems.messages.client.ClientCommand;
 import it.distributedsystems.utils.IndexedQueue;
 
 import java.util.Dictionary;
@@ -62,13 +63,13 @@ public class BrokerModel {
      * @throws IllegalArgumentException if the queue is not found
      * @throws IndexOutOfBoundsException if the client has already read all the queue
      */
-    private int readData(String queueKey, String clientID) throws IllegalArgumentException, IndexOutOfBoundsException {
+    private int readData(String queueKey, int clientID) throws IllegalArgumentException, IndexOutOfBoundsException {
         var queue = this.queues.get(queueKey);
         if (queue == null) {
             throw new IllegalArgumentException("Queue not found");
         }
 
-        return queue.readData(clientID);
+        return queue.readData(clientID+"");
     }
 
     /**
@@ -100,12 +101,12 @@ public class BrokerModel {
                 case READ_DATA : readData(command.getQueueKey(), command.getSenderID()); break;
             }
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
-            return new BaseResponse(this.brokerID,e.getMessage(), true);
+            return new BaseResponse(command.getSenderID(), command.commandId, e.getMessage(), true);
         } catch (Exception e) {
-            return new BaseResponse(this.brokerID,e.getClass().toString(), true);
+            return new BaseResponse(command.getSenderID(),command.commandId,e.getClass().toString(), true);
         }
 
-        return new BaseResponse(this.brokerID);
+        return new BaseResponse(command.getSenderID(), command.commandId);
     }
 
     public void acquireLock(){

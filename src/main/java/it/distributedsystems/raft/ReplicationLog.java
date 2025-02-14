@@ -1,6 +1,7 @@
 package it.distributedsystems.raft;
 
-import it.distributedsystems.commands.*;
+import it.distributedsystems.messages.client.ClientCommand;
+import it.distributedsystems.messages.client.CommandType;
 
 import java.io.*;
 import java.util.regex.*;
@@ -17,8 +18,8 @@ import java.time.LocalDate;
  *
  *
  *    Log structure: as a csv. Every log is in a new line.
- *    Epoch;SenderID;Command
- *
+ *    Index;Epoch;SenderID;Command
+ *     TODO: it is important to have the index of the log (which is the line number, but either you find a good way to get it or you should count it by yourself) and maybe not make it part of the log?
  */
 public class ReplicationLog {
     private static final String FILE_PATH = System.getProperty("user.home") + "/Desktop/DS-Project/" + LocalDate.now();
@@ -110,6 +111,7 @@ public class ReplicationLog {
                 default -> throw new InvalidObjectException("No match in command type");
             };
 
+            //TODO: al momento parseInt non e' safe, io farei una versione safe che restituisce null in caso non sia parsable
             return new ClientCommand(senderID, type, queueKey, Integer.parseInt(data.strip()));
         } else {
             throw new InvalidObjectException("No match for whole regex");

@@ -1,6 +1,8 @@
-package it.distributedsystems.commands;
+package it.distributedsystems.messages.broker;
 
-public class BrokerCommand extends BaseCommand{
+import it.distributedsystems.messages.BaseCommand;
+
+public class BrokerCommand extends BaseCommand {
     /**
      * Contructor of the command
      *

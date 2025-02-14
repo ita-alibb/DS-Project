@@ -1,4 +1,4 @@
-package it.distributedsystems.commands;
+package it.distributedsystems.messages.client;
 
 public enum CommandType {
     CREATE_QUEUE,
