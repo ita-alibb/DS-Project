@@ -1,5 +1,7 @@
 package it.distributedsystems.raft;
 
+import it.distributedsystems.utils.BrokerAddress;
+
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
@@ -8,16 +10,18 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class BrokerSettings {
     // Broker socket settings:
-    private static String brokerIP = null;
-    private static int brokerToBrokerPort = 0;
+    private static BrokerAddress brokerAddress = null;
 
     //Broker RAFT settings:
+    /**
+     * Broker Epoch is -1 until first connected with the leader. Then represent the perceived epoch of the Broker
+     */
+    private static int brokerEpoch = -1;
     //TODO: initial status is FOLLOWER and then election, changed to leader only to test
-    private static BrokerStatus brokerStatus = BrokerStatus.Leader;
+    private static BrokerStatus brokerStatus = BrokerStatus.Follower;
 
-    private static String leaderIP = "127.0.0.1";
-    private static Integer leaderPort = 8080;
-    private static List<String> knownBrokers;
+    private static BrokerAddress leaderAddress = null;
+    private static List<BrokerAddress> knownBrokers;
 
 
     private static final ReentrantLock settingsLock = new ReentrantLock();
@@ -36,17 +40,16 @@ public class BrokerSettings {
         settingsLock.unlock();
     }
 
-    public static Object[] getLeaderAddress(){
+    public static BrokerAddress getLeaderAddress(){
         settingsLock.lock();
-        Object[] returnVal = {leaderIP,leaderPort};
+        var returnVal = leaderAddress;
         settingsLock.unlock();
         return returnVal;
     }
 
-    public static void setLeaderAddress(Object[] newLeaderAddress){
+    public static void setLeaderAddress(int newLeaderId){
         settingsLock.lock();
-        leaderIP = (String) newLeaderAddress[0];
-        leaderPort = (Integer) newLeaderAddress[1];
+        leaderAddress = knownBrokers.get(newLeaderId+1);
         settingsLock.unlock();
     }
 
@@ -55,51 +58,69 @@ public class BrokerSettings {
      */
     public static List<String> getBrokers() {
         settingsLock.lock();
-        var returnVal = new LinkedList<String>(knownBrokers);
+        var returnVal = new LinkedList<String>(knownBrokers.stream().map(BrokerAddress::addressStringForClient).toList());
         settingsLock.unlock();
         return returnVal;
     }
 
-    public static void setBrokers(List<String> newKnownBrokers) {
+    public static int getBrokerID(){
         settingsLock.lock();
-        knownBrokers.clear();
-        knownBrokers.addAll(newKnownBrokers);
-        knownBrokers.remove(brokerIP+":"+brokerToBrokerPort);
-        knownBrokers.add(brokerIP+":"+brokerToBrokerPort);
-        knownBrokers = knownBrokers.reversed(); //my ip is at position 0. This way is always good to iterate from 1 to N-1
+        var returnVal = brokerAddress.id;
         settingsLock.unlock();
+        return returnVal;
     }
 
     public static String getBrokerIP(){
-        if (brokerIP == null) {
+        if (brokerAddress.IP == null) {
             try {
-                brokerIP = Inet4Address.getLocalHost().getHostAddress();
+                brokerAddress.IP = Inet4Address.getLocalHost().getHostAddress();
             } catch (UnknownHostException e) {
                 throw new RuntimeException("Cannot get host address", e);
             }
         }
 
-        return brokerIP;
+        return brokerAddress.IP;
     }
 
     /**
      * Gets the port for Broker to Broker communication
      */
     public static int getBtoBPort(){
-        return brokerToBrokerPort;
+        return brokerAddress.BrokerServerPort;
     }
 
     /**
      * Gets the port for Client<=>Broker communication
      */
     public static int getCtoBPort(){
-        return brokerToBrokerPort + 1;
+        return brokerAddress.ClientServerPort;
     }
 
-    /**
-     * Set the broker tcp port for broker to broker (client to broker will be +1) from args on startup
-     */
-    public static void setBrokerToBrokerPort(int newPort){
-        brokerToBrokerPort = newPort;
+    public static int getBrokerEpoch() {
+        settingsLock.lock();
+        var returnVal = brokerEpoch;
+        settingsLock.unlock();
+        return returnVal;
     }
+
+    public static void setBrokerEpoch(int newBrokerEpoch) {
+        settingsLock.lock();
+        brokerEpoch = newBrokerEpoch;
+        settingsLock.unlock();
+    }
+
+    // region Protected Setters
+    /**
+     * Set the broker address, from global configuration on startup based on provided id in args
+     */
+    protected static void setBrokerAddress(BrokerAddress newBrokerAddress){
+        brokerAddress = newBrokerAddress;
+    }
+
+    protected static void setBrokers(List<BrokerAddress> newKnownBrokers) {
+        settingsLock.lock();
+        knownBrokers = newKnownBrokers;
+        settingsLock.unlock();
+    }
+    // end-region
 }

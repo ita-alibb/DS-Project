@@ -1,7 +1,7 @@
 package it.distributedsystems.connection;
 
 import it.distributedsystems.messages.GsonDeserializer;
-import it.distributedsystems.messages.queue.BaseDeserializableMessage;
+import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.queue.ConnectionMessage;
 import it.distributedsystems.messages.queue.ConnectionResponse;
 import it.distributedsystems.messages.queue.QueueCommand;
@@ -46,7 +46,7 @@ public class BrokerConnection {
     private final ExecutorService processPool = Executors.newFixedThreadPool(2);
 
     /**
-     * clients listening thread pool Max 10 clients
+     * clients handling thread pool Max 10 clients
      */
     ExecutorService clientsPool = Executors.newFixedThreadPool(10);
 
@@ -95,17 +95,19 @@ public class BrokerConnection {
         while (true) {
             try{
                 Socket clientSocket = this.clientServerSocket.accept();
+                SocketHandler handler;
                 System.out.println("New client connected: " + clientSocket.getInetAddress());
 
+                //Establishing connection
                 try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
                     try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)){
                         ConnectionMessage msg = (ConnectionMessage) GsonDeserializer.deserialize(in.readLine()); //receive the connection message
 
-                        if (BrokerSettings.getBrokerStatus() !=BrokerStatus.Leader) {
-                            //I am NOT the leader so i can't connect with the client.
+                        if (BrokerSettings.getBrokerStatus() != BrokerStatus.Leader) {
+                            //I am NOT the leader, so I can't connect with the client.
                             //Send back the IP/Port of the leader
                             var leaderAddress = BrokerSettings.getLeaderAddress();
-                            out.println(new ConnectionResponse((String) leaderAddress[0],(Integer) leaderAddress[1]).toJson());
+                            out.println(new ConnectionResponse(leaderAddress.IP,leaderAddress.ClientServerPort).toJson());
                             //Close the socket
                             continue; //do not submit in the clientsPool
                         }
@@ -114,13 +116,20 @@ public class BrokerConnection {
                         //Send back the client ID. (nextClientId++)
                         var newClientId = msg.getClientID() == -1 ? nextClientId++ : msg.getClientID();
                         out.println(new ConnectionResponse(newClientId, BrokerSettings.getBrokers()).toJson());
+
+                        //Create the ClientHandler
+                        handler = new SocketHandler(clientSocket, out, in, this::handleClientMessageCallback);
+
+
+                        //TODO: The handler must be saved somewhere because we need to retrieve it to send back messages!
+                        // WITH THE NEW CLIENT ID!!! ---=> MAP
+                        // Start a new thread to handle the client
+                        clientsPool.submit(handler);
                     }
                 } catch (IOException e) {
                     System.out.println("Error while establishing client connection: " + e.getMessage());
+                    continue;
                 }
-
-                // Start a new thread to handle the client
-                clientsPool.submit(() -> handleReceivedMessage(clientSocket,true));
             } catch (IOException e) {
                 System.out.println("Error while waiting for client connection");
             }
@@ -146,6 +155,24 @@ public class BrokerConnection {
         }
     }
 
+
+    /**
+     * Call back function called by every ClientHandler upon receiving of a message
+     */
+    public void handleClientMessageCallback(String jsonMessage) throws InterruptedException {
+        QueueCommand cmd = (QueueCommand) GsonDeserializer.deserialize(jsonMessage);
+        // Add the message to the shared queue of clients
+        commandsQueue.put(cmd);
+    }
+
+    /**
+     * Call back function called by every BrokerHandler upon receiving of a message
+     */
+    public void handleBrokerMessageCallback(String jsonMessage) throws InterruptedException {
+        BaseDeserializableMessage cmd = GsonDeserializer.deserialize(jsonMessage);
+        // Add the message to the shared queue of brokers
+        raftCommandsQueue.put(cmd);
+    }
     /**
      * Function run on a separate thread.
      * Handles the message arriving from that client or broker,

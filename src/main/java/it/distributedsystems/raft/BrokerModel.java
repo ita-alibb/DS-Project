@@ -27,6 +27,10 @@ public class BrokerModel {
      */
     private Dictionary<String, IndexedQueue> queues = new Hashtable<String, IndexedQueue>();
 
+    public BrokerModel() {
+        ReplicationLog.initializeLogFile();
+    }
+
     /**
      * Singleton thread safe initialization
      */
