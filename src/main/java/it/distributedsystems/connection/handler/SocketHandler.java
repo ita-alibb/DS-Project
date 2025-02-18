@@ -1,5 +1,6 @@
-package it.distributedsystems.connection;
+package it.distributedsystems.connection.handler;
 
+import it.distributedsystems.connection.ReceiveJsonMessageCallback;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 
 import java.io.BufferedReader;
@@ -10,7 +11,7 @@ import java.net.Socket;
 /**
  * This class is used to handle the socket connected to my ServerSocket
  */
-public class SocketHandler implements Runnable {
+public abstract class SocketHandler implements Runnable {
     /**
      * The connected socket
      */

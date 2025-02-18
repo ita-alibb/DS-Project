@@ -1,6 +1,7 @@
 package it.distributedsystems.messages.queue;
 
 import it.distributedsystems.messages.BaseDeserializableMessage;
+import it.distributedsystems.messages.MessageDeserializerType;
 
 /**
  * This class represent the base message sent from client to Brokers, it contains the clientID.

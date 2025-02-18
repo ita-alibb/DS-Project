@@ -1,11 +1,11 @@
 package it.distributedsystems.raft;
 
-import it.distributedsystems.messages.queue.CommandType;
 import it.distributedsystems.messages.queue.QueueCommand;
 
 import java.io.*;
-import java.util.regex.*;
 import java.time.LocalDate;
+
+import static java.lang.System.exit;
 
 /**
  * This class handles write of the log.
@@ -23,6 +23,7 @@ import java.time.LocalDate;
  */
 public class ReplicationLog {
     private static String FILE_PATH = System.getProperty("user.home") + "/Desktop/DS-Project/" + LocalDate.now();
+    private static String prevLogLineString = null;
 
     /**
      * Method to be called at the initialization of the BrokerModel to initialize the log file.
@@ -47,10 +48,11 @@ public class ReplicationLog {
     /**
      * Append the command to the file in the standard directory in brokerid.txt file.
      * @param command the new command to append
+     * @return the appended LogLine
      */
-    public static void leaderAppendCommand(int epoch, QueueCommand command) {
+    public static LogLine leaderAppendCommand(QueueCommand command) {
         //The Index count is incremented. Kept inside LogLine.getLastIndexCounter
-        LogLine line = LogLine.CreateNewLogToAppend(epoch, command);
+        LogLine line = LogLine.CreateNewLogToAppend(BrokerSettings.getBrokerEpoch(), command);
 
         // Append the line to the file
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
@@ -59,7 +61,10 @@ public class ReplicationLog {
             //System.out.println("Appended line: " + line);
         } catch (IOException e) {
             System.err.println("Error while appending to file: " + e.getMessage());
+            exit(0);
         }
+
+        return line;
     }
 
     /**
@@ -90,5 +95,16 @@ public class ReplicationLog {
         } catch (IOException e) {
             System.err.println("Error while reading file: " + e.getMessage());
         }
+    }
+
+    public static String getPrevLogLineString() {
+        return prevLogLineString;
+    }
+
+    /**
+     * Used passing the last entry of AppendEntries (received or sended)
+     */
+    public static void setPrevLogLineString(String prevLogLineString) {
+        ReplicationLog.prevLogLineString = prevLogLineString;
     }
 }

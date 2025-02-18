@@ -5,22 +5,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/brokerPortConfiguration.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ReceiveJsonMessageCallback.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/SocketHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntries.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/LogLine.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerAddress.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/ClientHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/FollowerHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/UniqueMessageIdentifier.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/CommandProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/BaseDeserializableMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/BaseDeserializableMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/SocketHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/SocketHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/BaseDeserializableMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/BaseDeserializableMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/GsonDeserializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/GsonDeserializer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/ConnectionMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/ConnectionMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/ConnectionResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/ConnectionResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/MessageDeserializerType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/MessageDeserializerType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueCommand.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntries.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntries.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerSettings.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -191,7 +194,9 @@
       <workItem from="1739449470221" duration="1768000" />
       <workItem from="1739465355504" duration="17203000" />
       <workItem from="1739527501871" duration="19196000" />
-      <workItem from="1739617100808" duration="17226000" />
+      <workItem from="1739617100808" duration="17243000" />
+      <workItem from="1739705336955" duration="3934000" />
+      <workItem from="1739914528070" duration="5182000" />
     </task>
     <servers />
   </component>
@@ -213,17 +218,17 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java</url>
-          <line>39</line>
+          <line>40</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java</url>
-          <line>29</line>
+          <line>30</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java</url>
-          <line>230</line>
+          <line>261</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>

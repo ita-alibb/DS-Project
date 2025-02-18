@@ -1,7 +1,6 @@
 package it.distributedsystems.messages;
 
 import com.google.gson.Gson;
-import it.distributedsystems.messages.queue.MessageDeserializerType;
 
 /**
  * Base message, every message extends it, needed for deserialization

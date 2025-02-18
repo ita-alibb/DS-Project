@@ -1,13 +1,13 @@
 package it.distributedsystems.connection;
 
+import it.distributedsystems.connection.handler.ClientHandler;
+import it.distributedsystems.connection.handler.SocketHandler;
 import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.queue.ConnectionMessage;
 import it.distributedsystems.messages.queue.ConnectionResponse;
 import it.distributedsystems.messages.queue.QueueCommand;
-import it.distributedsystems.raft.BrokerModel;
-import it.distributedsystems.raft.BrokerSettings;
-import it.distributedsystems.raft.BrokerStatus;
+import it.distributedsystems.raft.*;
 
 import java.io.*;
 import java.net.*;
@@ -17,6 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class BrokerConnection {
+    private static BrokerConnection INSTANCE;
+
     /**
      * The next client ID that will be assigned to the next clients that will connect
      */
@@ -65,7 +67,9 @@ public class BrokerConnection {
      */
     private final BlockingQueue<BaseDeserializableMessage> raftCommandsQueue = new LinkedBlockingQueue<>();
 
-    public BrokerConnection() {
+    private CommandProcessor clientCommandsProcesser;
+
+    private BrokerConnection() {
         try{
             var tcpPort = BrokerSettings.getCtoBPort();
             this.clientServerSocket = new ServerSocket(tcpPort);
@@ -74,17 +78,41 @@ public class BrokerConnection {
             tcpPort = BrokerSettings.getBtoBPort();
             this.brokerServerSocket = new ServerSocket(tcpPort+1);
             System.out.println("Server Socket for BROKERS started on port " + (tcpPort));
-
-            //Start the accepting thread on clientServerSocket and brokerServerSocket
-            acceptancePool.submit(this::clientAccept);
-            acceptancePool.submit(this::brokerAccept);
-
-            // Start a separate thread to process messages from all clients and brokers
-            processPool.submit(this::processClientsCommand);
-            processPool.submit(this::processBrokerCommand);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static synchronized BrokerConnection getInstance(){
+        if (INSTANCE == null){
+            INSTANCE = new BrokerConnection();
+        }
+        return INSTANCE;
+    }
+
+    /**
+     * Starts all the thread
+     */
+    public static void start(){
+        var instance = getInstance();
+
+        instance.startConnection();
+    }
+
+    private void startConnection(){
+        //Start the accepting thread on clientServerSocket and brokerServerSocket
+        acceptancePool.submit(this::clientAccept);
+        acceptancePool.submit(this::brokerAccept);
+
+        // Start a separate thread to process messages from all clients and brokers
+        //processPool.submit(this::processClientsCommand);
+        processPool.submit(this::processBrokerCommand);
+    }
+
+    public void setLeader(){
+        clientCommandsProcesser = new CommandProcessor();
+        processPool.submit(clientCommandsProcesser);
+        BrokerSettings.setBrokerStatus(BrokerStatus.Leader);
     }
 
     /**
@@ -118,11 +146,9 @@ public class BrokerConnection {
                         out.println(new ConnectionResponse(newClientId, BrokerSettings.getBrokers()).toJson());
 
                         //Create the ClientHandler
-                        handler = new SocketHandler(clientSocket, out, in, this::handleClientMessageCallback);
-
+                        handler = new ClientHandler(newClientId, clientSocket, out, in, clientCommandsProcesser::handleClientMessageCallback);
 
                         //TODO: The handler must be saved somewhere because we need to retrieve it to send back messages!
-                        // WITH THE NEW CLIENT ID!!! ---=> MAP
                         // Start a new thread to handle the client
                         clientsPool.submit(handler);
                     }
@@ -155,24 +181,25 @@ public class BrokerConnection {
         }
     }
 
-
-    /**
+    /*
+    *//**
      * Call back function called by every ClientHandler upon receiving of a message
-     */
+     *//*
     public void handleClientMessageCallback(String jsonMessage) throws InterruptedException {
         QueueCommand cmd = (QueueCommand) GsonDeserializer.deserialize(jsonMessage);
         // Add the message to the shared queue of clients
         commandsQueue.put(cmd);
-    }
+    }*/
 
     /**
-     * Call back function called by every BrokerHandler upon receiving of a message
+     * Call back function called by every FollowerHandler upon receiving of a message
      */
     public void handleBrokerMessageCallback(String jsonMessage) throws InterruptedException {
         BaseDeserializableMessage cmd = GsonDeserializer.deserialize(jsonMessage);
         // Add the message to the shared queue of brokers
         raftCommandsQueue.put(cmd);
     }
+
     /**
      * Function run on a separate thread.
      * Handles the message arriving from that client or broker,
@@ -199,10 +226,10 @@ public class BrokerConnection {
         }
     }
 
-    /**
+/*    *//**
      * Function that runs in an endless thread loop.
      * Take commands from queue to be processed
-     */
+     *//*
     private void processClientsCommand() {
         while (true) {
             try {
@@ -212,7 +239,11 @@ public class BrokerConnection {
                 //If a command is here this means this broker is the leader
                 //RAFT:
                 //1) Append the command to your Log
-                //2) Send AppendEntries to every other broker
+                LogLine appendedLine = ReplicationLog.leaderAppendCommand(BrokerSettings.getBrokerEpoch(),command);
+
+                //2) !Send AppendEntries to every other broker! AppendEntries is sent periodically, here we create a batch!
+
+
                 //3) !Once I receive the majority of ACK! apply to my internal Model
                 BrokerModel.getInstance().processCommand(command);
                 //4) After AKCs and after applying the command is COMMITTED: RETURN response to the client
@@ -221,7 +252,7 @@ public class BrokerConnection {
                 Thread.currentThread().interrupt();
             }
         }
-    }
+    }*/
 
     /**
      * Function that runs in an endless thread loop.

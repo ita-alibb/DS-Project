@@ -1,5 +1,7 @@
 package it.distributedsystems.messages.queue;
 
+import it.distributedsystems.messages.MessageDeserializerType;
+
 /**
  * This class represent the command sent from the client to the Leader to operate in the queues
  */

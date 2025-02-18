@@ -2,6 +2,7 @@ package it.distributedsystems.messages;
 
 import com.google.gson.Gson;
 import it.distributedsystems.messages.queue.*;
+import it.distributedsystems.messages.raft.AppendEntries;
 
 public class GsonDeserializer {
     /**
@@ -16,27 +17,7 @@ public class GsonDeserializer {
             case QUEUE_COMMAND -> gson.fromJson(json, QueueCommand.class);
             case QUEUE_RESPONSE -> gson.fromJson(json, QueueResponse.class);
             case CONNECTION_RESPONSE -> gson.fromJson(json, ConnectionResponse.class);
+            case APPEND_ENTRIES -> gson.fromJson(json, AppendEntries.class);
         };
     }
-/*
-    public static BaseCommand deserializeCommand(String json) {
-        Gson gson = new Gson();
-        var baseCommand = gson.fromJson(json, BaseCommand.class);
-        if (baseCommand.isBroker()){
-            return gson.fromJson(json, BrokerCommand.class);
-        } else {
-            return gson.fromJson(json, ClientCommand.class);
-        }
-    }
-
-    public static BaseResponse deserializeResponse(String json) {
-        Gson gson = new Gson();
-        var dataResponse = gson.fromJson(json, DataResponse.class);
-
-        if (dataResponse.getData() == null){
-            return gson.fromJson(json, BaseResponse.class);
-        }
-
-        return dataResponse;
-    }*/
 }

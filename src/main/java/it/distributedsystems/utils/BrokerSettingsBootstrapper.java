@@ -2,7 +2,6 @@ package it.distributedsystems.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.raft.BrokerSettings;
 
 import java.io.IOException;
@@ -32,5 +31,6 @@ public class BrokerSettingsBootstrapper extends BrokerSettings {
 
         setBrokerAddress(newBrokerAddress.get(indexInFile+1));
         setBrokers(newBrokerAddress);
+        setNumOfNodes(newBrokerAddress.size());
     }
 }

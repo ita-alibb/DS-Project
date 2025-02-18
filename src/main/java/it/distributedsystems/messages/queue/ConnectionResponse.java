@@ -1,5 +1,7 @@
 package it.distributedsystems.messages.queue;
 
+import it.distributedsystems.messages.MessageDeserializerType;
+
 import java.util.List;
 
 /**

@@ -2,6 +2,7 @@ package it.distributedsystems.messages.queue;
 
 import com.google.gson.Gson;
 import it.distributedsystems.messages.BaseDeserializableMessage;
+import it.distributedsystems.messages.MessageDeserializerType;
 
 /**
  * This class represent the response sent from the Leader to the client after a QueueCommand.

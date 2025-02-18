@@ -14,7 +14,7 @@ public class BrokerApp {
         BrokerSettingsBootstrapper.bootstrap(Integer.parseInt(args[0]));
 
         //Start-up connection and all threads relative to socket and message handling
-        new BrokerConnection();
+        BrokerConnection.start();
 
         //Start TUI update thread
 

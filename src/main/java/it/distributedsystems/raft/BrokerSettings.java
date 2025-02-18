@@ -11,12 +11,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public class BrokerSettings {
     // Broker socket settings:
     private static BrokerAddress brokerAddress = null;
+    private static int numOfNodes;
 
     //Broker RAFT settings:
     /**
      * Broker Epoch is -1 until first connected with the leader. Then represent the perceived epoch of the Broker
      */
     private static int brokerEpoch = -1;
+    private static int brokerCommitIndex = -1;
     //TODO: initial status is FOLLOWER and then election, changed to leader only to test
     private static BrokerStatus brokerStatus = BrokerStatus.Follower;
 
@@ -82,6 +84,14 @@ public class BrokerSettings {
         return brokerAddress.IP;
     }
 
+    public static int getNumOfNodes() {
+        return numOfNodes;
+    }
+
+    protected static void setNumOfNodes(int numOfNodes) {
+        BrokerSettings.numOfNodes = numOfNodes;
+    }
+
     /**
      * Gets the port for Broker to Broker communication
      */
@@ -106,6 +116,19 @@ public class BrokerSettings {
     public static void setBrokerEpoch(int newBrokerEpoch) {
         settingsLock.lock();
         brokerEpoch = newBrokerEpoch;
+        settingsLock.unlock();
+    }
+
+    public static int getBrokerCommitIndex() {
+        settingsLock.lock();
+        var returnVal = brokerCommitIndex;
+        settingsLock.unlock();
+        return returnVal;
+    }
+
+    public static void setBrokerCommitIndex(int brokerCommitIndex) {
+        settingsLock.lock();
+        BrokerSettings.brokerCommitIndex = brokerCommitIndex;
         settingsLock.unlock();
     }
 
