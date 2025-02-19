@@ -58,9 +58,9 @@ public class BrokerSettings {
     /**
      * The list is composed of addresses of every other broker in this format "{IP}:{Port}"
      */
-    public static List<String> getBrokers() {
+    public static List<BrokerAddress> getBrokers() {
         settingsLock.lock();
-        var returnVal = new LinkedList<String>(knownBrokers.stream().map(BrokerAddress::addressStringForClient).toList());
+        var returnVal = new LinkedList<>(knownBrokers);
         settingsLock.unlock();
         return returnVal;
     }

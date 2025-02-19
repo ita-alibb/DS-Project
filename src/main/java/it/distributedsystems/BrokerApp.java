@@ -16,6 +16,9 @@ public class BrokerApp {
         //Start-up connection and all threads relative to socket and message handling
         BrokerConnection.start();
 
+        //Start up the ReplicationLog. Something like the last commit index, the last epoch registered in log ecc...
+
+
         //Start TUI update thread
 
     }

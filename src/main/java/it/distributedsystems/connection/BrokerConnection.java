@@ -1,16 +1,22 @@
 package it.distributedsystems.connection;
 
 import it.distributedsystems.connection.handler.ClientHandler;
-import it.distributedsystems.connection.handler.SocketHandler;
+import it.distributedsystems.connection.handler.FollowerHandler;
+import it.distributedsystems.connection.handler.LeaderHandler;
 import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.queue.ConnectionMessage;
 import it.distributedsystems.messages.queue.ConnectionResponse;
 import it.distributedsystems.messages.queue.QueueCommand;
+import it.distributedsystems.messages.queue.QueueResponse;
+import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.raft.*;
+import it.distributedsystems.utils.BrokerAddress;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,12 +56,27 @@ public class BrokerConnection {
     /**
      * clients handling thread pool Max 10 clients
      */
-    ExecutorService clientsPool = Executors.newFixedThreadPool(10);
+    private final ExecutorService clientsPool = Executors.newFixedThreadPool(10);
+    /**
+     * List of all connected Clients
+     */
+    private final List<ClientHandler> clientHandlers = new ArrayList<>();
+
 
     /**
-     * Brokers listening thread pool Max 10 clients
+     * Brokers listening thread pool Max 10 followers
      */
-    ExecutorService brokersPool = Executors.newFixedThreadPool(10);
+    private final ExecutorService followersPool = Executors.newFixedThreadPool(10);
+    /**
+     * List of all connected Followers, used if leader
+     */
+    private final List<FollowerHandler> followerHandlers = new ArrayList<>();
+
+    /**
+     * Class that keeps track of the leader connection. Is a ScoketHandler.
+     * Null if not connected to the leader or this node is the leader.
+     */
+    private LeaderHandler leaderHandler;
 
     /**
      * Centralized queue that receives every message from the (possibly) different clients
@@ -94,9 +115,7 @@ public class BrokerConnection {
      * Starts all the thread
      */
     public static void start(){
-        var instance = getInstance();
-
-        instance.startConnection();
+        getInstance().startConnection();
     }
 
     private void startConnection(){
@@ -104,11 +123,13 @@ public class BrokerConnection {
         acceptancePool.submit(this::clientAccept);
         acceptancePool.submit(this::brokerAccept);
 
-        // Start a separate thread to process messages from all clients and brokers
-        //processPool.submit(this::processClientsCommand);
+        // Start a separate thread to process messages from brokers
         processPool.submit(this::processBrokerCommand);
     }
 
+    /**
+     * Call this method if this node becomes the leader
+     */
     public void setLeader(){
         clientCommandsProcesser = new CommandProcessor();
         processPool.submit(clientCommandsProcesser);
@@ -123,7 +144,7 @@ public class BrokerConnection {
         while (true) {
             try{
                 Socket clientSocket = this.clientServerSocket.accept();
-                SocketHandler handler;
+                ClientHandler handler;
                 System.out.println("New client connected: " + clientSocket.getInetAddress());
 
                 //Establishing connection
@@ -143,13 +164,12 @@ public class BrokerConnection {
                         //Handle the assign of an ID.
                         //Send back the client ID. (nextClientId++)
                         var newClientId = msg.getClientID() == -1 ? nextClientId++ : msg.getClientID();
-                        out.println(new ConnectionResponse(newClientId, BrokerSettings.getBrokers()).toJson());
+                        out.println(new ConnectionResponse(newClientId, BrokerSettings.getBrokers().stream().map(BrokerAddress::addressStringForClient).toList()).toJson());
 
                         //Create the ClientHandler
                         handler = new ClientHandler(newClientId, clientSocket, out, in, clientCommandsProcesser::handleClientMessageCallback);
 
-                        //TODO: The handler must be saved somewhere because we need to retrieve it to send back messages!
-                        // Start a new thread to handle the client
+                        clientHandlers.add(handler);
                         clientsPool.submit(handler);
                     }
                 } catch (IOException e) {
@@ -163,9 +183,68 @@ public class BrokerConnection {
     }
 
     /**
+     * Send QueueResponse to specific client Id
+     */
+    public void sendQueueResponseToClient(int clientID, QueueResponse response) {
+        var clientHandler = this.clientHandlers.stream().filter(ch -> ch.getClientId() == clientID).findFirst().orElse(null);
+        if (clientHandler == null) {
+            System.out.println("Client " + clientID + " not found, cannot send response: " + response.toJson());
+            return;
+        }
+
+        clientHandler.sendMessage(response);
+    }
+
+    /**
+     * Called by Leader at startup. Initializes the handlers.
+     * When a Follower crashes Handler must be removed!.
+     * When a Follower recovers from crash he will wait for x time for the AppendEntries. If not received he will start an election, this way he will receive the new leader!
+     */
+    private void connectToEveryNode(){
+        var allNodesAddress = BrokerSettings.getBrokers();
+        if (followerHandlers.size() == allNodesAddress.size()) return; //Every node is connected
+
+        List<Integer> presentFollowerIDs = followerHandlers.stream().map(FollowerHandler::getFollowerId).toList();
+
+        for (Integer followerID : presentFollowerIDs) {
+            connectToNode(followerID);
+        }
+    }
+
+    /**
+     * Connect the current broker Leader to the follower
+     */
+    private void connectToNode(Integer followerID) {
+        var followerAddress = BrokerSettings.getBrokers().stream().filter(a -> a.id == followerID).findFirst().orElse(null);
+        if (followerAddress == null) {
+            System.out.println("No follower with given id: " + followerID);
+            return;
+        }
+
+        try {
+            var followerSocket = new Socket(followerAddress.IP, followerAddress.BrokerServerPort);
+
+            try (PrintWriter out = new PrintWriter(followerSocket.getOutputStream(), true)){
+                //Send the connection message to identify as a leader
+                out.println(new LeaderConnection(BrokerSettings.getBrokerID(),BrokerSettings.getBrokerStatus()));
+
+                FollowerHandler handler = new FollowerHandler(followerID,leaderLastIndex, followerSocket, out, new BufferedReader(new InputStreamReader(followerSocket.getInputStream())), clientCommandsProcesser::handleClientMessageCallback);
+
+                followerHandlers.add(handler);
+                followersPool.submit(handler);
+            } catch (IOException e) {
+                System.out.println("Error while establishing client connection: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            System.out.println("Follower is not ready");
+        }
+    }
+
+    /**
      * Function run on an endless loop thread.
-     * Keeps accepting brokers for possible Candidate message, and connects with the leader(if follower)
-     * IS LEADER: keeps the connection to every follower to send periodic (possible empty, works as heartbeat) AppendEntries
+     * Keeps accepting brokers.
+     * If the connection is from the leader, stores the persistent connection.
+     * If is from another follower it means it is an election starting
      */
     public void brokerAccept() {
         while (true) {
@@ -173,23 +252,33 @@ public class BrokerConnection {
                 Socket brokerSocket = this.brokerServerSocket.accept();
                 System.out.println("New broker connected: " + brokerSocket.getInetAddress());
 
-                // Start a new thread to handle the client
-                brokersPool.submit(() -> handleReceivedMessage(brokerSocket, false));
+                //Establishing connection
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(brokerSocket.getInputStream()))) {
+                    try (PrintWriter out = new PrintWriter(brokerSocket.getOutputStream(), true)){
+                        BaseDeserializableMessage msg = GsonDeserializer.deserialize(in.readLine()); //receive the connection message
+
+                        if (msg instanceof RequestVote) {//Message from another follower (candidate) to RequestVote RPC
+                            // if conditions to vote, vote Yes else vote no
+                        } else if (msg instanceof LeaderConnection) {//Message from the leader, it connect to this follower.
+                            //create LeaderHandler to keep persistent connection
+                        }
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error while establishing client connection: " + e.getMessage());
+                    continue;
+                }
             } catch (IOException e) {
                 System.out.println("Error while waiting for broker connection");
             }
         }
     }
 
-    /*
-    *//**
-     * Call back function called by every ClientHandler upon receiving of a message
-     *//*
-    public void handleClientMessageCallback(String jsonMessage) throws InterruptedException {
-        QueueCommand cmd = (QueueCommand) GsonDeserializer.deserialize(jsonMessage);
-        // Add the message to the shared queue of clients
-        commandsQueue.put(cmd);
-    }*/
+    /**
+     * Call back function called by every LeaderHandler upon receiving of a message
+     */
+    public void handleLeaderMessageCallback(String jsonMessage) throws InterruptedException {
+
+    }
 
     /**
      * Call back function called by every FollowerHandler upon receiving of a message
@@ -201,72 +290,14 @@ public class BrokerConnection {
     }
 
     /**
-     * Function run on a separate thread.
-     * Handles the message arriving from that client or broker,
-     * adds the message to the queue right queue depending on the fact it was from a broker or from a client
+     * Send Message to every follower
      */
-    private void handleReceivedMessage(Socket socket, boolean isClient) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            String incomingMessage;
-            while ((incomingMessage = in.readLine()) != null) {
-                if (isClient) {
-                    QueueCommand cmd = (QueueCommand) GsonDeserializer.deserialize(incomingMessage);
-                    // Add the message to the shared queue of clients
-                    commandsQueue.put(cmd);
-                } else {
-                    BaseDeserializableMessage cmd = GsonDeserializer.deserialize(incomingMessage);
-                    // Add the message to the shared queue of brokers
-                    raftCommandsQueue.put(cmd);
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Client disconnected: " + socket.getInetAddress());
-        } catch (InterruptedException e) {
-            System.out.println("Exception while waiting for queue to free space");
-        }
-    }
-
-/*    *//**
-     * Function that runs in an endless thread loop.
-     * Take commands from queue to be processed
-     *//*
-    private void processClientsCommand() {
-        while (true) {
-            try {
-                // Take command from the queue and process them
-                var command = commandsQueue.take();
-
-                //If a command is here this means this broker is the leader
-                //RAFT:
-                //1) Append the command to your Log
-                LogLine appendedLine = ReplicationLog.leaderAppendCommand(BrokerSettings.getBrokerEpoch(),command);
-
-                //2) !Send AppendEntries to every other broker! AppendEntries is sent periodically, here we create a batch!
-
-
-                //3) !Once I receive the majority of ACK! apply to my internal Model
-                BrokerModel.getInstance().processCommand(command);
-                //4) After AKCs and after applying the command is COMMITTED: RETURN response to the client
-            } catch (InterruptedException e) {
-                System.out.println("Exception while waiting for new commands");
-                Thread.currentThread().interrupt();
-            }
-        }
-    }*/
-
-    /**
-     * Function that runs in an endless thread loop.
-     * Take commands from brokers queue to be processed (manages raft)
-     */
-    private void processBrokerCommand() {
-        while (true) {
-            try {
-                // Take command from the queue and process them
-                var command = raftCommandsQueue.take();
-                //TODO: PROCESS THE RAFT COMMAND
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+    public void forwardAllFollowers(BaseDeserializableMessage message) {
+        //Start it in a new thread to not stop the process execution
+        new Thread(() -> {
+            this.followerHandlers.forEach(fh -> {
+                fh.sendMessage(message);
+            });
+        });
     }
 }

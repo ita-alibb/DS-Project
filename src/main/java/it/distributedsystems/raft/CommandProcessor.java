@@ -83,7 +83,7 @@ public class CommandProcessor implements Runnable {
                 this.currentBatchMessage.setLeaderCommitIndex(leaderCommitIndex?);
 
                 //manda a tutti i broker //Maybe it creates a new thread
-                BrokerConnection.getInstance().forwardAllBrokers(new AppendEntries(this.currentBatchMessage));
+                BrokerConnection.getInstance().forwardAllFollowers(new AppendEntries(this.currentBatchMessage));
 
                 //clear del current batch e SETTA IL PREVLOGLINE!
                 this.currentBatchMessage.clearBatch();
