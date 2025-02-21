@@ -15,7 +15,7 @@ import static java.lang.System.exit;
  * Class used to protect setters, called by the main app once at the start. Bootstrap of every final setting
  */
 public class BrokerSettingsBootstrapper extends BrokerSettings {
-    public static void bootstrap(int indexInFile){
+    public static void bootstrap(int brokerId){
         final Path path = Path.of("src/main/java/it/distributedsystems/brokerPortConfiguration.json");
 
         String jsonText = null;
@@ -29,7 +29,7 @@ public class BrokerSettingsBootstrapper extends BrokerSettings {
 
         List<BrokerAddress> newBrokerAddress = gson.fromJson(jsonText, new TypeToken<List<BrokerAddress>>() {}.getType());
 
-        setBrokerAddress(newBrokerAddress.get(indexInFile+1));
+        setBrokerAddress(newBrokerAddress.stream().filter(ba -> ba.id == brokerId).findFirst().get());
         setBrokers(newBrokerAddress);
         setNumOfNodes(newBrokerAddress.size());
     }

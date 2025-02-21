@@ -11,7 +11,7 @@ import java.util.concurrent.*;
  * This class is used to read the input stream.
  */
 public class InputReader implements Runnable {
-    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Scanner scanner;
 
     private InputReader() {
@@ -50,7 +50,7 @@ public class InputReader implements Runnable {
      * @param input     The command given by the player
      */
     private void executeCommand(String input) {
-        QueueCommand command;
+        QueueCommand command = null;
         boolean error = false;
 
         var args = input.split("\\s+");
@@ -92,8 +92,9 @@ public class InputReader implements Runnable {
             System.out.print("> ");
         } else {
             //send the command
-            //TODO: ClientConnection.send(command);
+            ClientConnection.getINSTANCE().sendAsync(command);
         }
+
         readLine();
     }
 }

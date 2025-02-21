@@ -36,7 +36,7 @@ public class CommandProcessor implements Runnable {
 
     public CommandProcessor() {
         this.currentBatchMessage = new AppendEntries(BrokerSettings.getBrokerEpoch(),BrokerSettings.getBrokerID());
-        periodicalAppendEntriesSender.submit(this::periodicalSend);
+        periodicalAppendEntriesSender.execute(this::periodicalSend);
     }
 
     /**
@@ -76,18 +76,18 @@ public class CommandProcessor implements Runnable {
         try{
             while(true) {
                 //wait 20 seconds
-                wait(20_000);
+                Thread.sleep(200_000);
                 currentBatchLock.lock();
                 //Aggiorna il batch di messaggi fatto esternamente con un metodo
                 //prima di mandare setta il commit index
-                this.currentBatchMessage.setLeaderCommitIndex(leaderCommitIndex?);
+                //this.currentBatchMessage.setLeaderCommitIndex(leaderCommitIndex?);
 
                 //manda a tutti i broker //Maybe it creates a new thread
                 BrokerConnection.getInstance().forwardAllFollowers(new AppendEntries(this.currentBatchMessage));
 
                 //clear del current batch e SETTA IL PREVLOGLINE!
                 this.currentBatchMessage.clearBatch();
-                ReplicationLog.setPrevLogLineString(this.currentBatchMessage.getNewLogLineBatch().getLast());
+                ReplicationLog.setPrevLogLine(this.currentBatchMessage.getNewLogLineBatch().getLast());
                 currentBatchLock.unlock();
             }
         } catch (InterruptedException e) {

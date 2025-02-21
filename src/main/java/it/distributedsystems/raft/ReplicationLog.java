@@ -15,15 +15,12 @@ import static java.lang.System.exit;
  *    -brokerID.txt
  *    -brokerID.txt
  *    -...
- *
- *
  *    Log structure: as a csv. Every log is in a new line.
- *    Index;Epoch;SenderID;Command
- *     TODO: it is important to have the index of the log (which is the line number, but either you find a good way to get it or you should count it by yourself) and maybe not make it part of the log?
+ *    Index;Epoch;Json representation of QueueCommand
  */
 public class ReplicationLog {
     private static String FILE_PATH = System.getProperty("user.home") + "/Desktop/DS-Project/" + LocalDate.now();
-    private static String prevLogLineString = null;
+    private static LogLine prevLogLine = null;
 
     /**
      * Method to be called at the initialization of the BrokerModel to initialize the log file.
@@ -39,7 +36,7 @@ public class ReplicationLog {
         }
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
-            writer.write("Index;Epoch;ClientID;FormattedCommand");
+            writer.write("Index;Epoch;JsonQueueCommand");
         } catch (IOException e) {
             System.err.println("Error writing to file: " + e.getMessage());
         }
@@ -97,14 +94,14 @@ public class ReplicationLog {
         }
     }
 
-    public static String getPrevLogLineString() {
-        return prevLogLineString;
+    public static LogLine getPrevLogLineString() {
+        return prevLogLine;
     }
 
     /**
      * Used passing the last entry of AppendEntries (received or sended)
      */
-    public static void setPrevLogLineString(String prevLogLineString) {
-        ReplicationLog.prevLogLineString = prevLogLineString;
+    public static void setPrevLogLine(String prevLogLineString) {
+        ReplicationLog.prevLogLine = new LogLine(prevLogLineString);
     }
 }

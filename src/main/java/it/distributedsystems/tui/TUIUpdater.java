@@ -1,6 +1,8 @@
 package it.distributedsystems.tui;
 
 public class TUIUpdater {
+    public static Integer lastReadInt = null;
+
     /**
      * This method is called everytime something new must be shown in the view
      * Starts a single thread (cannot be started multiple consecutive times because if a thread is already running then will probably include the second change without starting another thread)

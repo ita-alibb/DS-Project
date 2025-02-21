@@ -1,5 +1,6 @@
 package it.distributedsystems.connection;
 
+import com.sun.jdi.ClassNotPreparedException;
 import it.distributedsystems.connection.handler.ClientHandler;
 import it.distributedsystems.connection.handler.FollowerHandler;
 import it.distributedsystems.connection.handler.LeaderHandler;
@@ -22,13 +23,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static java.lang.System.exit;
+
 public class BrokerConnection {
     private static BrokerConnection INSTANCE;
-
-    /**
-     * The next client ID that will be assigned to the next clients that will connect
-     */
-    private int nextClientId = 0;
 
     /**
      * The server socket to which the clients write (to be used if the broker is the leader)
@@ -120,11 +118,11 @@ public class BrokerConnection {
 
     private void startConnection(){
         //Start the accepting thread on clientServerSocket and brokerServerSocket
-        acceptancePool.submit(this::clientAccept);
-        acceptancePool.submit(this::brokerAccept);
+        acceptancePool.execute(this::clientAccept);
+        //TODO: acceptancePool.execute(this::brokerAccept);
 
         // Start a separate thread to process messages from brokers
-        processPool.submit(this::processBrokerCommand);
+        //TODO: processPool.execute(this::processBrokerCommand);
     }
 
     /**
@@ -132,7 +130,7 @@ public class BrokerConnection {
      */
     public void setLeader(){
         clientCommandsProcesser = new CommandProcessor();
-        processPool.submit(clientCommandsProcesser);
+        processPool.execute(clientCommandsProcesser);
         BrokerSettings.setBrokerStatus(BrokerStatus.Leader);
     }
 
@@ -141,43 +139,33 @@ public class BrokerConnection {
      * Keeps accepting clients (if leader) or redirect to leader (if follower)
      */
     public void clientAccept() {
+        // TODO: REMOVE THIS IS JUST TO TEST
+        this.setLeader();
+
         while (true) {
             try{
                 Socket clientSocket = this.clientServerSocket.accept();
                 ClientHandler handler;
-                System.out.println("New client connected: " + clientSocket.getInetAddress());
+                System.out.println("New client connected: " + clientSocket.getInetAddress() + clientSocket.getPort());
 
-                //Establishing connection
-                try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-                    try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)){
-                        ConnectionMessage msg = (ConnectionMessage) GsonDeserializer.deserialize(in.readLine()); //receive the connection message
+                try{
+                    //Create handler that initialize the connection
+                    handler = new ClientHandler(clientSocket);
 
-                        if (BrokerSettings.getBrokerStatus() != BrokerStatus.Leader) {
-                            //I am NOT the leader, so I can't connect with the client.
-                            //Send back the IP/Port of the leader
-                            var leaderAddress = BrokerSettings.getLeaderAddress();
-                            out.println(new ConnectionResponse(leaderAddress.IP,leaderAddress.ClientServerPort).toJson());
-                            //Close the socket
-                            continue; //do not submit in the clientsPool
-                        }
+                    //Reach here if the constructor does not throw exception (You ARE the leader)
+                    handler.setMsgReceiveCallback(clientCommandsProcesser::handleClientMessageCallback);
+                    clientHandlers.add(handler);
+                    clientsPool.execute(handler);
 
-                        //Handle the assign of an ID.
-                        //Send back the client ID. (nextClientId++)
-                        var newClientId = msg.getClientID() == -1 ? nextClientId++ : msg.getClientID();
-                        out.println(new ConnectionResponse(newClientId, BrokerSettings.getBrokers().stream().map(BrokerAddress::addressStringForClient).toList()).toJson());
-
-                        //Create the ClientHandler
-                        handler = new ClientHandler(newClientId, clientSocket, out, in, clientCommandsProcesser::handleClientMessageCallback);
-
-                        clientHandlers.add(handler);
-                        clientsPool.submit(handler);
-                    }
+                    System.out.println("New handler created and added correctly ID: " + handler.getClientId());
                 } catch (IOException e) {
                     System.out.println("Error while establishing client connection: " + e.getMessage());
-                    continue;
+                } catch (ClassNotPreparedException e) {
+                    System.out.println("Not leader, redirect to leader");
                 }
             } catch (IOException e) {
                 System.out.println("Error while waiting for client connection");
+                exit(-1);
             }
         }
     }
@@ -226,12 +214,12 @@ public class BrokerConnection {
 
             try (PrintWriter out = new PrintWriter(followerSocket.getOutputStream(), true)){
                 //Send the connection message to identify as a leader
-                out.println(new LeaderConnection(BrokerSettings.getBrokerID(),BrokerSettings.getBrokerStatus()));
+                // TODO: out.println(new LeaderConnection(BrokerSettings.getBrokerID(),BrokerSettings.getBrokerStatus()));
 
-                FollowerHandler handler = new FollowerHandler(followerID,leaderLastIndex, followerSocket, out, new BufferedReader(new InputStreamReader(followerSocket.getInputStream())), clientCommandsProcesser::handleClientMessageCallback);
+                // TODO: FollowerHandler handler = new FollowerHandler(followerID,leaderLastIndex, followerSocket, out, new BufferedReader(new InputStreamReader(followerSocket.getInputStream())), clientCommandsProcesser::handleClientMessageCallback);
 
-                followerHandlers.add(handler);
-                followersPool.submit(handler);
+                // TODO: followerHandlers.add(handler);
+                // TODO: followersPool.execute(handler);
             } catch (IOException e) {
                 System.out.println("Error while establishing client connection: " + e.getMessage());
             }
@@ -257,11 +245,11 @@ public class BrokerConnection {
                     try (PrintWriter out = new PrintWriter(brokerSocket.getOutputStream(), true)){
                         BaseDeserializableMessage msg = GsonDeserializer.deserialize(in.readLine()); //receive the connection message
 
-                        if (msg instanceof RequestVote) {//Message from another follower (candidate) to RequestVote RPC
+                        /* TODO: if (msg instanceof RequestVote) {//Message from another follower (candidate) to RequestVote RPC
                             // if conditions to vote, vote Yes else vote no
                         } else if (msg instanceof LeaderConnection) {//Message from the leader, it connect to this follower.
                             //create LeaderHandler to keep persistent connection
-                        }
+                        }*/
                     }
                 } catch (IOException e) {
                     System.out.println("Error while establishing client connection: " + e.getMessage());

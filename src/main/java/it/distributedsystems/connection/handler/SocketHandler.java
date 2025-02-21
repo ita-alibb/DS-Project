@@ -5,6 +5,7 @@ import it.distributedsystems.messages.BaseDeserializableMessage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -30,12 +31,18 @@ public abstract class SocketHandler implements Runnable {
     /**
      * This is the function called after receiving a message
      */
-    private final ReceiveJsonMessageCallback msgReceiveCallback;
+    private ReceiveJsonMessageCallback msgReceiveCallback;
 
-    public SocketHandler(Socket socket, PrintWriter out, BufferedReader in, ReceiveJsonMessageCallback msgReceiveCallback){
+    public SocketHandler(Socket socket) throws IOException {
         this.socket = socket;
-        this.out = out;
-        this.in = in;
+        this.out = new PrintWriter(socket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.msgReceiveCallback = null;
+    }
+    public SocketHandler(Socket socket, ReceiveJsonMessageCallback msgReceiveCallback) throws IOException {
+        this.socket = socket;
+        this.out = new PrintWriter(socket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.msgReceiveCallback = msgReceiveCallback;
     }
 
@@ -57,7 +64,6 @@ public abstract class SocketHandler implements Runnable {
             // break the loop and finally call the disconnection
         } finally {
             System.out.println("Client disconnected from socket IP:"+ socket.getInetAddress() + " Port: " + socket.getPort());
-            //TODO: better handling of disconnection?
         }
     }
 
@@ -71,5 +77,17 @@ public abstract class SocketHandler implements Runnable {
         } catch (Exception e) {
             System.out.println("Exception on sending message from socket IP:"+ socket.getInetAddress() + " Port: " + socket.getPort()  + " " + e.getMessage());
         }
+    }
+
+    /**
+     * Used to set the callback
+     */
+    public void setMsgReceiveCallback(ReceiveJsonMessageCallback msgReceiveCallback) {
+        if (this.msgReceiveCallback != null) {
+            System.out.println("Cannot re set CallBack");
+            return;
+        }
+
+        this.msgReceiveCallback = msgReceiveCallback;
     }
 }

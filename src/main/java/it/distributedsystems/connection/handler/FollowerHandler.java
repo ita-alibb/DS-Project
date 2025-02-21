@@ -3,6 +3,7 @@ package it.distributedsystems.connection.handler;
 import it.distributedsystems.connection.ReceiveJsonMessageCallback;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -19,8 +20,8 @@ public class FollowerHandler extends SocketHandler {
      */
     private int nextIndex;
 
-    public FollowerHandler(int followerId, int leaderLastIndex, Socket socket, PrintWriter out, BufferedReader in, ReceiveJsonMessageCallback msgReceiveCallback) {
-        super(socket, out, in, msgReceiveCallback);
+    public FollowerHandler(int followerId, int leaderLastIndex, Socket socket, ReceiveJsonMessageCallback msgReceiveCallback) throws IOException {
+        super(socket, msgReceiveCallback);
         this.followerId = followerId;
         this.nextIndex = leaderLastIndex +1;
     }

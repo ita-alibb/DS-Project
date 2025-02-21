@@ -5,12 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/client/ClientModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/ClientApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/ClientApp.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerSettings.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/FollowerHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/FollowerHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/SocketHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/SocketHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/ConnectionResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/ConnectionResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueCommand.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/CommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/CommandProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/LogLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/LogLine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,45 +50,48 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.GsonTest.BaseDeserializableMessageTest.executor&quot;: &quot;Debug&quot;,
-    &quot;JUnit.GsonTest.ConnectionMessageTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.GsonTest.QueueResponseTest.executor&quot;: &quot;Debug&quot;,
-    &quot;JUnit.GsonTest.executor&quot;: &quot;Run&quot;,
-    &quot;Maven.rqs-cli-app [test].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.rqs-cli-app [verify].executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;task/setup&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/aliba/Documents/GitHub/DS-Project&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Main.executor": "Run",
+    "Application.StartBroker.executor": "Run",
+    "Application.StartClient.executor": "Run",
+    "JUnit.GsonTest.BaseDeserializableMessageTest.executor": "Debug",
+    "JUnit.GsonTest.ConnectionMessageTest.executor": "Run",
+    "JUnit.GsonTest.QueueResponseTest.executor": "Debug",
+    "JUnit.GsonTest.executor": "Run",
+    "Maven.rqs-cli-app [test].executor": "Run",
+    "Maven.rqs-cli-app [verify].executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "task/finish",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/aliba/Documents/GitHub/DS-Project",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\aliba\Documents\GitHub\DS-Project\src\main\java\it\distributedsystems" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.GsonTest.QueueResponseTest">
-    <configuration name="Main" type="Application" factoryName="Application" singleton="false">
-      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.App" />
+  <component name="RunManager" selected="Application.StartBroker">
+    <configuration name="StartBroker" type="Application" factoryName="Application" singleton="false">
+      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.BrokerApp" />
       <module name="rqs-cli-app" />
+      <option name="PROGRAM_PARAMETERS" value="1" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="StartClient" type="Application" factoryName="Application">
+    <configuration name="StartClient" type="Application" factoryName="Application" singleton="false">
       <option name="MAIN_CLASS_NAME" value="it.distributedsystems.ClientApp" />
       <module name="rqs-cli-app" />
-      <option name="PROGRAM_PARAMETERS" value="localhost 6000" />
+      <option name="PROGRAM_PARAMETERS" value="localhost 6100" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -145,8 +160,8 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="Application.Main" />
       <item itemvalue="Application.StartClient" />
+      <item itemvalue="Application.StartBroker" />
       <item itemvalue="JUnit.GsonTest" />
       <item itemvalue="JUnit.GsonTest.BaseDeserializableMessageTest" />
       <item itemvalue="JUnit.GsonTest.ConnectionMessageTest" />
@@ -185,6 +200,7 @@
       <workItem from="1739705336955" duration="3934000" />
       <workItem from="1739914528070" duration="10724000" />
       <workItem from="1739963560890" duration="2262000" />
+      <workItem from="1740145049801" duration="11680000" />
     </task>
     <servers />
   </component>
@@ -213,6 +229,11 @@
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java</url>
           <line>30</line>
           <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/SocketHandler.java</url>
+          <line>55</line>
+          <option name="timeStamp" value="13" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

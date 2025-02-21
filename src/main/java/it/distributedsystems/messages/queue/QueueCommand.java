@@ -11,7 +11,7 @@ public class QueueCommand extends ConnectionMessage {
      * Every instance of the base command will have a unique Id
      * (unique for every sender e.g. every client, senderID+commandID will be globally unique)
      */
-    public final int commandID;
+    private final int commandID;
 
     private final CommandType type;
     private final String queueKey;

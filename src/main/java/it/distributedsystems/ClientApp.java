@@ -7,10 +7,10 @@ import it.distributedsystems.tui.InputReader;
 public class ClientApp {
     public static void main(String[] args) {
         //initialize connection
-        var connection = new ClientConnection(args[0], args[1]);
+        ClientConnection.setConnection(args[0], args[1]);
 
         //start listening thread
-        new Thread(connection).start();
+        new Thread(ClientConnection.getINSTANCE()).start();
 
         //start input reader
         InputReader.readLine();
