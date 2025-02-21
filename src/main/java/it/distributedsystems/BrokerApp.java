@@ -1,6 +1,8 @@
 package it.distributedsystems;
 
 import it.distributedsystems.connection.BrokerConnection;
+import it.distributedsystems.raft.ReplicationLog;
+import it.distributedsystems.tui.TUIUpdater;
 import it.distributedsystems.utils.BrokerSettingsBootstrapper;
 
 public class BrokerApp {
@@ -11,9 +13,9 @@ public class BrokerApp {
         BrokerConnection.start();
 
         //Start up the ReplicationLog. Something like the last commit index, the last epoch registered in log ecc...
+        ReplicationLog.initializeLogFile();
 
-
-        //Start TUI update thread
-
+        //Print TUI
+        TUIUpdater.getINSTANCE().reprintViewAsync(false);
     }
 }

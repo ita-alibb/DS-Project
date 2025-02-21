@@ -2,9 +2,9 @@ package it.distributedsystems.raft;
 
 import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.queue.QueueResponse;
+import it.distributedsystems.tui.TUIUpdater;
 import it.distributedsystems.utils.IndexedQueue;
 
-import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,16 +19,14 @@ public class BrokerModel {
      * This lock must be called before every
      */
     private final ReentrantLock processCommandLock = new ReentrantLock();
-    private String brokerID;
 
     /**
      * String: queueKey
      * IndexedQueue: the list of elements
      */
-    private Dictionary<String, IndexedQueue> queues = new Hashtable<String, IndexedQueue>();
+    private final Hashtable<String, IndexedQueue> queues = new Hashtable<>();
 
     public BrokerModel() {
-        ReplicationLog.initializeLogFile();
     }
 
     /**
@@ -68,6 +66,9 @@ public class BrokerModel {
             response = processCommandInternal(command);
         }
 
+        //Trigger update of the TUI
+
+
         return response;
     }
 
@@ -80,12 +81,13 @@ public class BrokerModel {
                 case READ_DATA : data = readData(command.getQueueKey(), command.getClientID()); break;
             }
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
-            return new QueueResponse(command.getCommandID(), e.getMessage());
+            TUIUpdater.getINSTANCE().printError("Error processing command: " + command.getQueueKey() + ": " + e.getMessage());
+            return new QueueResponse(command.getClientID(), command.getCommandID(), e.getMessage());
         } catch (Exception e) {
-            return new QueueResponse(command.getCommandID(), e.getClass().toString());
+            return new QueueResponse(command.getClientID(), command.getCommandID(), e.getClass().toString());
         }
 
-        return new QueueResponse(command.getCommandID(), data);
+        return new QueueResponse(command.getClientID(), command.getCommandID(), data);
     }
 
     /**
@@ -120,5 +122,13 @@ public class BrokerModel {
         }
 
         return queue.readData(clientID+"");
+    }
+
+
+    public Hashtable<String, IndexedQueue> getQueues() {
+        processCommandLock.lock();
+        var returnVal = new Hashtable<>(queues);
+        processCommandLock.unlock();
+        return returnVal;
     }
 }

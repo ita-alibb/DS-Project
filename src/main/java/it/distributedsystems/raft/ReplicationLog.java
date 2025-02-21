@@ -3,6 +3,8 @@ package it.distributedsystems.raft;
 import it.distributedsystems.messages.queue.QueueCommand;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 
 import static java.lang.System.exit;
@@ -19,7 +21,7 @@ import static java.lang.System.exit;
  *    Index;Epoch;Json representation of QueueCommand
  */
 public class ReplicationLog {
-    private static String FILE_PATH = System.getProperty("user.home") + "/Desktop/DS-Project/" + LocalDate.now();
+    private static String FILE_PATH = System.getProperty("user.dir") + "/logs/" + LocalDate.now();
     private static LogLine prevLogLine = null;
 
     /**
@@ -27,16 +29,20 @@ public class ReplicationLog {
      * Creates the file and add the header. Checks that the file does not exist
      */
     public static void initializeLogFile() {
-        FILE_PATH = FILE_PATH + "/" + BrokerSettings.getBrokerID() + ".txt";
-        File file = new File(FILE_PATH);
+        try {
+            Files.createDirectories(Paths.get(FILE_PATH));
+            FILE_PATH = FILE_PATH + "/" + BrokerSettings.getBrokerID() + ".txt";
+            File file = new File(FILE_PATH);
 
-        if (file.exists()) {
-            //file already exist; return
-            return;
-        }
+            if (file.exists()) {
+                //file already exist; return
+                return;
+            }
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
-            writer.write("Index;Epoch;JsonQueueCommand");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
+                writer.write("Index;Epoch;JsonQueueCommand");
+                writer.newLine();
+            }
         } catch (IOException e) {
             System.err.println("Error writing to file: " + e.getMessage());
         }

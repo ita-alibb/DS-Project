@@ -3,7 +3,14 @@ package it.distributedsystems.tui;
 import it.distributedsystems.connection.ClientConnection;
 import it.distributedsystems.messages.queue.CommandType;
 import it.distributedsystems.messages.queue.QueueCommand;
+import it.distributedsystems.raft.BrokerModel;
+import it.distributedsystems.raft.LogLine;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
@@ -30,10 +37,16 @@ public class InputReader implements Runnable {
                 input = scanner.nextLine();
             } while (input == null);
 
+            if (input.equals("test")) {
+                runTest();
+                return;
+            }
+
             this.executeCommand(input);
         } catch (Exception e) {
             System.out.println("Error: incorrect command");
             System.out.print("> ");
+        } finally {
             readLine();
         }
     }
@@ -83,7 +96,6 @@ public class InputReader implements Runnable {
                     command = new QueueCommand(ClientConnection.getClientId(),CommandType.READ_DATA,args[1],null);
                 }
             }; break;
-
             default: error = true;
         }
 
@@ -94,7 +106,19 @@ public class InputReader implements Runnable {
             //send the command
             ClientConnection.getINSTANCE().sendAsync(command);
         }
+    }
 
-        readLine();
+    private void runTest() {
+        var file = "src/test/java/it/distributedsystems/testFile.txt";
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String command;
+            while ((command = reader.readLine()) != null) {
+                executeCommand(command);
+            }
+        } catch (InvalidObjectException e) {
+            System.err.println("Error while extracting the command: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("Error while reading file: " + e.getMessage());
+        }
     }
 }

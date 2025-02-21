@@ -1,0 +1,39 @@
+C queue1
+C queue2
+C queue3
+A queue1 10
+A queue1 11
+A queue1 12
+A queue2 20
+A queue2 21
+A queue2 22
+A queue2 23
+A queue3 30
+A queue3 31
+A queue3 32
+A queue3 33
+A queue3 34
+A queue2 24
+A queue2 25
+A queue2 26
+A queue2 27
+A queue2 28
+A queue2 29
+A queue2 210
+A queue2 211
+A queue2 212
+A queue3 35
+A queue3 36
+A queue3 37
+A queue3 38
+A queue1 13
+A queue1 14
+A queue1 15
+A queue1 16
+A queue1 17
+A queue1 18
+A queue2 213
+A queue3 39
+A queue3 310
+A queue3 311
+A queue3 312

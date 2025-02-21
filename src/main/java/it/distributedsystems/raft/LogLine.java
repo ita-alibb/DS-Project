@@ -26,7 +26,7 @@ public class LogLine {
     /**
      * Constructor used to clone a LogLine, does not increase the index count
      */
-    public LogLine(int epoch, int index, QueueCommand command) {
+    public LogLine(int index, int epoch, QueueCommand command) {
         this.index = index;
         this.epoch = epoch;
         this.command = command;
@@ -35,7 +35,7 @@ public class LogLine {
     /**
      * Constructor used to clone a LogLine, does not increase the index count
      */
-    public LogLine(int epoch, int index, String commandJson) {
+    public LogLine(int index, int epoch, String commandJson) {
         this.index = index;
         this.epoch = epoch;
         this.command = (QueueCommand) GsonDeserializer.deserialize(commandJson);

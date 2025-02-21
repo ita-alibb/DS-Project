@@ -5,6 +5,7 @@ import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.messages.raft.UniqueMessageIdentifier;
+import it.distributedsystems.tui.TUIUpdater;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +37,9 @@ public class CommandProcessor implements Runnable {
 
     public CommandProcessor() {
         this.currentBatchMessage = new AppendEntries(BrokerSettings.getBrokerEpoch(),BrokerSettings.getBrokerID());
-        periodicalAppendEntriesSender.execute(this::periodicalSend);
+
+        // TODO: implement periodical appendEntries.. Maybe this class is just the Leader Behavior
+        //periodicalAppendEntriesSender.execute(this::periodicalSend);
     }
 
     /**
@@ -59,9 +62,15 @@ public class CommandProcessor implements Runnable {
                 currentBatchMessage.addNewLogLine(appendedLine);
                 currentBatchLock.unlock();
 
-                //3) !Once I receive the majority of ACK! apply to my internal Model
-                BrokerModel.getInstance().processCommand(command);
+                // TODO: NEEDS to be removed from here. Here you cannot have received the acks
+                //  3) !Once I receive the majority of ACK! apply to my internal Model
+                var response = BrokerModel.getInstance().processCommand(command);
                 //4) After AKCs and after applying the command is COMMITTED: RETURN response to the client
+                //TODO: also this should not be done here!
+                BrokerConnection.getInstance().sendQueueResponseToClient(response);
+
+                //TODO: find a better place to trigger the reprint
+                TUIUpdater.getINSTANCE().reprintViewAsync(false);
             } catch (InterruptedException e) {
                 System.out.println("Exception while waiting for new commands");
                 Thread.currentThread().interrupt();

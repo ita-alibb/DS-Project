@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class IndexedQueue {
     /**
@@ -53,5 +54,10 @@ public class IndexedQueue {
         this.readPointer.put(clientID, clientReadPointer);
 
         return returnData;
+    }
+
+    @Override
+    public String toString() {
+        return elements.stream().map(String::valueOf).collect(Collectors.joining(", "));
     }
 }

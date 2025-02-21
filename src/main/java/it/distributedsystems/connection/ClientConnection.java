@@ -89,6 +89,8 @@ public class ClientConnection implements Runnable{
             // Initialize the connection. Contains endless thread
             this.initConnection();
 
+            TUIUpdater.getINSTANCE().reprintViewAsync(true);
+
             System.out.println("Connection established correctly, start listening");
             // Listening to socket. Contains endless while, returns only in case of exception eg: disconnection of leader
             this.listeningConnection();
@@ -183,12 +185,16 @@ public class ClientConnection implements Runnable{
                 var response = this.asynchronousResponseQueue.take();
 
                 if (response.getData() != null) { //this means it is a response to ReadData: Show the data
-                    //In TUIUpdater set the new read Int
-                    TUIUpdater.lastReadInt = response.getData();
+                    //In Create a model that on update triggers tui Updater review
+                    //TODO:change it to something more smart
+                    TUIUpdater.getINSTANCE().printError("Last read: " + response.getData());
                 }
+
+                System.out.println("DEBUG: " + response.toJson() + " sentcommands: " + sentCommands.size());
 
                 //remove the command id from the uncommited command list:
                 sentCommands.removeIf(c -> c.getCommandID() == response.getCommandId());
+                TUIUpdater.getINSTANCE().reprintViewAsync(true);
             } catch (InterruptedException e) {
                 System.out.println("Error on executing broadcast");
             }
@@ -204,9 +210,14 @@ public class ClientConnection implements Runnable{
         try {
             this.out.println(command.toJson());
             this.sentCommands.add(command);
+            TUIUpdater.getINSTANCE().reprintViewAsync(true);
         } catch (Exception e) {
             System.out.println("Exception on sending request to server; exception: " + e.getMessage());
         }
+    }
+
+    public List<QueueCommand> getSentCommands() {
+        return sentCommands;
     }
 }
 

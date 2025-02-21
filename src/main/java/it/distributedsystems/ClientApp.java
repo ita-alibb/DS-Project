@@ -3,6 +3,7 @@ package it.distributedsystems;
 import it.distributedsystems.connection.ClientConnection;
 
 import it.distributedsystems.tui.InputReader;
+import it.distributedsystems.tui.TUIUpdater;
 
 public class ClientApp {
     public static void main(String[] args) {
@@ -14,5 +15,8 @@ public class ClientApp {
 
         //start input reader
         InputReader.readLine();
+
+        //Print tui
+        TUIUpdater.getINSTANCE().reprintViewAsync(true);
     }
 }

@@ -138,7 +138,7 @@ public class BrokerConnection {
      * Function run on an endless loop thread.
      * Keeps accepting clients (if leader) or redirect to leader (if follower)
      */
-    public void clientAccept() {
+    private void clientAccept() {
         // TODO: REMOVE THIS IS JUST TO TEST
         this.setLeader();
 
@@ -173,10 +173,10 @@ public class BrokerConnection {
     /**
      * Send QueueResponse to specific client Id
      */
-    public void sendQueueResponseToClient(int clientID, QueueResponse response) {
-        var clientHandler = this.clientHandlers.stream().filter(ch -> ch.getClientId() == clientID).findFirst().orElse(null);
+    public void sendQueueResponseToClient(QueueResponse response) {
+        var clientHandler = this.clientHandlers.stream().filter(ch -> ch.getClientId() == response.getClientID()).findFirst().orElse(null);
         if (clientHandler == null) {
-            System.out.println("Client " + clientID + " not found, cannot send response: " + response.toJson());
+            System.out.println("Client " + response.getClientID() + " not found, cannot send response: " + response.toJson());
             return;
         }
 
@@ -234,7 +234,7 @@ public class BrokerConnection {
      * If the connection is from the leader, stores the persistent connection.
      * If is from another follower it means it is an election starting
      */
-    public void brokerAccept() {
+    private void brokerAccept() {
         while (true) {
             try {
                 Socket brokerSocket = this.brokerServerSocket.accept();
