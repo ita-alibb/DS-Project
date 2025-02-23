@@ -5,20 +5,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/test/java/it/distributedsystems/testFile.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntriesResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/LeaderIdentification.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/RequestVote.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/RaftCommandProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/ClientApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/ClientApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/brokerPortConfiguration.json" beforeDir="false" afterPath="$PROJECT_DIR$/brokerPortConfiguration.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/queue/QueueResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/FollowerHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/FollowerHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/SocketHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/SocketHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/MessageDeserializerType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/MessageDeserializerType.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/CommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/CommandProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/LogLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/LogLine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerSettings.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/CommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ClientCommandProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/IndexedQueue.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/IndexedQueue.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/it/distributedsystems/testFile.txt" beforeDir="false" afterPath="$PROJECT_DIR$/testFile.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,7 +57,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.Main.executor": "Run",
-    "Application.StartBroker.executor": "Run",
+    "Application.StartBroker.executor": "Debug",
     "Application.StartClient.executor": "Run",
     "JUnit.GsonTest.BaseDeserializableMessageTest.executor": "Debug",
     "JUnit.GsonTest.ConnectionMessageTest.executor": "Run",
@@ -72,6 +80,7 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\aliba\Documents\GitHub\DS-Project" />
       <recent name="C:\Users\aliba\Documents\GitHub\DS-Project\src\main\java\it\distributedsystems" />
     </key>
   </component>
@@ -197,7 +206,8 @@
       <workItem from="1739914528070" duration="10724000" />
       <workItem from="1739963560890" duration="2262000" />
       <workItem from="1740145049801" duration="11680000" />
-      <workItem from="1740168819849" duration="8617000" />
+      <workItem from="1740168819849" duration="11749000" />
+      <workItem from="1740239687770" duration="9623000" />
     </task>
     <servers />
   </component>
@@ -219,22 +229,22 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java</url>
-          <line>118</line>
+          <line>117</line>
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java</url>
-          <line>149</line>
+          <line>150</line>
           <option name="timeStamp" value="22" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/SocketHandler.java</url>
-          <line>75</line>
+          <line>83</line>
           <option name="timeStamp" value="24" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java</url>
-          <line>186</line>
+          <line>187</line>
           <option name="timeStamp" value="25" />
         </line-breakpoint>
       </breakpoints>

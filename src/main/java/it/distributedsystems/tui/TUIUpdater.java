@@ -4,41 +4,35 @@ import it.distributedsystems.connection.ClientConnection;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.raft.BrokerModel;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class TUIUpdater {
-    private static TUIUpdater INSTANCE;
-    private String errorMessage;
+import static java.lang.System.exit;
 
-    private ExecutorService reprinter = Executors.newSingleThreadExecutor();
+public class TUIUpdater implements Runnable {
+    private final boolean isClient;
 
-    private TUIUpdater() {}
-
-    public static TUIUpdater getINSTANCE() {
-        if (INSTANCE == null) {
-            INSTANCE = new TUIUpdater();
-        }
-        return INSTANCE;
+    public TUIUpdater(boolean isClient) {
+        this.isClient = isClient;
     }
 
     /**
-     * This method is called everytime something new must be shown in the view
-     * Starts a single thread (cannot be started multiple consecutive times because if a thread is already running then will probably include the second change without starting another thread)
+     * Runs this operation.
      */
-    public void reprintViewAsync(boolean isClient) {
-        //Se c'e' un thread gia' in esecuzione, RETURN senza startare
-        //Starta un thread che fa printViewInternal
-        if (isClient) {
-            this.reprinter.execute(this::printClientViewInternal);
-        } else {
-            this.reprinter.execute(this::printBrokerViewInternal);
-        }
-    }
+    @Override
+    public void run() {
+        try {
+            while (true) {
+                Thread.sleep(1_000); //1 sec delay
 
-    public void printError(String errorMessage) {
-        this.errorMessage = errorMessage;
+                if (this.isClient) {
+                    this.printClientViewInternal();
+                } else {
+                    this.printBrokerViewInternal();
+                }
+            }
+        } catch (InterruptedException e) {
+            exit(-1);
+        }
     }
 
     /**
@@ -46,11 +40,12 @@ public class TUIUpdater {
      */
     private void printClientViewInternal(){
         clearConsole();
-
-        System.out.println("┌──────────────────────────────────────────────────────────────────────┐");
-        System.out.printf("UserID: %d                                                              %n", ClientConnection.getClientId());
+        var ba = ClientConnection.getINSTANCE().getBrokerAddress();
+        System.out.println("──────────────────────────────────────────────────────────────────────");
+        System.out.printf("UserID: %d            Leader IP: %s Leader Port: %d                     %n", ClientConnection.getClientId(), ba.IP, ba.ClientServerPort);
+        System.out.println("Last Read Int: "+ ClientConnection.getINSTANCE().getLastReadInt());
         System.out.println("List of not ack commands: " + ClientConnection.getINSTANCE().getSentCommands().stream().map(BaseDeserializableMessage::toJson).collect(Collectors.joining(", ")));
-        System.out.println("Last Error: "+ errorMessage);
+        System.out.println("Last Error: "+ ClientConnection.getINSTANCE().getLastError());
         printCommands();
     }
 
@@ -66,7 +61,7 @@ public class TUIUpdater {
         for (var queueKey : queues.keySet()) {
             System.out.printf(" %s : %s %n", queueKey, queues.get(queueKey).toString());
         }
-        System.out.println("Last Error: "+ errorMessage);
+        //System.out.println("Last Error: "+ errorMessage);
     }
 
     /**
@@ -87,9 +82,8 @@ public class TUIUpdater {
     }
 
     private void printCommands(){
+        System.out.println("[ COMMANDS:");
         System.out.println("┌──────────────────────────────────────────────────────────────────────┐");
-        System.out.println("│                             COMMANDS                                 │");
-        System.out.println("├──────────────────────────────────────────────────────────────────────┤");
         System.out.println("│ - C {queueKey}         -> create specific queue                      │");
         System.out.println("│ - A {queueKey} {data}  -> append data to specified queue             │");
         System.out.println("│ - R {queueKey}         -> read data from the specified queue         │");

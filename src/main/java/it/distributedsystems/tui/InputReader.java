@@ -109,7 +109,7 @@ public class InputReader implements Runnable {
     }
 
     private void runTest() {
-        var file = "src/test/java/it/distributedsystems/testFile.txt";
+        var file = System.getProperty("user.dir") + "/" + "testFile.txt";
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String command;
             while ((command = reader.readLine()) != null) {

@@ -4,8 +4,8 @@ import it.distributedsystems.connection.BrokerConnection;
 import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.raft.AppendEntries;
+import it.distributedsystems.messages.raft.AppendEntriesResponse;
 import it.distributedsystems.messages.raft.UniqueMessageIdentifier;
-import it.distributedsystems.tui.TUIUpdater;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.System.exit;
 
-public class CommandProcessor implements Runnable {
+public class ClientCommandProcessor implements Runnable {
     private final AppendEntries currentBatchMessage;
     private final Lock currentBatchLock = new ReentrantLock();
 
@@ -31,15 +31,14 @@ public class CommandProcessor implements Runnable {
     /**
      * Centralized queue that receives every message from the (possibly) different clients
      */
-    private final BlockingQueue<QueueCommand> commandsQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<QueueCommand> clientCommandsQueue = new LinkedBlockingQueue<>();
 
     private final ExecutorService periodicalAppendEntriesSender = Executors.newSingleThreadExecutor();
 
-    public CommandProcessor() {
+    public ClientCommandProcessor() {
         this.currentBatchMessage = new AppendEntries(BrokerSettings.getBrokerEpoch(),BrokerSettings.getBrokerID());
 
-        // TODO: implement periodical appendEntries.. Maybe this class is just the Leader Behavior
-        //periodicalAppendEntriesSender.execute(this::periodicalSend);
+        periodicalAppendEntriesSender.execute(this::periodicalSend);
     }
 
     /**
@@ -50,7 +49,7 @@ public class CommandProcessor implements Runnable {
         while (true) {
             try {
                 // Take command from the queue and process them
-                var command = commandsQueue.take();
+                var command = clientCommandsQueue.take();
 
                 //If a command is here this means this broker is the leader
                 //RAFT:
@@ -62,15 +61,6 @@ public class CommandProcessor implements Runnable {
                 currentBatchMessage.addNewLogLine(appendedLine);
                 currentBatchLock.unlock();
 
-                // TODO: NEEDS to be removed from here. Here you cannot have received the acks
-                //  3) !Once I receive the majority of ACK! apply to my internal Model
-                var response = BrokerModel.getInstance().processCommand(command);
-                //4) After AKCs and after applying the command is COMMITTED: RETURN response to the client
-                //TODO: also this should not be done here!
-                BrokerConnection.getInstance().sendQueueResponseToClient(response);
-
-                //TODO: find a better place to trigger the reprint
-                TUIUpdater.getINSTANCE().reprintViewAsync(false);
             } catch (InterruptedException e) {
                 System.out.println("Exception while waiting for new commands");
                 Thread.currentThread().interrupt();
@@ -88,10 +78,10 @@ public class CommandProcessor implements Runnable {
                 Thread.sleep(200_000);
                 currentBatchLock.lock();
                 //Aggiorna il batch di messaggi fatto esternamente con un metodo
-                //prima di mandare setta il commit index
-                //this.currentBatchMessage.setLeaderCommitIndex(leaderCommitIndex?);
+                //TODO: prima di mandare setta il commit index
+                //TODO: this.currentBatchMessage.setLeaderCommitIndex(leaderCommitIndex?);
 
-                //manda a tutti i broker //Maybe it creates a new thread
+                //manda a tutti I follower
                 BrokerConnection.getInstance().forwardAllFollowers(new AppendEntries(this.currentBatchMessage));
 
                 //clear del current batch e SETTA IL PREVLOGLINE!
@@ -104,12 +94,25 @@ public class CommandProcessor implements Runnable {
         }
     }
 
+    public void registerAck(AppendEntriesResponse response) {
+        //per ogni messaggio presente nell AppendEntries, se la risposta e' positiva aggiungi al counter degli Ack, per ogni comando,
+        //l'id del follower che ti ha appena fatto ACK (aggiungi id in un set, cosi' se per caso ne manda 2 comunque non cambia la somma)
+        // poi SE ogni precedente comando e' committato ed il presente comando ha >N/2 ACK allora committa anche questo.
+        //Quindi un while sul peek di una coda!.
+        //operazione da performare per ogni comando da committare:
+        /*
+          3) !Once I receive the majority of ACK! apply to my internal Model
+          var response = BrokerModel.getInstance().processCommand(command);
+          4) After AKCs and after applying the command is COMMITTED: RETURN response to the client AND UPDATE COMMITTEDINDEX!
+          BrokerConnection.getInstance().sendQueueResponseToClient(response);*/
+    }
+
     /**
      * Call back function called by every ClientHandler upon receiving of a message
      */
     public void handleClientMessageCallback(String jsonMessage) throws InterruptedException {
         QueueCommand cmd = (QueueCommand) GsonDeserializer.deserialize(jsonMessage);
         // Add the message to the shared queue of clients
-        commandsQueue.put(cmd);
+        clientCommandsQueue.put(cmd);
     }
 }

@@ -16,6 +16,14 @@ public class BrokerApp {
         ReplicationLog.initializeLogFile();
 
         //Print TUI
-        TUIUpdater.getINSTANCE().reprintViewAsync(false);
+        var updater = new TUIUpdater(false);
+        new Thread(updater).start();
     }
 }
+
+//TODO: lastAppliedIndex and LastCommitIndex. Pensali meglio, tutti questi indici vanno tenuti in maniera piu' ordinata
+// fosse anche solo raggruppandoli in classi che poi vanno dentro brokerSettings.
+// lastApplied: tiene traccia dell'ultimo index applicato al model.
+// commitIndex: tiene conto dell'ultimo index committato. (questo viene aggiornato e poi se e' piu' avanti del lastapplied allora si applicano tutti quelli in mezzo)
+// lastIndex: tiene traccia dell'ultimo index inserito.
+//

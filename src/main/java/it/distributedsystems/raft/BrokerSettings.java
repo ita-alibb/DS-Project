@@ -18,6 +18,7 @@ public class BrokerSettings {
      * Broker Epoch is -1 until first connected with the leader. Then represent the perceived epoch of the Broker
      */
     private static int brokerEpoch = -1;
+    private static int votedFor = -1;
     private static int brokerCommitIndex = -1;
     //TODO: initial status is FOLLOWER and then election, changed to leader only to test
     private static BrokerStatus brokerStatus = BrokerStatus.Follower;
@@ -119,6 +120,22 @@ public class BrokerSettings {
         settingsLock.unlock();
     }
 
+    public static int getCurrentTermVotedFor() {
+        settingsLock.lock();
+        var returnVal = votedFor;
+        settingsLock.unlock();
+        return returnVal;
+    }
+
+    public static void setCurrentTermVotedFor(int votedFor) {
+        settingsLock.lock();
+        BrokerSettings.votedFor = votedFor;
+        settingsLock.unlock();
+    }
+
+    /**
+     * The index received from the leader. Identifies the last committed log that you agreed on
+     */
     public static int getBrokerCommitIndex() {
         settingsLock.lock();
         var returnVal = brokerCommitIndex;
@@ -126,6 +143,9 @@ public class BrokerSettings {
         return returnVal;
     }
 
+    /**
+     * The index received from the leader. Identifies the last committed log that you agreed on
+     */
     public static void setBrokerCommitIndex(int brokerCommitIndex) {
         settingsLock.lock();
         BrokerSettings.brokerCommitIndex = brokerCommitIndex;

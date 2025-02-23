@@ -81,7 +81,6 @@ public class BrokerModel {
                 case READ_DATA : data = readData(command.getQueueKey(), command.getClientID()); break;
             }
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
-            TUIUpdater.getINSTANCE().printError("Error processing command: " + command.getQueueKey() + ": " + e.getMessage());
             return new QueueResponse(command.getClientID(), command.getCommandID(), e.getMessage());
         } catch (Exception e) {
             return new QueueResponse(command.getClientID(), command.getCommandID(), e.getClass().toString());

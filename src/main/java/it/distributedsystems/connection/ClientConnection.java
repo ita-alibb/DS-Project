@@ -3,6 +3,7 @@ package it.distributedsystems.connection;
 import it.distributedsystems.messages.*;
 import it.distributedsystems.messages.queue.*;
 import it.distributedsystems.tui.TUIUpdater;
+import it.distributedsystems.utils.BrokerAddress;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -55,6 +56,8 @@ public class ClientConnection implements Runnable{
      */
     private final List<QueueCommand> sentCommands = Collections.synchronizedList(new ArrayList<>());
 
+    private String lastError = "";
+    private Integer lastReadInt = null;
 
     private final LinkedBlockingQueue<QueueResponse> asynchronousResponseQueue = new LinkedBlockingQueue<>();
 
@@ -88,8 +91,6 @@ public class ClientConnection implements Runnable{
         while (true) {
             // Initialize the connection. Contains endless thread
             this.initConnection();
-
-            TUIUpdater.getINSTANCE().reprintViewAsync(true);
 
             System.out.println("Connection established correctly, start listening");
             // Listening to socket. Contains endless while, returns only in case of exception eg: disconnection of leader
@@ -187,14 +188,14 @@ public class ClientConnection implements Runnable{
                 if (response.getData() != null) { //this means it is a response to ReadData: Show the data
                     //In Create a model that on update triggers tui Updater review
                     //TODO:change it to something more smart
-                    TUIUpdater.getINSTANCE().printError("Last read: " + response.getData());
+                    lastReadInt = response.getData();
                 }
 
-                System.out.println("DEBUG: " + response.toJson() + " sentcommands: " + sentCommands.size());
+                lastError = response.getError() == null ?
+                        lastError : "CommandID:" + response.getCommandId() + " returned error: " + response.getError();
 
                 //remove the command id from the uncommited command list:
                 sentCommands.removeIf(c -> c.getCommandID() == response.getCommandId());
-                TUIUpdater.getINSTANCE().reprintViewAsync(true);
             } catch (InterruptedException e) {
                 System.out.println("Error on executing broadcast");
             }
@@ -210,7 +211,6 @@ public class ClientConnection implements Runnable{
         try {
             this.out.println(command.toJson());
             this.sentCommands.add(command);
-            TUIUpdater.getINSTANCE().reprintViewAsync(true);
         } catch (Exception e) {
             System.out.println("Exception on sending request to server; exception: " + e.getMessage());
         }
@@ -218,6 +218,21 @@ public class ClientConnection implements Runnable{
 
     public List<QueueCommand> getSentCommands() {
         return sentCommands;
+    }
+
+    public String getLastError() {
+        return lastError;
+    }
+
+    public Integer getLastReadInt() {
+        return lastReadInt;
+    }
+
+    public BrokerAddress getBrokerAddress() {
+        var ba = new BrokerAddress();
+        ba.IP = this.serverIP;
+        ba.ClientServerPort = this.serverPort;
+        return ba;
     }
 }
 

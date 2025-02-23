@@ -17,6 +17,7 @@ public class ClientApp {
         InputReader.readLine();
 
         //Print tui
-        TUIUpdater.getINSTANCE().reprintViewAsync(true);
+        var updater = new TUIUpdater(true);
+        new Thread(updater).start();
     }
 }

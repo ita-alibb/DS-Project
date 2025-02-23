@@ -39,6 +39,14 @@ public abstract class SocketHandler implements Runnable {
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.msgReceiveCallback = null;
     }
+
+    public SocketHandler(Socket socket, PrintWriter out, BufferedReader in) throws IOException {
+        this.socket = socket;
+        this.out = out;
+        this.in = in;
+        this.msgReceiveCallback = null;
+    }
+
     public SocketHandler(Socket socket, ReceiveJsonMessageCallback msgReceiveCallback) throws IOException {
         this.socket = socket;
         this.out = new PrintWriter(socket.getOutputStream(), true);

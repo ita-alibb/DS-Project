@@ -21,6 +21,7 @@ import static java.lang.System.exit;
  *    Index;Epoch;Json representation of QueueCommand
  */
 public class ReplicationLog {
+    public final static String FILE_HEADER = "Index;Epoch;JsonQueueCommand";
     private static String FILE_PATH = System.getProperty("user.dir") + "/logs/" + LocalDate.now();
     private static LogLine prevLogLine = null;
 
@@ -35,12 +36,13 @@ public class ReplicationLog {
             File file = new File(FILE_PATH);
 
             if (file.exists()) {
-                //file already exist; return
+                //file already exist;
+                //Maybe a crash, Recompute all replication log until the last saved leader commit indexn
                 return;
             }
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
-                writer.write("Index;Epoch;JsonQueueCommand");
+                writer.write(FILE_HEADER);
                 writer.newLine();
             }
         } catch (IOException e) {
@@ -73,7 +75,8 @@ public class ReplicationLog {
     /**
      * Reads all the contents of the CSV file and apply the command to the BrokerModel.
      * Needed in case of reconnection after a crash. New Broker Model is instantiated and all the changes in the log applied
-     * To be done AFTER LOG RECONCILIATION with (possibly new) Leader
+     * To be done AFTER LOG RECONCILIATION with (possibly new) Leader.
+     * Recompute ALL until the LEADERCOMMITINDEX, the last committed entry
      */
     public static void recomputeAllReplicationLog() {
         File file = new File(FILE_PATH);
@@ -82,6 +85,8 @@ public class ReplicationLog {
             return;
         }
 
+        var lastLederCommitIndex = BrokerSettings.getBrokerCommitIndex();
+
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String logLineString;
             reader.readLine(); //skip header line
@@ -89,6 +94,7 @@ public class ReplicationLog {
             BrokerModel.getInstance().acquireLock();
             while ((logLineString = reader.readLine()) != null) {
                 var tmp = new LogLine(logLineString);
+                if (tmp.getIndex() > lastLederCommitIndex) break;
                 BrokerModel.getInstance().processCommand(tmp.getCommand());
             }
 
@@ -109,5 +115,16 @@ public class ReplicationLog {
      */
     public static void setPrevLogLine(String prevLogLineString) {
         ReplicationLog.prevLogLine = new LogLine(prevLogLineString);
+    }
+
+    public static void setPersistentState(){
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
+            writer.write(String.format(FILE_HEADER + "currentTerm=%d;votedFor=%d", BrokerSettings.getBrokerEpoch(), BrokerSettings.getCurrentTermVotedFor()));
+            writer.newLine();
+            //System.out.println("Appended line: " + line);
+        } catch (IOException e) {
+            System.err.println("Error while appending to file: " + e.getMessage());
+            exit(0);
+        }
     }
 }
