@@ -24,7 +24,7 @@ public class ClientConnection implements Runnable{
     /**
      * The clientID, it's -1 at the beginning, then it is updated with the one sent from the leader (only one change per lifetime)
      */
-    private static int clientID = -1;
+    private int clientID;
 
     /**
      * List keeping formatted {IP}:{Port} of other brokers (to use if current leader fails to connect)
@@ -61,14 +61,15 @@ public class ClientConnection implements Runnable{
 
     private final LinkedBlockingQueue<QueueResponse> asynchronousResponseQueue = new LinkedBlockingQueue<>();
 
-    private ClientConnection(String serverIp, String tcpPort) {
+    private ClientConnection(String serverIp, String tcpPort, int clientID) {
         this.serverIP = serverIp;
         this.serverPort = Integer.parseInt(tcpPort);
+        this.clientID = clientID;
     }
 
-    public static void setConnection(String serverIp, String tcpPort) {
+    public static void setConnection(String serverIp, String tcpPort, int clientID) {
         if (INSTANCE == null) {
-            INSTANCE = new ClientConnection(serverIp, tcpPort);
+            INSTANCE = new ClientConnection(serverIp, tcpPort, clientID);
         }
     }
 
@@ -172,8 +173,8 @@ public class ClientConnection implements Runnable{
         }
     }
 
-    public static int getClientId() {
-        return clientID;
+    public int getClientId() {
+        return this.clientID;
     }
 
     public static List<String> getOtherBrokers() {

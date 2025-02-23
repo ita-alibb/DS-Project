@@ -42,7 +42,7 @@ public class TUIUpdater implements Runnable {
         clearConsole();
         var ba = ClientConnection.getINSTANCE().getBrokerAddress();
         System.out.println("──────────────────────────────────────────────────────────────────────");
-        System.out.printf("UserID: %d            Leader IP: %s Leader Port: %d                     %n", ClientConnection.getClientId(), ba.IP, ba.ClientServerPort);
+        System.out.printf("UserID: %d            Leader IP: %s Leader Port: %d                     %n", ClientConnection.getINSTANCE().getClientId(), ba.IP, ba.ClientServerPort);
         System.out.println("Last Read Int: "+ ClientConnection.getINSTANCE().getLastReadInt());
         System.out.println("List of not ack commands: " + ClientConnection.getINSTANCE().getSentCommands().stream().map(BaseDeserializableMessage::toJson).collect(Collectors.joining(", ")));
         System.out.println("Last Error: "+ ClientConnection.getINSTANCE().getLastError());
