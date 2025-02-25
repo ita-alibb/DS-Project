@@ -1,10 +1,12 @@
-package it.distributedsystems.raft;
+package it.distributedsystems.raft.processors;
 
 import it.distributedsystems.connection.BrokerConnection;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.messages.raft.AppendEntriesResponse;
+import it.distributedsystems.raft.BrokerSettings;
+import it.distributedsystems.raft.BrokerStatus;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -33,12 +35,20 @@ public class RaftCommandProcessor implements Runnable{
                 var command = raftCommandsQueue.take();
 
                 switch (command) {
-                    case AppendEntries appendEntries : {
+                    case AppendEntries appendEntries : {//Message received by a FOLLOWER
+                        // TODO: IF APPENDENTRIES IS VALID:
+                        //resetta il timer e settati come FOLLOWER (ricevere ED ACCETTARE un AppendEntries fa di te un follower)
+                        //If the timer is reset means that you received an AppendEntries, so you are a follower
+                        BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
+                        BrokerConnection.getInstance().resetElectionTimeout();
+
                         //Replica tutti i log nel mio log personale.
                         // Manda Ack dell'AppendEntries al Leader
+
+                        //TODO: IF not valid send NACK
                     }; break;
 
-                    case AppendEntriesResponse appendEntriesResponse : {
+                    case AppendEntriesResponse appendEntriesResponse : {//Message received by a LEADER
                         //Il leader riceve qui l'ACK.
                         //Aumenta il counter di ACK in ClientCommandProcessor.(callback o una chiamata tramite BrokerConnection)
                     }; break;

@@ -110,6 +110,14 @@ public class ReplicationLog {
         return prevLogLine;
     }
 
+    public static int getPrevLogLineIndex() {
+        return prevLogLine != null ? prevLogLine.getIndex() : -1;
+    }
+
+    public static int getPrevLogLineTerm() {
+        return prevLogLine != null ? prevLogLine.getEpoch() : -1;
+    }
+
     /**
      * Used passing the last entry of AppendEntries (received or sended)
      */

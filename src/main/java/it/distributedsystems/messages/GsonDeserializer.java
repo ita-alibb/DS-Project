@@ -2,7 +2,7 @@ package it.distributedsystems.messages;
 
 import com.google.gson.Gson;
 import it.distributedsystems.messages.queue.*;
-import it.distributedsystems.messages.raft.AppendEntries;
+import it.distributedsystems.messages.raft.*;
 
 public class GsonDeserializer {
     /**
@@ -18,6 +18,10 @@ public class GsonDeserializer {
             case QUEUE_RESPONSE -> gson.fromJson(json, QueueResponse.class);
             case CONNECTION_RESPONSE -> gson.fromJson(json, ConnectionResponse.class);
             case APPEND_ENTRIES -> gson.fromJson(json, AppendEntries.class);
+            case LEADER_IDENTIFICATION -> gson.fromJson(json, LeaderIdentification.class);
+            case APPEND_ENTRIES_RESPONSE -> gson.fromJson(json, AppendEntriesResponse.class);
+            case REQUEST_VOTE -> gson.fromJson(json, RequestVote.class);
+            case REQUEST_VOTE_RESPONSE -> gson.fromJson(json, RequestVoteResponse.class);
         };
     }
 }

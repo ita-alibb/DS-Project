@@ -1,12 +1,12 @@
 package it.distributedsystems.connection.handler;
 
 import com.sun.jdi.ClassNotPreparedException;
-import it.distributedsystems.connection.ReceiveJsonMessageCallback;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.GsonDeserializer;
-import it.distributedsystems.messages.queue.ConnectionMessage;
 import it.distributedsystems.messages.raft.LeaderIdentification;
 import it.distributedsystems.messages.raft.RequestVote;
+import it.distributedsystems.messages.raft.RequestVoteResponse;
+import it.distributedsystems.raft.BrokerSettings;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -20,9 +20,9 @@ public class LeaderHandler extends SocketHandler {
         //Initialize connection
         BaseDeserializableMessage msg = GsonDeserializer.deserialize(in.readLine()); //receive the connection message
 
-        if (msg instanceof RequestVote) {//Message from another follower (candidate) to RequestVote RPC
+        if (msg instanceof RequestVote vote) {//Message from another follower (candidate) to RequestVote RPC
             // if conditions to vote, vote Yes else vote no
-            handleRequestVote();
+            handleRequestVote(vote);
 
             //Close the socket. Vote or not, but then close the handler. If it becomes the leader you will be re-contacted
             throw new ClassNotPreparedException("Not Leader Connection");
@@ -37,8 +37,9 @@ public class LeaderHandler extends SocketHandler {
     /**
      * If the message is a RequestVote than evaluate it and return. Not create instance of LeaderHandler
      */
-    private void handleRequestVote() {
-
+    private void handleRequestVote(RequestVote msg) {
+        //TODO: Evaluation not always true
+        out.println(new RequestVoteResponse(BrokerSettings.getBrokerID(),true).toJson());
     }
 
     public int getLeaderId() {

@@ -33,6 +33,17 @@ public class QueueCommand extends ConnectionMessage {
         this.data = data; // not null only for AppendData
     }
 
+    /**
+     * Clone QueueCommand
+     */
+    public QueueCommand(QueueCommand toCopy) {
+        super(toCopy.getClientID(), MessageDeserializerType.QUEUE_COMMAND);
+        this.commandID = toCopy.getCommandID();
+        this.type = toCopy.getType();
+        this.queueKey = toCopy.getQueueKey();
+        this.data = toCopy.getData();
+    }
+
     public int getCommandID() {
         return commandID;
     }

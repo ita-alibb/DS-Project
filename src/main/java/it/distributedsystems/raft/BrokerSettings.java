@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class BrokerSettings {
+    //Final public static settings, settings that are set once and never changes
+    public final static int APPEND_ENTRIES_TIME = 2_000; //2 seconds, period of sending of an Append_entries batch
+
+
+
     // Broker socket settings:
     private static BrokerAddress brokerAddress = null;
     private static int numOfNodes;
@@ -52,7 +57,7 @@ public class BrokerSettings {
 
     public static void setLeaderAddress(int newLeaderId){
         settingsLock.lock();
-        leaderAddress = knownBrokers.get(newLeaderId+1);
+        leaderAddress = knownBrokers.stream().filter(ba -> ba.id == newLeaderId).findFirst().get();
         settingsLock.unlock();
     }
 
@@ -71,6 +76,10 @@ public class BrokerSettings {
         var returnVal = brokerAddress.id;
         settingsLock.unlock();
         return returnVal;
+    }
+
+    public static BrokerAddress getBrokerAddress() {
+        return brokerAddress;
     }
 
     public static String getBrokerIP(){

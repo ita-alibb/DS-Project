@@ -44,7 +44,9 @@ public class ClientHandler extends SocketHandler {
         this.clientId = msg.getClientID() == -1 ? nextClientId++ : msg.getClientID();
 
         //Send the response of established connection to the client
-        this.sendMessage(new ConnectionResponse(this.clientId, BrokerSettings.getBrokers().stream().map(BrokerAddress::addressStringForClient).toList()));
+        var setOfBrokers = BrokerSettings.getBrokers(); //put also myself
+        setOfBrokers.add(BrokerSettings.getBrokerAddress());
+        this.sendMessage(new ConnectionResponse(this.clientId, setOfBrokers.stream().map(BrokerAddress::addressStringForClient).toList()));
     }
 
     public int getClientId() {

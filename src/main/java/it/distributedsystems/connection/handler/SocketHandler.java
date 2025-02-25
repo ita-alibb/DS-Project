@@ -12,7 +12,7 @@ import java.net.Socket;
 /**
  * This class is used to handle the socket connected to my ServerSocket
  */
-public abstract class SocketHandler implements Runnable {
+public class SocketHandler implements Runnable {
     /**
      * The connected socket
      */
@@ -97,5 +97,9 @@ public abstract class SocketHandler implements Runnable {
         }
 
         this.msgReceiveCallback = msgReceiveCallback;
+    }
+
+    public boolean isConnected(){
+        return (this.socket != null && !this.socket.isClosed());
     }
 }

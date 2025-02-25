@@ -6,6 +6,14 @@ public class BrokerAddress {
     public int ClientServerPort;
     public int BrokerServerPort;
 
+    public BrokerAddress() {
+    }
+
+    public BrokerAddress(String IP, int clientServerPort) {
+        this.IP = IP;
+        ClientServerPort = clientServerPort;
+    }
+
     public String addressStringForClient(){
         return String.format("%s:%d", IP, ClientServerPort);
     }

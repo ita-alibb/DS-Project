@@ -1,4 +1,4 @@
-package it.distributedsystems.raft;
+package it.distributedsystems.raft.processors;
 
 import it.distributedsystems.connection.BrokerConnection;
 import it.distributedsystems.messages.GsonDeserializer;
@@ -6,6 +6,9 @@ import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.messages.raft.AppendEntriesResponse;
 import it.distributedsystems.messages.raft.UniqueMessageIdentifier;
+import it.distributedsystems.raft.BrokerSettings;
+import it.distributedsystems.raft.LogLine;
+import it.distributedsystems.raft.ReplicationLog;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static it.distributedsystems.raft.BrokerSettings.APPEND_ENTRIES_TIME;
 import static java.lang.System.exit;
 
 public class ClientCommandProcessor implements Runnable {
@@ -32,6 +36,10 @@ public class ClientCommandProcessor implements Runnable {
      * Centralized queue that receives every message from the (possibly) different clients
      */
     private final BlockingQueue<QueueCommand> clientCommandsQueue = new LinkedBlockingQueue<>();
+    private QueueCommand lastClientCommand = null;
+    public String getLastClientCommand() {
+        return lastClientCommand != null ? lastClientCommand.toJson() : "";
+    }
 
     private final ExecutorService periodicalAppendEntriesSender = Executors.newSingleThreadExecutor();
 
@@ -49,12 +57,12 @@ public class ClientCommandProcessor implements Runnable {
         while (true) {
             try {
                 // Take command from the queue and process them
-                var command = clientCommandsQueue.take();
+                lastClientCommand = clientCommandsQueue.take();
 
                 //If a command is here this means this broker is the leader
                 //RAFT:
                 //1) Append the command to your Log
-                LogLine appendedLine = ReplicationLog.leaderAppendCommand(command);
+                LogLine appendedLine = ReplicationLog.leaderAppendCommand(lastClientCommand);
 
                 //2) !Send AppendEntries to every other broker! AppendEntries is sent periodically, here we create a batch!
                 currentBatchLock.lock();
@@ -75,7 +83,7 @@ public class ClientCommandProcessor implements Runnable {
         try{
             while(true) {
                 //wait 20 seconds
-                Thread.sleep(200_000);
+                Thread.sleep(APPEND_ENTRIES_TIME);
                 currentBatchLock.lock();
                 //Aggiorna il batch di messaggi fatto esternamente con un metodo
                 //TODO: prima di mandare setta il commit index
@@ -86,7 +94,9 @@ public class ClientCommandProcessor implements Runnable {
 
                 //clear del current batch e SETTA IL PREVLOGLINE!
                 this.currentBatchMessage.clearBatch();
-                ReplicationLog.setPrevLogLine(this.currentBatchMessage.getNewLogLineBatch().getLast());
+                if (!this.currentBatchMessage.getNewLogLineBatch().isEmpty()) {//if not empty set the prevlogline
+                    ReplicationLog.setPrevLogLine(this.currentBatchMessage.getNewLogLineBatch().getLast());
+                }
                 currentBatchLock.unlock();
             }
         } catch (InterruptedException e) {

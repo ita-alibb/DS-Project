@@ -1,8 +1,11 @@
 package it.distributedsystems.tui;
 
+import it.distributedsystems.connection.BrokerConnection;
 import it.distributedsystems.connection.ClientConnection;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.raft.BrokerModel;
+import it.distributedsystems.raft.BrokerSettings;
+import it.distributedsystems.raft.BrokerStatus;
 
 import java.util.stream.Collectors;
 
@@ -10,6 +13,11 @@ import static java.lang.System.exit;
 
 public class TUIUpdater implements Runnable {
     private final boolean isClient;
+
+    private static String lastMessage = "";
+    public static void setLastMessage(String newLast) {
+        lastMessage = newLast;
+    }
 
     public TUIUpdater(boolean isClient) {
         this.isClient = isClient;
@@ -22,7 +30,7 @@ public class TUIUpdater implements Runnable {
     public void run() {
         try {
             while (true) {
-                Thread.sleep(1_000); //1 sec delay
+                Thread.sleep(100); //0.1 sec delay
 
                 if (this.isClient) {
                     this.printClientViewInternal();
@@ -56,12 +64,29 @@ public class TUIUpdater implements Runnable {
         clearConsole();
 
         var queues = BrokerModel.getInstance().getQueues();
+        var la = BrokerSettings.getLeaderAddress();
+        var ba = BrokerSettings.getBrokerAddress();
+        System.out.println("──────────────────────────────────────────────────────────────────────");
+        System.out.printf("LeaderID: %d | Leader IP: %s | Leader Port: %d %n",la != null ? la.id : -1, la != null ? la.IP : -1, la != null ? la.ClientServerPort : -1);
+        System.out.printf("BrokerID: %d | Broker IP: %s | Broker Port: %d %n",ba.id, ba.IP, ba.ClientServerPort);
+        System.out.printf("Broker Status: %s   BrokerEpoch: %d  BrokerTimeout: %d %n", BrokerSettings.getBrokerStatus(),BrokerSettings.getBrokerEpoch(), BrokerConnection.getInstance().getWaitTimeForCurrentTimer());
+        System.out.println("──────────────────────────────────────────────────────────────────────");
 
-        System.out.println("Queue Key: Values...");
-        for (var queueKey : queues.keySet()) {
-            System.out.printf(" %s : %s %n", queueKey, queues.get(queueKey).toString());
+        if (BrokerSettings.getBrokerStatus() == BrokerStatus.Candidate){
+            System.out.println("Election in progress...");
+            System.out.printf("#ofBrokers: %d   Accept: %d  Deny: %d %n", BrokerSettings.getNumOfNodes(), BrokerConnection.getInstance().getAcceptedCount(),BrokerConnection.getInstance().getDeniedCount());
+        } else {
+            if (BrokerSettings.getBrokerStatus() == BrokerStatus.Leader) {
+                System.out.printf("Last polled command: %s %n", BrokerConnection.getInstance().getLastQueueCommand());
+                System.out.println("──────────────────────────────────────────────────────────────────────");
+            }
+            System.out.println("Queue Key: Values...");
+            for (var queueKey : queues.keySet()) {
+                System.out.printf(" %s : %s %n", queueKey, queues.get(queueKey).toString());
+            }
         }
-        //System.out.println("Last Error: "+ errorMessage);
+
+        System.out.printf("Last message to show: %s %n", lastMessage);
     }
 
     /**
