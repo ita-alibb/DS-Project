@@ -4,10 +4,7 @@ import it.distributedsystems.connection.BrokerConnection;
 import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.raft.RequestVote;
 import it.distributedsystems.messages.raft.RequestVoteResponse;
-import it.distributedsystems.raft.BrokerSettings;
-import it.distributedsystems.raft.BrokerStatus;
-import it.distributedsystems.raft.Follower;
-import it.distributedsystems.raft.ReplicationLog;
+import it.distributedsystems.raft.*;
 import it.distributedsystems.tui.TUIUpdater;
 
 import java.util.LinkedList;
@@ -43,7 +40,7 @@ public class ElectionProcessor implements Runnable {
                 // Take command from the queue and process them
                 var response = requestVoteResponses.take();
 
-                if (response.isAccepted()) {
+                if (response.isVoteGranted()) {
                     acceptedCount++;
                 } else {
                     deniedCount++;
@@ -82,7 +79,7 @@ public class ElectionProcessor implements Runnable {
             resetElection();
 
             //send to every node a RequestVote
-            var requestVote = new RequestVote(BrokerSettings.getBrokerEpoch(), ReplicationLog.getPrevLogLineIndex(), ReplicationLog.getPrevLogLineTerm());
+            var requestVote = new RequestVote(BrokerSettings.getBrokerID(), BrokerState.getCurrentTerm(), ReplicationLog.getPrevLogLineIndex(), ReplicationLog.getPrevLogLineTerm());
 
             for (final Follower follower : followers) {
                 futureTask.add(
@@ -120,7 +117,7 @@ public class ElectionProcessor implements Runnable {
         //schedule next timeout in case of tie in this election
         BrokerConnection.getInstance().resetElectionTimeout();
         //set new term for this election
-        BrokerSettings.setBrokerEpoch(BrokerSettings.getBrokerEpoch() + 1);
+        BrokerState.setCurrentTerm(BrokerState.getCurrentTerm() + 1);
         //reset counters
         acceptedCount = 1;
         deniedCount = 0;

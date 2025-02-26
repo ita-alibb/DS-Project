@@ -19,17 +19,25 @@ import java.util.LinkedList;
  * This class represent the follower. Used when the current node is the Leader.
  */
 public class Follower {
+    //region Volatile state on leader, initialized after every election
+    /**
+     * index of the next log entry
+     *  to send to that server
+     *  (initialized to LeaderLastLogIndex+1)
+     */
+    private int nextIndex;
+    /**
+     * index of highest log entry
+     *  known to be replicated on server
+     *  (initialized to 0,increases monotonically)
+     */
+    private int matchIndex;
+    //endregion
+
     /**
      * The broker id (Follower)
      */
     private final BrokerAddress followerAddress;
-
-    /**
-     * This is the next index to send.
-     * It is used to keep track of how much AppendEntries you have to send.
-     * Updated after receiving ACK
-     */
-    private int nextIndex;
 
     private SocketHandler followerHandler;
 
@@ -65,12 +73,17 @@ public class Follower {
             followerHandler = new SocketHandler(followerSocket, msgReceiveCallback);
 
             //send to the handler the message to identify as the Leader
-            followerHandler.sendMessage(new LeaderIdentification(BrokerSettings.getBrokerID(),BrokerSettings.getBrokerEpoch(), ReplicationLog.getPrevLogLineString().getIndex()));
+            followerHandler.sendMessage(new LeaderIdentification(BrokerSettings.getBrokerID(),BrokerState.getCurrentTerm(),
+                    ReplicationLog.getPrevLogLineIndex()));
 
             //send every lost appendEntries
             while (!lostAppendEntries.isEmpty()) {
                 followerHandler.sendMessage(lostAppendEntries.pop());
             }
+
+            //TODO: non so se e' giusto questo +1
+            this.nextIndex = ReplicationLog.getPrevLogLineIndex() + 1;
+            this.matchIndex = 0;
 
             //start the socketHandler Listening thread
             new Thread(followerHandler).start();

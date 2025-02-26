@@ -3,6 +3,7 @@ package it.distributedsystems.utils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import it.distributedsystems.raft.BrokerSettings;
+import it.distributedsystems.raft.BrokerState;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -42,28 +43,19 @@ public class BrokerSettingsBootstrapper extends BrokerSettings {
 
 
     /**
-     * Consider the header of the log file as the persistent state. It stores also "currentTerm=X;votedFor=Y"
+     * Consider the header of the log file as the persistent state. It stores also ";currentTerm=X;votedFor=Y"
      */
     private static void restorePersistentState(){
-        File file = new File(System.getProperty("user.dir") + "/logs/" + LocalDate.now() + "/" + BrokerSettings.getBrokerID() + ".txt");
+        File file = new File(System.getProperty("user.dir") + "/logs/" + LocalDate.now() + "/" + BrokerSettings.getBrokerID() + "state.txt");
         if (!file.exists()) {
             System.out.println("File does not exist on restore");
             return;
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            var persistentState = reader.readLine().replace(FILE_HEADER,""); //remove header
+            var persistentState = reader.readLine();
 
-            if (persistentState.isEmpty()) return;
-
-            persistentState= persistentState.replace("currentTerm=","");
-            persistentState= persistentState.replace("votedFor=","");
-
-            var match = persistentState.split(";");
-            BrokerSettings.setBrokerEpoch(Integer.parseInt(match[0]));
-            if (match.length > 1 && !match[1].isEmpty()) {
-                BrokerSettings.setCurrentTermVotedFor(Integer.parseInt(match[1]));
-            }
+            BrokerState.reloadPersistentState(persistentState);
         } catch (InvalidObjectException e) {
             System.err.println("Error while extracting the command: " + e.getMessage());
         } catch (IOException e) {

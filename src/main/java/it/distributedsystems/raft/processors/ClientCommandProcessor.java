@@ -7,6 +7,7 @@ import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.messages.raft.AppendEntriesResponse;
 import it.distributedsystems.messages.raft.UniqueMessageIdentifier;
 import it.distributedsystems.raft.BrokerSettings;
+import it.distributedsystems.raft.BrokerState;
 import it.distributedsystems.raft.LogLine;
 import it.distributedsystems.raft.ReplicationLog;
 
@@ -23,7 +24,7 @@ import static it.distributedsystems.raft.BrokerSettings.APPEND_ENTRIES_TIME;
 import static java.lang.System.exit;
 
 public class ClientCommandProcessor implements Runnable {
-    private final AppendEntries currentBatchMessage;
+    private final AppendEntries currentAppendEntries;
     private final Lock currentBatchLock = new ReentrantLock();
 
     /**
@@ -44,7 +45,7 @@ public class ClientCommandProcessor implements Runnable {
     private final ExecutorService periodicalAppendEntriesSender = Executors.newSingleThreadExecutor();
 
     public ClientCommandProcessor() {
-        this.currentBatchMessage = new AppendEntries(BrokerSettings.getBrokerEpoch(),BrokerSettings.getBrokerID());
+        this.currentAppendEntries = new AppendEntries(BrokerState.getCurrentTerm(),BrokerSettings.getBrokerID());
 
         periodicalAppendEntriesSender.execute(this::periodicalSend);
     }
@@ -66,7 +67,7 @@ public class ClientCommandProcessor implements Runnable {
 
                 //2) !Send AppendEntries to every other broker! AppendEntries is sent periodically, here we create a batch!
                 currentBatchLock.lock();
-                currentBatchMessage.addNewLogLine(appendedLine);
+                currentAppendEntries.addNewLogLine(appendedLine);
                 currentBatchLock.unlock();
 
             } catch (InterruptedException e) {
@@ -82,22 +83,34 @@ public class ClientCommandProcessor implements Runnable {
     public void periodicalSend() {
         try{
             while(true) {
-                //wait 20 seconds
-                Thread.sleep(APPEND_ENTRIES_TIME);
                 currentBatchLock.lock();
                 //Aggiorna il batch di messaggi fatto esternamente con un metodo
                 //TODO: prima di mandare setta il commit index
                 //TODO: this.currentBatchMessage.setLeaderCommitIndex(leaderCommitIndex?);
+                //ensure prev index is first index +1
+                var firstNewLineIndex = currentAppendEntries.getLastNewLineIndex();
+                if (firstNewLineIndex != currentAppendEntries.getPrevLogIndex() + 1 ) {
+                    System.out.println("Strange behavior " + firstNewLineIndex + "prev index= " + currentAppendEntries.getPrevLogIndex());
+                }
 
                 //manda a tutti I follower
-                BrokerConnection.getInstance().forwardAllFollowers(new AppendEntries(this.currentBatchMessage));
+                BrokerConnection.getInstance().forwardAllFollowers(new AppendEntries(this.currentAppendEntries));
 
-                //clear del current batch e SETTA IL PREVLOGLINE!
-                this.currentBatchMessage.clearBatch();
-                if (!this.currentBatchMessage.getNewLogLineBatch().isEmpty()) {//if not empty set the prevlogline
-                    ReplicationLog.setPrevLogLine(this.currentBatchMessage.getNewLogLineBatch().getLast());
+                //Set prevLog infos for next AppendEntries
+                var newPrevLogLine = this.currentAppendEntries.getLastLogLineInBatch();
+                if (newPrevLogLine != null) {//if not empty set the prevlog
+                    this.currentAppendEntries.setPrevLogIndex(newPrevLogLine.getIndex());
+                    this.currentAppendEntries.setPrevLogTerm(newPrevLogLine.getTerm());
                 }
+
+                //clear del batch
+                this.currentAppendEntries.clearBatch();
+
+
                 currentBatchLock.unlock();
+
+                //wait 20 seconds
+                Thread.sleep(APPEND_ENTRIES_TIME);
             }
         } catch (InterruptedException e) {
             exit(-1);

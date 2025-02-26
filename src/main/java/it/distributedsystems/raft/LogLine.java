@@ -7,10 +7,10 @@ import it.distributedsystems.messages.queue.QueueCommand;
  * This class represent one line of the Log File. It keeps track of the log index
  */
 public class LogLine {
-    private static int lastInsertedIndex = -1;
+    private static int lastInsertedIndex = 0;
 
     private final int index;
-    private final int epoch;
+    private final int term;
     private final QueueCommand command;
 
     /**
@@ -19,25 +19,25 @@ public class LogLine {
     public LogLine(String fullFormattedLogLine) {
         var parts = fullFormattedLogLine.trim().split(";");
         this.index = Integer.parseInt(parts[0]);
-        this.epoch = Integer.parseInt(parts[1]);
+        this.term = Integer.parseInt(parts[1]);
         this.command = (QueueCommand) GsonDeserializer.deserialize(parts[2]);
     }
 
     /**
      * Constructor used to clone a LogLine, does not increase the index count
      */
-    public LogLine(int index, int epoch, QueueCommand command) {
+    public LogLine(int index, int term, QueueCommand command) {
         this.index = index;
-        this.epoch = epoch;
+        this.term = term;
         this.command = command;
     }
 
     /**
      * Constructor used to clone a LogLine, does not increase the index count
      */
-    public LogLine(int index, int epoch, String commandJson) {
+    public LogLine(int index, int term, String commandJson) {
         this.index = index;
-        this.epoch = epoch;
+        this.term = term;
         this.command = (QueueCommand) GsonDeserializer.deserialize(commandJson);
     }
 
@@ -55,7 +55,7 @@ public class LogLine {
      */
     @Override
     public String toString(){
-        return String.format("%d;%d;%s", index, epoch, command.toJson());
+        return String.format("%d;%d;%s", index, term, command.toJson());
     }
 
     //Getters
@@ -71,8 +71,8 @@ public class LogLine {
         return index;
     }
 
-    public int getEpoch() {
-        return epoch;
+    public int getTerm() {
+        return term;
     }
 
     public QueueCommand getCommand() {

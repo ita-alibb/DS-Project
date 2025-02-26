@@ -6,7 +6,8 @@ import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.raft.LeaderIdentification;
 import it.distributedsystems.messages.raft.RequestVote;
 import it.distributedsystems.messages.raft.RequestVoteResponse;
-import it.distributedsystems.raft.BrokerSettings;
+import it.distributedsystems.raft.BrokerState;
+import it.distributedsystems.raft.ReplicationLog;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -38,8 +39,19 @@ public class LeaderHandler extends SocketHandler {
      * If the message is a RequestVote than evaluate it and return. Not create instance of LeaderHandler
      */
     private void handleRequestVote(RequestVote msg) {
-        //TODO: Evaluation not always true
-        out.println(new RequestVoteResponse(BrokerSettings.getBrokerID(),true).toJson());
+        var currentTerm = BrokerState.getCurrentTerm();
+        boolean voteGranted = msg.getCandidateTerm() >= currentTerm;//if candidate term is less, it is outdated, not grant vote
+        voteGranted = voteGranted && (BrokerState.getVotedFor() == null || BrokerState.getVotedFor() == msg.getCandidateTerm());
+        voteGranted = voteGranted &&
+                (msg.getCandidateLastLogTerm() >= ReplicationLog.getPrevLogLineTerm() &&
+                        msg.getCandidateLastLogIndex() >= ReplicationLog.getPrevLogLineIndex());
+
+        if (voteGranted) {
+            BrokerState.setCurrentTerm(msg.getCandidateTerm());
+            BrokerState.setVotedFor(msg.getCandidateId());
+        }
+
+        out.println(new RequestVoteResponse(currentTerm, voteGranted).toJson());
     }
 
     public int getLeaderId() {

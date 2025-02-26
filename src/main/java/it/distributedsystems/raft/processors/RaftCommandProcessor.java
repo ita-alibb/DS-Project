@@ -5,11 +5,12 @@ import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.messages.raft.AppendEntriesResponse;
-import it.distributedsystems.raft.BrokerSettings;
-import it.distributedsystems.raft.BrokerStatus;
+import it.distributedsystems.raft.*;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import static java.lang.System.exit;
 
 public class RaftCommandProcessor implements Runnable{
     /**
@@ -39,13 +40,28 @@ public class RaftCommandProcessor implements Runnable{
                         // TODO: IF APPENDENTRIES IS VALID:
                         //resetta il timer e settati come FOLLOWER (ricevere ED ACCETTARE un AppendEntries fa di te un follower)
                         //If the timer is reset means that you received an AppendEntries, so you are a follower
-                        BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
-                        BrokerConnection.getInstance().resetElectionTimeout();
+                        if (testAppendEntries(appendEntries)) {
+                            BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
+                            BrokerConnection.getInstance().resetElectionTimeout();
 
-                        //Replica tutti i log nel mio log personale.
-                        // Manda Ack dell'AppendEntries al Leader
+                            //Replica tutti i log nel mio log personale.
+                            ReplicationLog.followerCopyAppendEntriesLog(appendEntries);
 
-                        //TODO: IF not valid send NACK
+                            // Manda Ack dell'AppendEntries al Leader
+
+                            /*If leaderCommit>commitIndex,*/
+                            if (appendEntries.getLeaderCommitIndex() > BrokerState.getCommitIndex()) {
+                                var lastNewLogIndex = appendEntries.getLastNewLineIndex();
+
+                                //As stated in the paper set commitIndex= min(leaderCommit,index of last new entry)
+                                //If there are no new entry consider the current commit index
+                                BrokerState.setCommitIndex(Math.min(BrokerState.getCommitIndex(),
+                                        (lastNewLogIndex == -1) ? BrokerState.getCommitIndex() : lastNewLogIndex));
+                            }
+                        } else {
+
+                            //TODO: IF not valid send NACK
+                        }
                     }; break;
 
                     case AppendEntriesResponse appendEntriesResponse : {//Message received by a LEADER
@@ -63,6 +79,13 @@ public class RaftCommandProcessor implements Runnable{
         }
     }
 
+    private boolean testAppendEntries(AppendEntries appendEntries) {
+        if (appendEntries == null) exit(-1);
+        if (appendEntries.getLeaderTerm() < BrokerState.getCurrentTerm()) return false;
+        LogLine prevLogLine = ReplicationLog.getLog(appendEntries.getPrevLogIndex());
+        if (prevLogLine == null || prevLogLine.getTerm() != appendEntries.getPrevLogTerm()) return false;
+        return true;
+    }
     /**
      * Call back function called by every ClientHandler upon receiving of a message
      */

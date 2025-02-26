@@ -4,21 +4,21 @@ import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.MessageDeserializerType;
 
 public class RequestVoteResponse extends BaseDeserializableMessage {
-    private final int followerID;
+    private final int term;
 
-    private final boolean accepted;
+    private final boolean voteGranted;
 
-    public RequestVoteResponse(int followerId, boolean accepted) {
+    public RequestVoteResponse(int term, boolean voteGranted) {
         super(MessageDeserializerType.REQUEST_VOTE_RESPONSE);
-        this.accepted = accepted;
-        this.followerID = followerId;
+        this.term = term;
+        this.voteGranted = voteGranted;
     }
 
-    public int getFollowerID() {
-        return followerID;
+    public int getResponseTerm() {
+        return term;
     }
 
-    public boolean isAccepted() {
-        return accepted;
+    public boolean isVoteGranted() {
+        return voteGranted;
     }
 }
