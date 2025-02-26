@@ -3,6 +3,7 @@ package it.distributedsystems.raft.processors;
 import it.distributedsystems.connection.BrokerConnection;
 import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.queue.QueueCommand;
+import it.distributedsystems.messages.queue.QueueResponse;
 import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.messages.raft.AppendEntriesResponse;
 import it.distributedsystems.messages.raft.UniqueMessageIdentifier;
@@ -17,21 +18,21 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static it.distributedsystems.raft.BrokerSettings.APPEND_ENTRIES_TIME;
-import static java.lang.System.exit;
 
 public class ClientCommandProcessor implements Runnable {
     private final AppendEntries currentAppendEntries;
     private final Lock currentBatchLock = new ReentrantLock();
+    private AtomicBoolean alive = new AtomicBoolean(true);
 
     /**
-     * This map keeps track of messages and Acks (if > BrokerSettings.getNumofNodes /2 send response to client, add to committed messages)
+     * This queue is filled by other threads when a response must be sent
      */
-    private final Map<UniqueMessageIdentifier, Integer> ackCounts = new HashMap<>();
-    private final Lock ackLock = new ReentrantLock();
+    private final BlockingQueue<QueueResponse> responseToSendQueue = new LinkedBlockingQueue<>();
 
     /**
      * Centralized queue that receives every message from the (possibly) different clients
@@ -43,11 +44,13 @@ public class ClientCommandProcessor implements Runnable {
     }
 
     private final ExecutorService periodicalAppendEntriesSender = Executors.newSingleThreadExecutor();
+    private final ExecutorService sendResponseThread = Executors.newSingleThreadExecutor();
 
     public ClientCommandProcessor() {
         this.currentAppendEntries = new AppendEntries(BrokerState.getCurrentTerm(),BrokerSettings.getBrokerID());
 
         periodicalAppendEntriesSender.execute(this::periodicalSend);
+        sendResponseThread.execute(this::responseSender);
     }
 
     /**
@@ -55,7 +58,7 @@ public class ClientCommandProcessor implements Runnable {
      */
     @Override
     public void run() {
-        while (true) {
+        while (alive.get()) {
             try {
                 // Take command from the queue and process them
                 lastClientCommand = clientCommandsQueue.take();
@@ -82,11 +85,12 @@ public class ClientCommandProcessor implements Runnable {
      */
     public void periodicalSend() {
         try{
-            while(true) {
+            while(alive.get()) {
                 currentBatchLock.lock();
-                //Aggiorna il batch di messaggi fatto esternamente con un metodo
-                //TODO: prima di mandare setta il commit index
-                //TODO: this.currentBatchMessage.setLeaderCommitIndex(leaderCommitIndex?);
+                //Batch of messages set previously
+                //Set commitIndex
+                currentAppendEntries.setLeaderCommitIndex(BrokerState.getCommitIndex());
+
                 //ensure prev index is first index +1
                 var firstNewLineIndex = currentAppendEntries.getLastNewLineIndex();
                 if (firstNewLineIndex != currentAppendEntries.getPrevLogIndex() + 1 ) {
@@ -98,14 +102,13 @@ public class ClientCommandProcessor implements Runnable {
 
                 //Set prevLog infos for next AppendEntries
                 var newPrevLogLine = this.currentAppendEntries.getLastLogLineInBatch();
-                if (newPrevLogLine != null) {//if not empty set the prevlog
+                if (newPrevLogLine != null) {//if not empty set the prevlog,
                     this.currentAppendEntries.setPrevLogIndex(newPrevLogLine.getIndex());
                     this.currentAppendEntries.setPrevLogTerm(newPrevLogLine.getTerm());
-                }
+                }// else means that you just sent a heartbeat and not change previous log line
 
                 //clear del batch
                 this.currentAppendEntries.clearBatch();
-
 
                 currentBatchLock.unlock();
 
@@ -113,21 +116,28 @@ public class ClientCommandProcessor implements Runnable {
                 Thread.sleep(APPEND_ENTRIES_TIME);
             }
         } catch (InterruptedException e) {
-            exit(-1);
+            System.out.println("Exception while waiting for new commands");
+            Thread.currentThread().interrupt();
         }
     }
 
-    public void registerAck(AppendEntriesResponse response) {
-        //per ogni messaggio presente nell AppendEntries, se la risposta e' positiva aggiungi al counter degli Ack, per ogni comando,
-        //l'id del follower che ti ha appena fatto ACK (aggiungi id in un set, cosi' se per caso ne manda 2 comunque non cambia la somma)
-        // poi SE ogni precedente comando e' committato ed il presente comando ha >N/2 ACK allora committa anche questo.
-        //Quindi un while sul peek di una coda!.
-        //operazione da performare per ogni comando da committare:
+    public void responseSender() {
         /*
           3) !Once I receive the majority of ACK! apply to my internal Model
-          var response = BrokerModel.getInstance().processCommand(command);
-          4) After AKCs and after applying the command is COMMITTED: RETURN response to the client AND UPDATE COMMITTEDINDEX!
-          BrokerConnection.getInstance().sendQueueResponseToClient(response);*/
+          Done in RaftCommandProcessor
+          4) After AKCs and after applying the command is COMMITTED: RETURN response to the client!
+          */
+        while (alive.get()){
+            try{
+                var response = responseToSendQueue.take();
+
+                BrokerConnection.getInstance().sendQueueResponseToClient(response);
+
+            } catch (InterruptedException e) {
+                System.out.println("Exception while waiting for new responses");
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     /**
@@ -137,5 +147,21 @@ public class ClientCommandProcessor implements Runnable {
         QueueCommand cmd = (QueueCommand) GsonDeserializer.deserialize(jsonMessage);
         // Add the message to the shared queue of clients
         clientCommandsQueue.put(cmd);
+    }
+
+    /**
+     * Call back function called to add a response to the queue
+     */
+    public void handleResponseQueueCallback(QueueResponse response) {
+        // Add the message to the shared queue of clients
+        try {
+            responseToSendQueue.put(response);
+        } catch (InterruptedException e) {
+            System.out.println("Cannot add response to queue");
+        }
+    }
+
+    public void destroy() {
+        alive.set(false);
     }
 }

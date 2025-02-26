@@ -4,7 +4,6 @@ import com.sun.jdi.ClassNotPreparedException;
 import it.distributedsystems.connection.handler.ClientHandler;
 import it.distributedsystems.connection.handler.LeaderHandler;
 import it.distributedsystems.messages.BaseDeserializableMessage;
-import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.queue.QueueResponse;
 import it.distributedsystems.raft.*;
 import it.distributedsystems.raft.processors.ClientCommandProcessor;
@@ -170,6 +169,14 @@ public class BrokerConnection {
     }
 
     /**
+     * Call this method to revert this node from Leader to Folower
+     */
+    public void setFollower() {
+        BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
+        clientCommandProcessor.destroy();
+    }
+
+    /**
      * Function run on an endless loop thread.
      * Keeps accepting clients (if leader) or redirect to leader (if follower)
      */
@@ -279,5 +286,21 @@ public class BrokerConnection {
                 fh.sendMessage(message);
             });
         });
+    }
+
+    public void decreaseFollowerNextIndex(int followerId) {
+        followerHandlers.stream().filter(f -> f.getFollowerId() == followerId).findFirst().ifPresent(Follower::decreaseNextIndex);
+    }
+
+    public void increaseFollowerIndexes(int followerId, int lastReceivedIndex) {
+        followerHandlers.stream().filter(f -> f.getFollowerId() == followerId).findFirst().ifPresent(fw ->fw.increaseIndexes(lastReceivedIndex));
+    }
+
+    public List<Follower> getFollowers() {
+        return new ArrayList<>(followerHandlers);
+    }
+
+    public void registerResponse(QueueResponse response) {
+        clientCommandProcessor.handleResponseQueueCallback(response);
     }
 }

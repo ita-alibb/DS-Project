@@ -187,8 +187,6 @@ public class ClientConnection implements Runnable{
                 var response = this.asynchronousResponseQueue.take();
 
                 if (response.getData() != null) { //this means it is a response to ReadData: Show the data
-                    //In Create a model that on update triggers tui Updater review
-                    //TODO:change it to something more smart
                     lastReadInt = response.getData();
                 }
 

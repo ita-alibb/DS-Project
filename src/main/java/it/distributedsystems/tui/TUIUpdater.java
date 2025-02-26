@@ -5,6 +5,7 @@ import it.distributedsystems.connection.ClientConnection;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.raft.BrokerModel;
 import it.distributedsystems.raft.BrokerSettings;
+import it.distributedsystems.raft.BrokerState;
 import it.distributedsystems.raft.BrokerStatus;
 
 import java.util.stream.Collectors;
@@ -69,7 +70,8 @@ public class TUIUpdater implements Runnable {
         System.out.println("──────────────────────────────────────────────────────────────────────");
         System.out.printf("LeaderID: %d | Leader IP: %s | Leader Port: %d %n",la != null ? la.id : -1, la != null ? la.IP : -1, la != null ? la.ClientServerPort : -1);
         System.out.printf("BrokerID: %d | Broker IP: %s | Broker Port: %d %n",ba.id, ba.IP, ba.ClientServerPort);
-        System.out.printf("Broker Status: %s   BrokerEpoch: %d  BrokerTimeout: %d %n", BrokerSettings.getBrokerStatus(),BrokerSettings.getBrokerEpoch(), BrokerConnection.getInstance().getWaitTimeForCurrentTimer());
+        System.out.printf("Broker Status: %s   BrokerEpoch: %d  BrokerTimeout: %d %n", BrokerSettings.getBrokerStatus(), BrokerState.getCurrentTerm(), BrokerConnection.getInstance().getWaitTimeForCurrentTimer());
+        System.out.printf("Broker CommitIndex: %d   LastApplied: %d  VotedForInCurrentTerm: %d %n", BrokerState.getCommitIndex(),BrokerState.getLastApplied(), BrokerState.getVotedFor());
         System.out.println("──────────────────────────────────────────────────────────────────────");
 
         if (BrokerSettings.getBrokerStatus() == BrokerStatus.Candidate){

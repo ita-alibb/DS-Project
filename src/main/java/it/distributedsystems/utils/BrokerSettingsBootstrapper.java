@@ -46,7 +46,7 @@ public class BrokerSettingsBootstrapper extends BrokerSettings {
      * Consider the header of the log file as the persistent state. It stores also ";currentTerm=X;votedFor=Y"
      */
     private static void restorePersistentState(){
-        File file = new File(System.getProperty("user.dir") + "/logs/" + LocalDate.now() + "/" + BrokerSettings.getBrokerID() + "state.txt");
+        File file = new File(System.getProperty("user.dir") + "/logs/" + LocalDate.now() + "/" + BrokerSettings.getBrokerID() + "state.csv");
         if (!file.exists()) {
             System.out.println("File does not exist on restore");
             return;

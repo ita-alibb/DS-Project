@@ -37,17 +37,22 @@ public class RaftCommandProcessor implements Runnable{
 
                 switch (command) {
                     case AppendEntries appendEntries : {//Message received by a FOLLOWER
-                        // TODO: IF APPENDENTRIES IS VALID:
-                        //resetta il timer e settati come FOLLOWER (ricevere ED ACCETTARE un AppendEntries fa di te un follower)
-                        //If the timer is reset means that you received an AppendEntries, so you are a follower
                         if (testAppendEntries(appendEntries)) {
                             BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
                             BrokerConnection.getInstance().resetElectionTimeout();
+                            BrokerState.setCurrentTerm(appendEntries.getLeaderTerm());
+                            BrokerSettings.setLeaderAddress(appendEntries.getLeaderID());
 
-                            //Replica tutti i log nel mio log personale.
-                            ReplicationLog.followerCopyAppendEntriesLog(appendEntries);
+                            //Replicate all log.
+                            ReplicationLog.followerLogReconciliation(appendEntries);
 
-                            // Manda Ack dell'AppendEntries al Leader
+                            // Send AppendEntries ACK to Leader
+                            BrokerConnection.getInstance().sendMessageToLeader(new AppendEntriesResponse(
+                                    BrokerSettings.getBrokerID(),
+                                    BrokerState.getCurrentTerm(),
+                                    true,
+                                    ReplicationLog.getLastLogLineIndex()
+                            ));
 
                             /*If leaderCommit>commitIndex,*/
                             if (appendEntries.getLeaderCommitIndex() > BrokerState.getCommitIndex()) {
@@ -59,14 +64,41 @@ public class RaftCommandProcessor implements Runnable{
                                         (lastNewLogIndex == -1) ? BrokerState.getCommitIndex() : lastNewLogIndex));
                             }
                         } else {
-
-                            //TODO: IF not valid send NACK
+                            // Send AppendEntries NACK to Leader
+                            BrokerConnection.getInstance().sendMessageToLeader(new AppendEntriesResponse(
+                                    BrokerSettings.getBrokerID(),
+                                    BrokerState.getCurrentTerm(),
+                                    false,
+                                    ReplicationLog.getLastLogLineIndex()
+                            ));
                         }
                     }; break;
 
                     case AppendEntriesResponse appendEntriesResponse : {//Message received by a LEADER
-                        //Il leader riceve qui l'ACK.
-                        //Aumenta il counter di ACK in ClientCommandProcessor.(callback o una chiamata tramite BrokerConnection)
+                        //Receive ACK, increase indexes
+                        if (appendEntriesResponse.isSuccess()) {
+                            //ACK received
+                            //Update matchIndex
+                            BrokerConnection.getInstance().increaseFollowerIndexes(
+                                    appendEntriesResponse.getBrokerId(),
+                                    appendEntriesResponse.getLastLogIndex()
+                            );
+
+                            //Now that you have changed the match index for a Follower, chech the ocndition to update the commit index of the leaderyt
+                            new Thread(this::checkUpdateLeaderCommitIndex);
+
+                        } else {
+                            //NACK received
+                            // If RPC request or response contains term T>currentTerm:
+                            // set current Term = T,convert to follower
+                            if (appendEntriesResponse.getCurrentTerm() > BrokerState.getCurrentTerm()) {
+                                BrokerState.setCurrentTerm(appendEntriesResponse.getCurrentTerm());
+                                BrokerConnection.getInstance().setFollower();
+                            }
+
+                            //else decrease the Follower nextIndex
+                            BrokerConnection.getInstance().decreaseFollowerNextIndex(appendEntriesResponse.getBrokerId());
+                        }
                     }; break;
 
                     default: //TODO: unexpected message here.
@@ -76,6 +108,35 @@ public class RaftCommandProcessor implements Runnable{
                 System.out.println("Exception while waiting for new RAFT commands");
                 Thread.currentThread().interrupt();
             }
+        }
+    }
+
+    private void checkUpdateLeaderCommitIndex() {
+        // If there exists an N such that N>commitIndex, a majority
+        // of matchIndex[i]≥N, and log[N].term==currentTerm:
+        // set commitIndex=N
+        var currentMax = -1;
+        try{
+            for (int N = BrokerState.getCommitIndex(); N < ReplicationLog.getLastLogLineIndex(); N++) {
+                var nCount = 0;
+
+                for (Follower f : BrokerConnection.getInstance().getFollowers()) {
+                    if (f.getMatchIndex() >= N) {
+                        nCount++;
+                    }
+                }
+
+                var nLog = ReplicationLog.getLog(N);
+                if (nCount > BrokerSettings.getNumOfNodes()/2 && nLog != null && nLog.getTerm() == BrokerState.getCurrentTerm()){
+                    currentMax = Math.max(N,currentMax);
+                }
+            }
+
+            if (currentMax > BrokerState.getCommitIndex()) {
+                BrokerState.setCommitIndex(currentMax);//When setting the commit index it automatically start a thread that take lastApplied to commitIndex
+            }
+        } catch (Exception e) {
+            System.out.println("Unexpected exception while check update commit index " + e.getMessage());
         }
     }
 

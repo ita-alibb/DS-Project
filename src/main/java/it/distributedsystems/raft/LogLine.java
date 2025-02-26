@@ -11,7 +11,8 @@ public class LogLine {
 
     private final int index;
     private final int term;
-    private final QueueCommand command;
+    private transient final QueueCommand command;
+    private final String commandJson;
 
     /**
      * Constructor used to clone a LogLine, does not increase the index count
@@ -21,6 +22,18 @@ public class LogLine {
         this.index = Integer.parseInt(parts[0]);
         this.term = Integer.parseInt(parts[1]);
         this.command = (QueueCommand) GsonDeserializer.deserialize(parts[2]);
+        this.commandJson = parts[2];
+    }
+    public LogLine(String fullFormattedLogLine, boolean ignoreObject) {
+        var parts = fullFormattedLogLine.trim().split(";");
+        this.index = Integer.parseInt(parts[0]);
+        this.term = Integer.parseInt(parts[1]);
+        if (ignoreObject) {
+            this.command = null;
+        } else {
+            this.command = (QueueCommand) GsonDeserializer.deserialize(parts[2]);
+        }
+        this.commandJson = parts[2];
     }
 
     /**
@@ -30,6 +43,7 @@ public class LogLine {
         this.index = index;
         this.term = term;
         this.command = command;
+        this.commandJson = command.toJson();
     }
 
     /**
@@ -39,6 +53,7 @@ public class LogLine {
         this.index = index;
         this.term = term;
         this.command = (QueueCommand) GsonDeserializer.deserialize(commandJson);
+        this.commandJson = commandJson;
     }
 
     /**

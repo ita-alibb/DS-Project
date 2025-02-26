@@ -1,7 +1,12 @@
 package it.distributedsystems.raft;
 
+import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.raft.AppendEntries;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -16,8 +21,8 @@ import static java.lang.System.exit;
  * The logic is simple. The whole application has a base directory (hardcoded). Every Broker creates in this directory a directory with the date and then inside one file txt with the log.
  * -\homedir
  *   -\{date}
- *    -brokerID.txt
- *    -brokerID.txt
+ *    -brokerID.csv
+ *    -brokerID.csv
  *    -...
  *    Log structure: as a csv. Every log is in a new line.
  *    Index;Epoch;Json representation of QueueCommand
@@ -27,6 +32,13 @@ public class ReplicationLog {
     public final static String FILE_HEADER = "Index;Epoch;JsonQueueCommand";
     private static String LOG_FILE_PATH = System.getProperty("user.dir") + "/logs/" + LocalDate.now()+ "/";
     private static String STATE_FILE_PATH;
+    private final static char delimiter = ';';
+    private static final CSVFormat csvFormat = CSVFormat.DEFAULT
+            .builder()
+            .setDelimiter(delimiter)
+            .setHeader(FILE_HEADER)
+            .setSkipHeaderRecord(true)
+            .build();
     //endregion
 
     //region pervLogLine : lastLogLine appended to file and cache
@@ -44,8 +56,8 @@ public class ReplicationLog {
         try {
             Files.createDirectories(Paths.get(LOG_FILE_PATH));
             var dir = LOG_FILE_PATH;
-            LOG_FILE_PATH = dir + BrokerSettings.getBrokerID() + ".txt";
-            STATE_FILE_PATH = dir + BrokerSettings.getBrokerID() + "state" + ".txt";
+            LOG_FILE_PATH = dir + BrokerSettings.getBrokerID() + ".csv";
+            STATE_FILE_PATH = dir + BrokerSettings.getBrokerID() + "state" + ".csv";
             File file = new File(LOG_FILE_PATH);
 
             if (file.exists()) {
@@ -64,89 +76,93 @@ public class ReplicationLog {
     }
 
     /**
-     * Append the command to the file in the standard directory in brokerid.txt file.
+     * Append the command to the file in the standard directory in brokerid.csv file.
      * @param command the new command to append
      * @return the appended LogLine
      */
     public static LogLine leaderAppendCommand(QueueCommand command) {
         //The Index count is incremented. Kept inside LogLine.getLastIndexCounter
         LogLine line = LogLine.CreateNewLogToAppend(BrokerState.getCurrentTerm(), command);
-
         //Append to the cache
         appendToCachedLogLine(line);
         //set as LastLog Line
         ReplicationLog.lastLogLine = line;
-
-        // Append the line to the file
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
-            writer.write(line.toString());
-            writer.newLine();
-            //System.out.println("Appended line: " + line);
-        } catch (IOException e) {
-            System.err.println("Error while appending to file: " + e.getMessage());
-            exit(0);
-        }
+        //Write to persistent file
+        writeLineToCSV(line);
 
         return line;
     }
 
     /**
-     * Append the logLine to the file in the standard directory in brokerid.txt file.
+     * Called after check that prevIndex exists.
+     * Append the logLine to the file in the standard directory in brokerid.csv file.
      * Used by follower to copy message from AppendEntries
      */
-    public static void followerCopyAppendEntriesLog(AppendEntries appendEntries) {
-        //TODO: copia tutti i log, a partire dal prev che deve matchare fino all'ultimo.
-        // attenzione che in certi casi il prev matcha, ma non con il mio ultimo!
-        //ReplicationLog.lastLogLine = line;
+    public static void followerLogReconciliation(AppendEntries appendEntries) {
+        //Here the logLine with prevLogIndex is sure to exist
+        truncateLogAfterIndex(appendEntries.getPrevLogIndex());
+
+        //Append all logLine
+        LogLine line = ReplicationLog.lastLogLine;
+        for (String logLine : appendEntries.getLogLineStringBatch()) {
+            line = new LogLine(logLine, true);
+            writeLineToCSV(line);
+            appendToCachedLogLine(line);
+        }
+
+        //Set the new lastLogLine
+        ReplicationLog.lastLogLine = line;
     }
 
+    private static void writeLineToCSV(LogLine line) {
+        try (FileWriter writer = new FileWriter(LOG_FILE_PATH, true);
+             CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat)) {
+
+            csvPrinter.printRecord((LogLine) line);
+            csvPrinter.flush();
+        } catch (IOException e) {
+            System.err.println("Error while appending to file: " + e.getMessage());
+            exit(0);
+        }
+    }
     /**
      * Reads all the contents of the CSV file and apply the command to the BrokerModel.
      * used when the commit index changes. Ensures that the lastApplied is in match with the commit index!
      */
-    public static void applyReplicationLog() {
-        File file = new File(LOG_FILE_PATH);
-        if (!file.exists()) {
-            System.out.println("File does not exist: " + LOG_FILE_PATH);
-            return;
-        }
-
+    public synchronized static void applyReplicationLog() {
         var lastLeaderCommitIndex = BrokerState.getCommitIndex();
         var lastAppliedIndex = BrokerState.getLastApplied();
 
         if (lastAppliedIndex >= lastLeaderCommitIndex) return;
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String logLineString;
-            reader.readLine(); //skip header line
+        try (Reader reader = new FileReader(LOG_FILE_PATH);
+             CSVParser csvParser = new CSVParser(reader, csvFormat)) {
 
-            //lock the model
             BrokerModel.getInstance().acquireLock();
 
-            while ((logLineString = reader.readLine()) != null) {
-                var tmp = new LogLine(logLineString);
-                if (tmp.getIndex() <= lastAppliedIndex) continue;
-                if (tmp.getIndex() > lastLeaderCommitIndex) break;
+            for (CSVRecord record : csvParser) {
+                //check index
+                if (Integer.parseInt(record.get(0)) <= lastAppliedIndex) continue;
+                if (Integer.parseInt(record.get(0)) > lastLeaderCommitIndex) break;
 
                 //it's  lastApplied<=tmp.Index<=leaderCommitIndex --> Commit
-                BrokerModel.getInstance().processCommand(tmp.getCommand());
-                BrokerState.setLastApplied(tmp.getIndex());
+                BrokerModel.getInstance().processCommand((QueueCommand) GsonDeserializer.deserialize(record.get(3)));
+                BrokerState.setLastApplied(Integer.parseInt(record.get(0)));
             }
-
-            //unlock the model
-            BrokerModel.getInstance().releaseLock();
-        } catch (InvalidObjectException e) {
-            System.err.println("Error while extracting the command: " + e.getMessage());
+        } catch (FileNotFoundException e) {
+            System.out.println("File does not exist: " + LOG_FILE_PATH);
+            exit(-1);
         } catch (IOException e) {
             System.err.println("Error while reading file: " + e.getMessage());
+            exit(-1);
         }
     }
-    public static int getPrevLogLineIndex() {
-        return lastLogLine != null ? lastLogLine.getIndex() : -1;
+    public static int getLastLogLineIndex() {
+        return lastLogLine != null ? lastLogLine.getIndex() : 0;
     }
 
-    public static int getPrevLogLineTerm() {
-        return lastLogLine != null ? lastLogLine.getTerm() : -1;
+    public static int getLastLogLineTerm() {
+        return lastLogLine != null ? lastLogLine.getTerm() : 0;
     }
 
     public synchronized static void storePersistentState(String persistentState){
@@ -165,36 +181,53 @@ public class ReplicationLog {
      */
     public static LogLine getLog(int logIndex) {
         //try using cache:
-        var cacheHit = cachedLogLines.stream().filter(ll -> ll.getIndex() == logIndex).findFirst();
-        if (cacheHit.isPresent()) {
-            return cacheHit.get();
+        var cacheHit = cachedLogLines.stream().filter(ll -> ll.getIndex() == logIndex).toList();
+        if (!cacheHit.isEmpty()) {
+            return cacheHit.getLast();
         }
 
         //Cache miss:
-        File file = new File(LOG_FILE_PATH);
-        if (!file.exists()) {
-            exit(-1);
-            return null;
-        }
+        try (Reader reader = new FileReader(LOG_FILE_PATH);
+             CSVParser csvParser = new CSVParser(reader, csvFormat)) {
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String logLineString;
-            reader.readLine(); //skip header line
-
-            LogLine hit = null;
-            while ((logLineString = reader.readLine()) != null) {
-                hit = new LogLine(logLineString);
-                if (hit.getIndex() > logIndex) break;
+            for (CSVRecord record : csvParser) {
+                if (record.size() > 1 && Integer.parseInt(record.get(0)) == logIndex) {
+                    return new LogLine(Integer.parseInt(record.get(0)), Integer.parseInt(record.get(1)), record.get(2));
+                }
             }
-
-            return hit;
-        } catch (InvalidObjectException e) {
-            System.err.println("Error while extracting the command: " + e.getMessage());
         } catch (IOException e) {
             System.err.println("Error while reading file: " + e.getMessage());
+            exit(-1);
+        }
+        return null;
+    }
+
+    /**
+     * Efficiently truncates the file by keeping only the rows up to the specified index.
+     * Used to reconciliate log, delete every log and then append the right ones.
+     * @param prevLogIndex The last row index to keep (inclusive, 0-based)
+     * @return true if successful, false otherwise
+     */
+    private static boolean truncateLogAfterIndex(int prevLogIndex) {
+        if (prevLogIndex < 0 || prevLogIndex == getLastLogLineIndex()) {
+            return false;
         }
 
-        return null;
+        try (RandomAccessFile file = new RandomAccessFile(LOG_FILE_PATH, "rw")) {
+            String line;
+            while((line = file.readLine()) != null) {
+                //keep reading until reaching the last line to keep
+                if (Integer.parseInt(line.split(delimiter+"")[0]) == prevLogIndex) break;
+            }
+
+            //Truncate all next lines
+            file.setLength(file.getFilePointer());
+        } catch (IOException e) {
+            System.out.println("Cannot truncate file at line " + prevLogIndex);
+            exit(-1);
+        }
+
+        return true;
     }
 
     private static void appendToCachedLogLine(LogLine logLine) {

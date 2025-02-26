@@ -79,7 +79,7 @@ public class ElectionProcessor implements Runnable {
             resetElection();
 
             //send to every node a RequestVote
-            var requestVote = new RequestVote(BrokerSettings.getBrokerID(), BrokerState.getCurrentTerm(), ReplicationLog.getPrevLogLineIndex(), ReplicationLog.getPrevLogLineTerm());
+            var requestVote = new RequestVote(BrokerSettings.getBrokerID(), BrokerState.getCurrentTerm(), ReplicationLog.getLastLogLineIndex(), ReplicationLog.getLastLogLineTerm());
 
             for (final Follower follower : followers) {
                 futureTask.add(

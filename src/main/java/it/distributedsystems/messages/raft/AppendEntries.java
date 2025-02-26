@@ -3,6 +3,7 @@ package it.distributedsystems.messages.raft;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.MessageDeserializerType;
 import it.distributedsystems.raft.LogLine;
+import it.distributedsystems.raft.ReplicationLog;
 
 import java.util.*;
 
@@ -55,8 +56,8 @@ public class AppendEntries extends BaseDeserializableMessage {
         super(MessageDeserializerType.APPEND_ENTRIES);
         this.leaderTerm = leaderTerm;
         this.leaderID = leaderID;
-        this.prevLogIndex = 0;
-        this.prevLogTerm = 0;
+        this.prevLogIndex = ReplicationLog.getLastLogLineIndex();
+        this.prevLogTerm = ReplicationLog.getLastLogLineTerm();
         this.logLineBatch = new ArrayList<>();
         this.logLineObjBatch = new ArrayList<>();
         this.leaderCommitIndex = -1;

@@ -47,7 +47,11 @@ public class BrokerState {
             System.out.println("Error, set currentTerm should be monotonically increasing!");
             return;
         }
+        //If the current term is different, update also voted for as null, means that the current term went up
+        if (currentTerm != BrokerState.currentTerm) setVotedFor(null);
+
         BrokerState.currentTerm = currentTerm;
+
         ReplicationLog.storePersistentState(BrokerState.serialize());
     }
 
@@ -57,7 +61,9 @@ public class BrokerState {
 
     public synchronized static void setVotedFor(Integer votedFor) {
         BrokerState.votedFor = votedFor;
-        ReplicationLog.storePersistentState(BrokerState.serialize());
+        if (votedFor != null) {
+            ReplicationLog.storePersistentState(BrokerState.serialize());
+        }
     }
 
     public synchronized static int getCommitIndex() {
@@ -69,7 +75,11 @@ public class BrokerState {
             System.out.println("Error, set commitIndex should be monotonically increasing!");
             return;
         }
+
         BrokerState.commitIndex = commitIndex;
+
+        //If you update commit index you have to apply it to the model
+        new Thread(ReplicationLog::applyReplicationLog);
     }
 
     public synchronized static int getLastApplied() {

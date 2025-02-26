@@ -26,6 +26,7 @@ public class Follower {
      *  (initialized to LeaderLastLogIndex+1)
      */
     private int nextIndex;
+
     /**
      * index of highest log entry
      *  known to be replicated on server
@@ -74,15 +75,14 @@ public class Follower {
 
             //send to the handler the message to identify as the Leader
             followerHandler.sendMessage(new LeaderIdentification(BrokerSettings.getBrokerID(),BrokerState.getCurrentTerm(),
-                    ReplicationLog.getPrevLogLineIndex()));
+                    ReplicationLog.getLastLogLineIndex()));
 
             //send every lost appendEntries
             while (!lostAppendEntries.isEmpty()) {
                 followerHandler.sendMessage(lostAppendEntries.pop());
             }
 
-            //TODO: non so se e' giusto questo +1
-            this.nextIndex = ReplicationLog.getPrevLogLineIndex() + 1;
+            this.nextIndex = ReplicationLog.getLastLogLineIndex() + 1;
             this.matchIndex = 0;
 
             //start the socketHandler Listening thread
@@ -96,7 +96,6 @@ public class Follower {
 
     public void sendMessage(BaseDeserializableMessage message) {
         if (connectHandler()) {
-            //TODO: qui ci sono dei check da fare mi sa. Ed update degli index
             followerHandler.sendMessage(message);
         } else {
             if (message instanceof AppendEntries) {
@@ -136,5 +135,20 @@ public class Follower {
             Thread.currentThread().interrupt();
             return;
         }
+    }
+
+    public void decreaseNextIndex() {
+        //TODO: Raft paper proposes an optimization to decrease not by 1, but
+        // send some metadata on NACK and set it in a more precise but complex way
+        this.nextIndex = this.nextIndex - 1;
+    }
+
+    public void increaseIndexes(int lastReceivedIndex) {
+        this.matchIndex = lastReceivedIndex;
+        this.nextIndex = this.matchIndex + 1;
+    }
+
+    public int getMatchIndex() {
+        return this.matchIndex;
     }
 }

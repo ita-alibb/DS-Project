@@ -1,5 +1,6 @@
 package it.distributedsystems.raft;
 
+import it.distributedsystems.connection.BrokerConnection;
 import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.queue.QueueResponse;
 import it.distributedsystems.tui.TUIUpdater;
@@ -51,7 +52,7 @@ public class BrokerModel {
     /**
      * Calls the method processCommandInternal, ensuring that who calls it has acquired the lock
      */
-    public QueueResponse processCommand(QueueCommand command) {
+    public void processCommand(QueueCommand command) {
         QueueResponse response;
         // Check if current thread already holds the lock. Here enters if you do not lock it manually.
         if (!processCommandLock.isHeldByCurrentThread()) {
@@ -66,10 +67,7 @@ public class BrokerModel {
             response = processCommandInternal(command);
         }
 
-        //Trigger update of the TUI
-
-
-        return response;
+        BrokerConnection.getInstance().registerResponse(response);
     }
 
     private QueueResponse processCommandInternal(QueueCommand command) {
