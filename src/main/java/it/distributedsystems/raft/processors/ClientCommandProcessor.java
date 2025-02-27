@@ -92,13 +92,14 @@ public class ClientCommandProcessor implements Runnable {
                 currentAppendEntries.setLeaderCommitIndex(BrokerState.getCommitIndex());
 
                 //ensure prev index is first index +1
-                var firstNewLineIndex = currentAppendEntries.getLastNewLineIndex();
+                var firstNewLineIndex = currentAppendEntries.getFirstNewLineIndex();
                 if (firstNewLineIndex != currentAppendEntries.getPrevLogIndex() + 1 ) {
                     System.out.println("Strange behavior " + firstNewLineIndex + "prev index= " + currentAppendEntries.getPrevLogIndex());
                 }
 
                 //manda a tutti I follower
                 BrokerConnection.getInstance().forwardAllFollowers(new AppendEntries(this.currentAppendEntries));
+                System.out.println("Sent AppendEntries");
 
                 //Set prevLog infos for next AppendEntries
                 var newPrevLogLine = this.currentAppendEntries.getLastLogLineInBatch();

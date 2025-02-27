@@ -6,6 +6,7 @@ import it.distributedsystems.raft.Follower;
 
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,7 +32,7 @@ public class ElectionTimer {
      * Return an always variable between an interval TIMEOUT
      */
     private long getTIMEOUT(){
-        return (long) ((Math.random() + 1) * 10 * APPEND_ENTRIES_TIME);// Random value 10 to 20 times greater than the time for a single append entries
+        return ThreadLocalRandom.current().nextInt(5*APPEND_ENTRIES_TIME, 10*APPEND_ENTRIES_TIME + 1);//random timeout from 5 to 10 times more than append entries frequency
     }
 
     /**

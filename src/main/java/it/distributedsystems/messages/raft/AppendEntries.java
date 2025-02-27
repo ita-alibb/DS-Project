@@ -110,7 +110,7 @@ public class AppendEntries extends BaseDeserializableMessage {
             return lastLogLine.getIndex();
         }
 
-        return -1;
+        return 0;
     }
 
     public int getFirstNewLineIndex() {
@@ -121,7 +121,7 @@ public class AppendEntries extends BaseDeserializableMessage {
             return lastLogLine.getIndex();
         }
 
-        return 0;
+        return -1;
     }
 
     public int getLeaderCommitIndex() {

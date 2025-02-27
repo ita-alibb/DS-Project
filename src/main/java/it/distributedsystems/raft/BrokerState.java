@@ -107,7 +107,7 @@ public class BrokerState {
         var match = serialized.split(";");
         currentTerm = Integer.parseInt(match[0]);
         if (match.length > 1 && !match[1].isEmpty()) {
-            votedFor = Integer.parseInt(match[1]);
+            votedFor = (match[1].equals("null")) ? null : Integer.parseInt(match[1]);
         }
     }
 }

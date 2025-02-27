@@ -154,5 +154,6 @@ public class RaftCommandProcessor implements Runnable{
          BaseDeserializableMessage cmd = GsonDeserializer.deserialize(jsonMessage);
         // Add the message to the shared queue of clients
         raftCommandsQueue.put(cmd);
+        System.out.println("Added raft message to queue");
     }
 }

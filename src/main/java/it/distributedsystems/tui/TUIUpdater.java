@@ -31,7 +31,7 @@ public class TUIUpdater implements Runnable {
     public void run() {
         try {
             while (true) {
-                Thread.sleep(100); //0.1 sec delay
+                Thread.sleep(1000); //0.1 sec delay
 
                 if (this.isClient) {
                     this.printClientViewInternal();

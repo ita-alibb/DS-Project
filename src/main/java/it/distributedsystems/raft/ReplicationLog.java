@@ -57,7 +57,7 @@ public class ReplicationLog {
             Files.createDirectories(Paths.get(LOG_FILE_PATH));
             var dir = LOG_FILE_PATH;
             LOG_FILE_PATH = dir + BrokerSettings.getBrokerID() + ".csv";
-            STATE_FILE_PATH = dir + BrokerSettings.getBrokerID() + "state" + ".csv";
+            STATE_FILE_PATH = dir + BrokerSettings.getBrokerID() + "state" + ".txt";
             File file = new File(LOG_FILE_PATH);
 
             if (file.exists()) {

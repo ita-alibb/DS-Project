@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class BrokerSettings {
     //Final public static settings, settings that are set once and never changes
-    public final static int APPEND_ENTRIES_TIME = 2_000; //2 seconds, period of sending of an Append_entries batch
+    public final static int APPEND_ENTRIES_TIME = 1_000; //1 second, period of sending of an Append_entries batch
 
     // Broker socket settings:
     private static BrokerAddress brokerAddress = null;

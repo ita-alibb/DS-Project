@@ -6,24 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntries.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntries.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntriesResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntriesResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/RequestVoteResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/RequestVoteResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerSettings.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerState.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerState.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/Follower.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/Follower.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/LogLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/LogLine.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ClientCommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ClientCommandProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ElectionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ElectionProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/ElectionTimer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/ElectionTimer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -96,7 +88,7 @@
       <command value="mvn clean package" />
     </option>
   </component>
-  <component name="RunManager" selected="Application.StartBroker4">
+  <component name="RunManager" selected="Application.StartBroker2">
     <configuration name="StartBroker1" type="Application" factoryName="Application" singleton="true">
       <option name="MAIN_CLASS_NAME" value="it.distributedsystems.BrokerApp" />
       <module name="rqs-cli-app" />
@@ -260,7 +252,7 @@
       <workItem from="1740358340565" duration="6000" />
       <workItem from="1740395784788" duration="22675000" />
       <workItem from="1740577199542" duration="20138000" />
-      <workItem from="1740603773010" duration="9685000" />
+      <workItem from="1740603773010" duration="11649000" />
     </task>
     <servers />
   </component>

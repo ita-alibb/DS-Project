@@ -173,7 +173,7 @@ public class BrokerConnection {
      */
     public void setFollower() {
         BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
-        clientCommandProcessor.destroy();
+        if (clientCommandProcessor != null) clientCommandProcessor.destroy();
     }
 
     /**
@@ -239,6 +239,9 @@ public class BrokerConnection {
                 try{
                     //Create handler that initialize the connection
                     handler = new LeaderHandler(brokerSocket);
+
+                    setFollower();
+                    resetElectionTimeout();
 
                     //Reach here if the constructor does not throw exception (The leader is contacting you)
                     handler.setMsgReceiveCallback(raftCommandsProcessor::handleRaftMessageCallback);
