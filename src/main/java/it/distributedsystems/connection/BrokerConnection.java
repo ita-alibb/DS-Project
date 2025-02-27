@@ -63,7 +63,7 @@ public class BrokerConnection {
      * Class that keeps track of the leader connection. Is a SocketHandler.
      * Null if not connected to the leader or this node is the leader.
      */
-    private LeaderHandler leaderHandler;
+    private LeaderHandler leaderHandler = null;
 
     private ClientCommandProcessor clientCommandProcessor;
 
@@ -112,7 +112,7 @@ public class BrokerConnection {
             processPool.execute(raftCommandsProcessor);
 
             //populate the list of known brokers
-            for (BrokerAddress ba : BrokerSettings.getBrokers()) {
+            for (BrokerAddress ba : BrokerSettings.getBrokers(true)) {
                 var newFollower = new Follower(ba, raftCommandsProcessor::handleRaftMessageCallback);
                 this.followerHandlers.add(newFollower);
             }
@@ -250,11 +250,11 @@ public class BrokerConnection {
                     if (leaderHandler != null) {
                         leaderHandler.shutDownLeaderHandler();
                     }
-                    leaderPool.shutdownNow();
 
                     leaderHandler = handler; //track new leader
                     leaderPool.execute(handler);//execute new leader
 
+                    BrokerSettings.setLeaderAddress(handler.getLeaderId());//set the leader address
                     TUIUpdater.setLastMessage("New LEADER created and added correctly ID: " + handler.getLeaderId());
                 } catch (IOException e) {
                     TUIUpdater.setLastMessage("Error while establishing client connection: " + e.getMessage());
@@ -284,11 +284,14 @@ public class BrokerConnection {
      */
     public void forwardAllFollowers(BaseDeserializableMessage message) {
         //Start it in a new thread to not stop the process execution
-        new Thread(() -> {
-            this.followerHandlers.forEach(fh -> {
-                fh.sendMessage(message);
-            });
-        });
+        ExecutorService exec = Executors.newFixedThreadPool(this.followerHandlers.size());
+        try {
+            for (final Follower fh : this.followerHandlers) {
+                exec.submit(() -> fh.sendMessage(message));
+            }
+        } finally {
+            exec.shutdown();
+        }
     }
 
     public void decreaseFollowerNextIndex(int followerId) {

@@ -32,8 +32,6 @@ public class BrokerSettingsBootstrapper extends BrokerSettings {
         List<BrokerAddress> newBrokerAddress = gson.fromJson(jsonText, new TypeToken<List<BrokerAddress>>() {}.getType());
 
         setBrokerAddress(newBrokerAddress.stream().filter(ba -> ba.id == brokerId).findFirst().get());
-        //remove myself from the set of known brokers
-        newBrokerAddress.removeIf(ba -> ba.id == brokerId);
         setBrokers(newBrokerAddress);
         setNumOfNodes(newBrokerAddress.size() + 1);
 

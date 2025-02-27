@@ -121,7 +121,7 @@ public class AppendEntries extends BaseDeserializableMessage {
             return lastLogLine.getIndex();
         }
 
-        return -1;
+        return 1;
     }
 
     public int getLeaderCommitIndex() {

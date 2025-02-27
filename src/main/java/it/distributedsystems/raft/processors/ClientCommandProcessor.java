@@ -11,6 +11,7 @@ import it.distributedsystems.raft.BrokerSettings;
 import it.distributedsystems.raft.BrokerState;
 import it.distributedsystems.raft.LogLine;
 import it.distributedsystems.raft.ReplicationLog;
+import it.distributedsystems.tui.TUIUpdater;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -86,6 +87,8 @@ public class ClientCommandProcessor implements Runnable {
     public void periodicalSend() {
         try{
             while(alive.get()) {
+                AppendEntries messageToSend;
+
                 currentBatchLock.lock();
                 //Batch of messages set previously
                 //Set commitIndex
@@ -97,9 +100,8 @@ public class ClientCommandProcessor implements Runnable {
                     System.out.println("Strange behavior " + firstNewLineIndex + "prev index= " + currentAppendEntries.getPrevLogIndex());
                 }
 
-                //manda a tutti I follower
-                BrokerConnection.getInstance().forwardAllFollowers(new AppendEntries(this.currentAppendEntries));
-                System.out.println("Sent AppendEntries");
+                //Clone the append entries, send after releasing the lock.
+                messageToSend = new AppendEntries(this.currentAppendEntries);
 
                 //Set prevLog infos for next AppendEntries
                 var newPrevLogLine = this.currentAppendEntries.getLastLogLineInBatch();
@@ -113,6 +115,10 @@ public class ClientCommandProcessor implements Runnable {
 
                 currentBatchLock.unlock();
 
+                //After releasing the lock, send to all followers
+                BrokerConnection.getInstance().forwardAllFollowers(messageToSend);
+
+                TUIUpdater.setLastMessage("Sent AppendEntries");
                 //wait 20 seconds
                 Thread.sleep(APPEND_ENTRIES_TIME);
             }

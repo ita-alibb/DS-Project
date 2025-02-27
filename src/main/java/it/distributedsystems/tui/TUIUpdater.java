@@ -16,7 +16,7 @@ public class TUIUpdater implements Runnable {
     private final boolean isClient;
 
     private static String lastMessage = "";
-    public static void setLastMessage(String newLast) {
+    public synchronized static void setLastMessage(String newLast) {
         lastMessage = newLast;
     }
 
@@ -39,8 +39,10 @@ public class TUIUpdater implements Runnable {
                     this.printBrokerViewInternal();
                 }
             }
-        } catch (InterruptedException e) {
+        } catch (Exception ignored) {
             exit(-1);
+        } finally {
+            System.out.println("TUIUpdater STOPPED");
         }
     }
 
@@ -63,12 +65,12 @@ public class TUIUpdater implements Runnable {
      */
     private void printBrokerViewInternal(){
         clearConsole();
-
-        var queues = BrokerModel.getInstance().getQueues();
-        var la = BrokerSettings.getLeaderAddress();
-        var ba = BrokerSettings.getBrokerAddress();
         System.out.println("──────────────────────────────────────────────────────────────────────");
+
+        var la = BrokerSettings.getLeaderAddress();
         System.out.printf("LeaderID: %d | Leader IP: %s | Leader Port: %d %n",la != null ? la.id : -1, la != null ? la.IP : -1, la != null ? la.ClientServerPort : -1);
+
+        var ba = BrokerSettings.getBrokerAddress();
         System.out.printf("BrokerID: %d | Broker IP: %s | Broker Port: %d %n",ba.id, ba.IP, ba.ClientServerPort);
         System.out.printf("Broker Status: %s   BrokerEpoch: %d  BrokerTimeout: %d %n", BrokerSettings.getBrokerStatus(), BrokerState.getCurrentTerm(), BrokerConnection.getInstance().getWaitTimeForCurrentTimer());
         System.out.printf("Broker CommitIndex: %d   LastApplied: %d  VotedForInCurrentTerm: %d %n", BrokerState.getCommitIndex(),BrokerState.getLastApplied(), BrokerState.getVotedFor());
@@ -82,6 +84,8 @@ public class TUIUpdater implements Runnable {
                 System.out.printf("Last polled command: %s %n", BrokerConnection.getInstance().getLastQueueCommand());
                 System.out.println("──────────────────────────────────────────────────────────────────────");
             }
+
+            var queues = BrokerModel.getInstance().getQueues();
             System.out.println("Queue Key: Values...");
             for (var queueKey : queues.keySet()) {
                 System.out.printf(" %s : %s %n", queueKey, queues.get(queueKey).toString());
@@ -89,13 +93,14 @@ public class TUIUpdater implements Runnable {
         }
 
         System.out.printf("Last message to show: %s %n", lastMessage);
+        lastMessage = "";
     }
 
     /**
      * Method to clear the console before a new TUI is printed. Usually, this method is called before each update, obviously only if the update wants the terminal to be updated.
      */
     private void clearConsole(){
-        try {
+        /*try {
             final String os = System.getProperty("os.name");
             if (os.contains("Windows")) {
                 new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
@@ -105,7 +110,10 @@ public class TUIUpdater implements Runnable {
             }
         } catch (Exception e) {
             System.out.println("\033[H\033[2J");
-        }
+        }*/
+        System.out.println();
+        System.out.println("####################################################################");
+        System.out.println();
     }
 
     private void printCommands(){

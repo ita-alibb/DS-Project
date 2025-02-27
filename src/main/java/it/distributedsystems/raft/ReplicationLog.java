@@ -99,6 +99,9 @@ public class ReplicationLog {
      * Used by follower to copy message from AppendEntries
      */
     public static void followerLogReconciliation(AppendEntries appendEntries) {
+        //if there is no entry there is nothing to reconciliate
+        if (appendEntries.getLogLineStringBatch().isEmpty()) return;
+
         //Here the logLine with prevLogIndex is sure to exist
         truncateLogAfterIndex(appendEntries.getPrevLogIndex());
 
@@ -167,7 +170,7 @@ public class ReplicationLog {
 
     public synchronized static void storePersistentState(String persistentState){
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(STATE_FILE_PATH, false))) {
-            writer.write(String.format(FILE_HEADER + persistentState));
+            writer.write(String.format(persistentState));
             writer.newLine();
             //System.out.println("Appended line: " + line);
         } catch (IOException e) {
@@ -180,6 +183,10 @@ public class ReplicationLog {
      * Get the log with specified index
      */
     public static LogLine getLog(int logIndex) {
+        if (logIndex <= 0) { //indexes starts from 1
+            return null;
+        }
+
         //try using cache:
         var cacheHit = cachedLogLines.stream().filter(ll -> ll.getIndex() == logIndex).toList();
         if (!cacheHit.isEmpty()) {

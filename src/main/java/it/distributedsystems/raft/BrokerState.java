@@ -43,12 +43,13 @@ public class BrokerState {
     }
 
     public synchronized static void setCurrentTerm(int currentTerm) {
+        if (currentTerm == BrokerState.currentTerm) return;
         if (currentTerm < BrokerState.currentTerm) {
             System.out.println("Error, set currentTerm should be monotonically increasing!");
             return;
         }
         //If the current term is different, update also voted for as null, means that the current term went up
-        if (currentTerm != BrokerState.currentTerm) setVotedFor(null);
+        setVotedFor(null);
 
         BrokerState.currentTerm = currentTerm;
 
@@ -95,7 +96,7 @@ public class BrokerState {
     }
 
     private synchronized static String serialize(){
-        return String.format(";currentTerm=%d;votedFor=%d", currentTerm, votedFor);
+        return String.format("currentTerm=%d;votedFor=%d", currentTerm, votedFor);
     }
 
     public synchronized static void reloadPersistentState(String serialized){

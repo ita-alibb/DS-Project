@@ -3,11 +3,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>it.distributedsystems</groupId>
-  <artifactId>rqs-cli-app</artifactId>
+  <artifactId>DS-Project-App</artifactId>
   <version>1.0-SNAPSHOT</version>
-
-  <name>rqs-cli-app</name>
-  <url>http://maven.apache.org</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

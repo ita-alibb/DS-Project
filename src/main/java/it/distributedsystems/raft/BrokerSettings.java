@@ -21,57 +21,43 @@ public class BrokerSettings {
     private static BrokerAddress leaderAddress = null;
     private static List<BrokerAddress> knownBrokers;
 
-    private static final ReentrantLock settingsLock = new ReentrantLock();
-
-    public static BrokerStatus getBrokerStatus() {
-        settingsLock.lock();
-        var returnVal = brokerStatus;
-        settingsLock.unlock();
-
-        return returnVal;
+    public synchronized static BrokerStatus getBrokerStatus() {
+        return brokerStatus;
     }
 
-    public static void setBrokerStatus(BrokerStatus newBrokerStatus) {
-        settingsLock.lock();
+    public synchronized static void setBrokerStatus(BrokerStatus newBrokerStatus) {
         brokerStatus = newBrokerStatus;
-        settingsLock.unlock();
     }
 
-    public static BrokerAddress getLeaderAddress(){
-        settingsLock.lock();
-        var returnVal = leaderAddress;
-        settingsLock.unlock();
-        return returnVal;
+    public synchronized static BrokerAddress getLeaderAddress(){
+        return leaderAddress;
     }
 
-    public static void setLeaderAddress(int newLeaderId){
-        settingsLock.lock();
+    public synchronized static void setLeaderAddress(int newLeaderId){
         leaderAddress = knownBrokers.stream().filter(ba -> ba.id == newLeaderId).findFirst().get();
-        settingsLock.unlock();
     }
 
     /**
      * The list is composed of addresses of every other broker in this format "{IP}:{Port}"
      */
-    public static List<BrokerAddress> getBrokers() {
-        settingsLock.lock();
-        var returnVal = new LinkedList<>(knownBrokers);
-        settingsLock.unlock();
-        return returnVal;
+    public synchronized static List<BrokerAddress> getBrokers(boolean excludeMyself) {
+        if (excludeMyself) {
+            //remove myself from the set of known brokers
+            return new LinkedList<>(knownBrokers.stream().filter(b -> b.id != brokerAddress.id).toList());
+        } else {
+            return new LinkedList<>(knownBrokers);
+        }
     }
 
     public static int getBrokerID(){
-        settingsLock.lock();
-        var returnVal = brokerAddress.id;
-        settingsLock.unlock();
-        return returnVal;
+        return brokerAddress.id;
     }
 
     public static BrokerAddress getBrokerAddress() {
         return brokerAddress;
     }
 
-    public static String getBrokerIP(){
+    public synchronized static String getBrokerIP(){
         if (brokerAddress.IP == null) {
             try {
                 brokerAddress.IP = Inet4Address.getLocalHost().getHostAddress();
@@ -83,25 +69,25 @@ public class BrokerSettings {
         return brokerAddress.IP;
     }
 
-    public static int getNumOfNodes() {
+    public synchronized static int getNumOfNodes() {
         return numOfNodes;
     }
 
-    protected static void setNumOfNodes(int numOfNodes) {
+    protected synchronized static void setNumOfNodes(int numOfNodes) {
         BrokerSettings.numOfNodes = numOfNodes;
     }
 
     /**
      * Gets the port for Broker to Broker communication
      */
-    public static int getBtoBPort(){
+    public synchronized static int getBtoBPort(){
         return brokerAddress.BrokerServerPort;
     }
 
     /**
      * Gets the port for Client<=>Broker communication
      */
-    public static int getCtoBPort(){
+    public synchronized static int getCtoBPort(){
         return brokerAddress.ClientServerPort;
     }
 
@@ -113,10 +99,10 @@ public class BrokerSettings {
         brokerAddress = newBrokerAddress;
     }
 
-    protected static void setBrokers(List<BrokerAddress> newKnownBrokers) {
-        settingsLock.lock();
+    protected synchronized static void setBrokers(List<BrokerAddress> newKnownBrokers) {
+
         knownBrokers = newKnownBrokers;
-        settingsLock.unlock();
+
     }
     // end-region
 }

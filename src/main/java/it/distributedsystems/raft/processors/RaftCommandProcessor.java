@@ -6,6 +6,7 @@ import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.messages.raft.AppendEntriesResponse;
 import it.distributedsystems.raft.*;
+import it.distributedsystems.tui.TUIUpdater;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -37,12 +38,14 @@ public class RaftCommandProcessor implements Runnable{
 
                 switch (command) {
                     case AppendEntries appendEntries : {//Message received by a FOLLOWER
-                        if (testAppendEntries(appendEntries)) {
-                            BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
-                            BrokerConnection.getInstance().resetElectionTimeout();
-                            BrokerState.setCurrentTerm(appendEntries.getLeaderTerm());
-                            BrokerSettings.setLeaderAddress(appendEntries.getLeaderID());
+                        TUIUpdater.setLastMessage("AppendEntries received");
+                        //Even if the append entries will be refused, the leader is active
+                        BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
+                        System.out.println("Ricevuto appendEntries e settato a follower");
+                        BrokerConnection.getInstance().resetElectionTimeout();
+                        BrokerState.setCurrentTerm(appendEntries.getLeaderTerm());
 
+                        if (testAppendEntries(appendEntries)) {
                             //Replicate all log.
                             ReplicationLog.followerLogReconciliation(appendEntries);
 
@@ -143,6 +146,7 @@ public class RaftCommandProcessor implements Runnable{
     private boolean testAppendEntries(AppendEntries appendEntries) {
         if (appendEntries == null) exit(-1);
         if (appendEntries.getLeaderTerm() < BrokerState.getCurrentTerm()) return false;
+        if (appendEntries.getPrevLogIndex() == 0 && ReplicationLog.getLastLogLineIndex() == 0) return true;//special case, log file is empty for both leader and follower, the follower cannot check the log 0.
         LogLine prevLogLine = ReplicationLog.getLog(appendEntries.getPrevLogIndex());
         if (prevLogLine == null || prevLogLine.getTerm() != appendEntries.getPrevLogTerm()) return false;
         return true;
@@ -154,6 +158,5 @@ public class RaftCommandProcessor implements Runnable{
          BaseDeserializableMessage cmd = GsonDeserializer.deserialize(jsonMessage);
         // Add the message to the shared queue of clients
         raftCommandsQueue.put(cmd);
-        System.out.println("Added raft message to queue");
     }
 }

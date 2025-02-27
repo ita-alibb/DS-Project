@@ -98,8 +98,8 @@ public class Follower {
         if (connectHandler()) {
             followerHandler.sendMessage(message);
         } else {
-            if (message instanceof AppendEntries) {
-                lostAppendEntries.add((AppendEntries) message);
+            if (message instanceof AppendEntries appendEntries) {
+                if (!appendEntries.getLogLineStringBatch().isEmpty()) lostAppendEntries.add(appendEntries);
             }
             System.out.println("Follower" + followerAddress.id + " is not connected, message not sent");
         }
@@ -110,7 +110,7 @@ public class Follower {
     }
 
     public boolean isConnected(){
-        return !(followerHandler == null || followerHandler.isConnected());
+        return followerHandler != null && followerHandler.isConnected();
     }
 
     /**
@@ -140,6 +140,9 @@ public class Follower {
     public void decreaseNextIndex() {
         //TODO: Raft paper proposes an optimization to decrease not by 1, but
         // send some metadata on NACK and set it in a more precise but complex way
+
+        //Keeps track of the next index to send. So at startup will be 1 (0+1), never go less than 1.
+        if (this.nextIndex == 1) return; //do not go less than 1
         this.nextIndex = this.nextIndex - 1;
     }
 

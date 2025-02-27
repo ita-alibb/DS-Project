@@ -24,7 +24,9 @@ public class LeaderHandler extends SocketHandler {
 
         if (msg instanceof RequestVote vote) {//Message from another follower (candidate) to RequestVote RPC
             // if conditions to vote, vote Yes else vote no
-            handleRequestVote(vote);
+            var voteGranted = evaluateVoteGranted(vote);
+            //send vote
+            out.println(new RequestVoteResponse(BrokerSettings.getBrokerID(), BrokerState.getCurrentTerm(), voteGranted).toJson());
 
             //Close the socket. Vote or not, but then close the handler. If it becomes the leader you will be re-contacted
             throw new ClassNotPreparedException("Not Leader Connection");
@@ -39,20 +41,22 @@ public class LeaderHandler extends SocketHandler {
     /**
      * If the message is a RequestVote than evaluate it and return. Not create instance of LeaderHandler
      */
-    private void handleRequestVote(RequestVote msg) {
-        var currentTerm = BrokerState.getCurrentTerm();
-        boolean voteGranted = msg.getCandidateTerm() >= currentTerm;//if candidate term is less, it is outdated, not grant vote
-        voteGranted = voteGranted && (BrokerState.getVotedFor() == null || BrokerState.getVotedFor() == msg.getCandidateTerm());
-        voteGranted = voteGranted &&
-                (msg.getCandidateLastLogTerm() >= ReplicationLog.getLastLogLineTerm() &&
-                        msg.getCandidateLastLogIndex() >= ReplicationLog.getLastLogLineIndex());
+    private boolean evaluateVoteGranted(RequestVote msg) {
+        //if candidate term is less, it is outdated, not grant vote
+        if (msg.getCandidateTerm() < BrokerState.getCurrentTerm()) return false;
 
-        if (voteGranted) {
-            BrokerState.setCurrentTerm(msg.getCandidateTerm());
-            BrokerState.setVotedFor(msg.getCandidateId());
-        }
+        //If already voted for someone else in this term reply false
+        if (BrokerState.getVotedFor() != null && BrokerState.getVotedFor() != msg.getCandidateId()) return false;
 
-        out.println(new RequestVoteResponse(BrokerSettings.getBrokerID(), currentTerm, voteGranted).toJson());
+        //if log is not up-to-date reply false
+        if (msg.getCandidateLastLogTerm() < ReplicationLog.getLastLogLineTerm()) return false;//compare term
+
+        if (msg.getCandidateLastLogIndex() < ReplicationLog.getLastLogLineIndex()) return false;//compare index
+
+        //if reach here the vote is granted
+        BrokerState.setCurrentTerm(msg.getCandidateTerm());
+        BrokerState.setVotedFor(msg.getCandidateId());
+        return true;
     }
 
     public int getLeaderId() {
@@ -66,6 +70,8 @@ public class LeaderHandler extends SocketHandler {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            System.out.println("Stopped previous leaderHandler");
         }
     }
 }
