@@ -41,7 +41,6 @@ public class RaftCommandProcessor implements Runnable{
                         TUIUpdater.setLastMessage("AppendEntries received");
                         //Even if the append entries will be refused, the leader is active
                         BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
-                        System.out.println("Ricevuto appendEntries e settato a follower");
                         BrokerConnection.getInstance().resetElectionTimeout();
                         BrokerState.setCurrentTerm(appendEntries.getLeaderTerm());
 

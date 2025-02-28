@@ -3,16 +3,20 @@ package it.distributedsystems.tui;
 import it.distributedsystems.connection.BrokerConnection;
 import it.distributedsystems.connection.ClientConnection;
 import it.distributedsystems.messages.BaseDeserializableMessage;
-import it.distributedsystems.raft.BrokerModel;
-import it.distributedsystems.raft.BrokerSettings;
-import it.distributedsystems.raft.BrokerState;
-import it.distributedsystems.raft.BrokerStatus;
+import it.distributedsystems.raft.*;
 
 import java.util.stream.Collectors;
 
 import static java.lang.System.exit;
 
 public class TUIUpdater implements Runnable {
+    //region Colors
+    private static final String RESET = "\u001B[0m";
+    private static final String RED = "\u001B[31m";
+    private static final String GREEN = "\u001B[32m";
+    private static final String YELLOW = "\u001B[33m";
+    private static final String BLUE = "\u001B[34m";
+    //endregion
     private final boolean isClient;
 
     private static String lastMessage = "";
@@ -29,15 +33,15 @@ public class TUIUpdater implements Runnable {
      */
     @Override
     public void run() {
+        if (this.isClient) {
+            printClientViewInternal();
+            return;//disable client fixed update
+        }
         try {
             while (true) {
                 Thread.sleep(1000); //0.1 sec delay
 
-                if (this.isClient) {
-                    this.printClientViewInternal();
-                } else {
-                    this.printBrokerViewInternal();
-                }
+                printBrokerViewInternal();
             }
         } catch (Exception ignored) {
             exit(-1);
@@ -49,7 +53,7 @@ public class TUIUpdater implements Runnable {
     /**
      * Actually reprints the view of the Client.
      */
-    private void printClientViewInternal(){
+    public static void printClientViewInternal(){
         clearConsole();
         var ba = ClientConnection.getINSTANCE().getBrokerAddress();
         System.out.println("──────────────────────────────────────────────────────────────────────");
@@ -63,7 +67,7 @@ public class TUIUpdater implements Runnable {
     /**
      * Actually reprints the view of the Broker.
      */
-    private void printBrokerViewInternal(){
+    private static void printBrokerViewInternal(){
         clearConsole();
         System.out.println("──────────────────────────────────────────────────────────────────────");
 
@@ -72,34 +76,48 @@ public class TUIUpdater implements Runnable {
 
         var ba = BrokerSettings.getBrokerAddress();
         System.out.printf("BrokerID: %d | Broker IP: %s | Broker Port: %d %n",ba.id, ba.IP, ba.ClientServerPort);
-        System.out.printf("Broker Status: %s   BrokerEpoch: %d  BrokerTimeout: %d %n", BrokerSettings.getBrokerStatus(), BrokerState.getCurrentTerm(), BrokerConnection.getInstance().getWaitTimeForCurrentTimer());
+        System.out.printf("Broker Status: "+RED+"%s"+RESET+"   BrokerEpoch: %d  BrokerTimeout: "+YELLOW+"%s"+RESET+" %n", BrokerSettings.getBrokerStatus(), BrokerState.getCurrentTerm(), BrokerConnection.getInstance().getWaitTimeForCurrentTimer());
         System.out.printf("Broker CommitIndex: %d   LastApplied: %d  VotedForInCurrentTerm: %d %n", BrokerState.getCommitIndex(),BrokerState.getLastApplied(), BrokerState.getVotedFor());
         System.out.println("──────────────────────────────────────────────────────────────────────");
 
         if (BrokerSettings.getBrokerStatus() == BrokerStatus.Candidate){
-            System.out.println("Election in progress...");
-            System.out.printf("#ofBrokers: %d   Accept: %d  Deny: %d %n", BrokerSettings.getNumOfNodes(), BrokerConnection.getInstance().getAcceptedCount(),BrokerConnection.getInstance().getDeniedCount());
+            System.out.println(GREEN+"Election in progress..."+RESET);
+            System.out.printf("#ofBrokers: %d   BrokerVotes-> Accept: %s  Deny: %s %n", BrokerSettings.getNumOfNodes(),
+                    BrokerConnection.getInstance().getAcceptedCount().stream().map(String::valueOf)
+                            .collect(Collectors.joining(",")),
+                    BrokerConnection.getInstance().getDeniedCount().stream().map(String::valueOf)
+                            .collect(Collectors.joining(",")));
         } else {
             if (BrokerSettings.getBrokerStatus() == BrokerStatus.Leader) {
+
+                var followers = BrokerConnection.getInstance().getFollowers();
+                System.out.printf("Connected Followers: %s %n", followers.stream().
+                        filter(Follower::isConnected)
+                        .map(Follower::getFollowerId)
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")));
                 System.out.printf("Last polled command: %s %n", BrokerConnection.getInstance().getLastQueueCommand());
                 System.out.println("──────────────────────────────────────────────────────────────────────");
             }
 
             var queues = BrokerModel.getInstance().getQueues();
-            System.out.println("Queue Key: Values...");
+            System.out.println(BLUE+"Queue Key: Values..."+RESET);
             for (var queueKey : queues.keySet()) {
                 System.out.printf(" %s : %s %n", queueKey, queues.get(queueKey).toString());
             }
         }
 
-        System.out.printf("Last message to show: %s %n", lastMessage);
+        System.out.printf(GREEN+"Last message to show:"+RESET+" %s %n", lastMessage);
         lastMessage = "";
     }
 
     /**
      * Method to clear the console before a new TUI is printed. Usually, this method is called before each update, obviously only if the update wants the terminal to be updated.
      */
-    private void clearConsole(){
+    private static void clearConsole(){
+        System.out.println();
+        System.out.println("####################################################################");
+        System.out.println();
         /*try {
             final String os = System.getProperty("os.name");
             if (os.contains("Windows")) {
@@ -111,12 +129,9 @@ public class TUIUpdater implements Runnable {
         } catch (Exception e) {
             System.out.println("\033[H\033[2J");
         }*/
-        System.out.println();
-        System.out.println("####################################################################");
-        System.out.println();
     }
 
-    private void printCommands(){
+    private static void printCommands(){
         System.out.println("[ COMMANDS:");
         System.out.println("┌──────────────────────────────────────────────────────────────────────┐");
         System.out.println("│ - C {queueKey}         -> create specific queue                      │");

@@ -17,6 +17,7 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 
 import static java.lang.System.exit;
@@ -89,11 +90,11 @@ public class BrokerConnection {
         return timer.getWaitTimeForCurrentTimer();
     }
 
-    public int getAcceptedCount() {
+    public Set<Integer> getAcceptedCount() {
         return electionProcessor.getAcceptedCount();
     }
 
-    public int getDeniedCount() {
+    public Set<Integer> getDeniedCount() {
         return electionProcessor.getDeniedCount();
     }
 

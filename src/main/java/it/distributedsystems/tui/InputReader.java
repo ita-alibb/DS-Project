@@ -30,6 +30,7 @@ public class InputReader implements Runnable {
      */
     @Override
     public void run() {
+        var exception = false;
         try {
             //Choose Strategy
             String input;
@@ -37,16 +38,20 @@ public class InputReader implements Runnable {
                 input = scanner.nextLine();
             } while (input == null);
 
-            if (input.equals("test")) {
-                runTest();
+            if (input.startsWith("test")) {
+                runTest(input);
                 return;
             }
 
             this.executeCommand(input);
         } catch (Exception e) {
-            System.out.println("Error: incorrect command");
-            System.out.print("> ");
+            exception = true;
         } finally {
+            TUIUpdater.printClientViewInternal();//reprint view
+            if (exception) {
+                System.out.println("Error: incorrect command");
+                System.out.print("> ");
+            }
             readLine();
         }
     }
@@ -108,8 +113,8 @@ public class InputReader implements Runnable {
         }
     }
 
-    private void runTest() {
-        var file = System.getProperty("user.dir") + "/" + "testFile.txt";
+    private void runTest(String filename) {
+        var file = System.getProperty("user.dir") + "/" + filename + ".txt";
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String command;
             while ((command = reader.readLine()) != null) {

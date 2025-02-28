@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class is used to handle the socket connected to my ServerSocket
@@ -33,11 +34,17 @@ public class SocketHandler implements Runnable {
      */
     private ReceiveJsonMessageCallback msgReceiveCallback;
 
+    /**
+     * Atomic boolean to be sure to killed the socketHandler
+     */
+    private final AtomicBoolean killed;
+
     public SocketHandler(Socket socket) throws IOException {
         this.socket = socket;
         this.out = new PrintWriter(socket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.msgReceiveCallback = null;
+        killed = new AtomicBoolean(false);
     }
 
     public SocketHandler(Socket socket, PrintWriter out, BufferedReader in) throws IOException {
@@ -45,6 +52,7 @@ public class SocketHandler implements Runnable {
         this.out = out;
         this.in = in;
         this.msgReceiveCallback = null;
+        killed = new AtomicBoolean(false);
     }
 
     public SocketHandler(Socket socket, ReceiveJsonMessageCallback msgReceiveCallback) throws IOException {
@@ -52,6 +60,7 @@ public class SocketHandler implements Runnable {
         this.out = new PrintWriter(socket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.msgReceiveCallback = msgReceiveCallback;
+        killed = new AtomicBoolean(false);
     }
 
     /**
@@ -72,6 +81,12 @@ public class SocketHandler implements Runnable {
             // break the loop and finally call the disconnection
         } finally {
             System.out.println("Client disconnected from socket IP:"+ socket.getInetAddress() + " Port: " + socket.getPort());
+            try {
+                this.socket.close();
+            } catch (IOException e) {
+                System.out.println("Exception closing socket: exception: " + e.getMessage());
+            }
+            killed.set(true);
         }
     }
 
@@ -84,6 +99,7 @@ public class SocketHandler implements Runnable {
             this.out.println(message.toJson());
         } catch (Exception e) {
             System.out.println("Exception on sending message from socket IP:"+ socket.getInetAddress() + " Port: " + socket.getPort()  + " " + e.getMessage());
+            killed.set(true);
         }
     }
 
@@ -100,6 +116,6 @@ public class SocketHandler implements Runnable {
     }
 
     public boolean isConnected(){
-        return (this.socket != null && !this.socket.isClosed());
+        return (this.socket != null && !this.socket.isClosed() && !killed.get());
     }
 }

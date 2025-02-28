@@ -101,7 +101,7 @@ public class Follower {
             if (message instanceof AppendEntries appendEntries) {
                 if (!appendEntries.getLogLineStringBatch().isEmpty()) lostAppendEntries.add(appendEntries);
             }
-            System.out.println("Follower" + followerAddress.id + " is not connected, message not sent");
+            //System.out.println("Follower" + followerAddress.id + " is not connected, message not sent");
         }
     }
 

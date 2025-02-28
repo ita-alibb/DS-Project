@@ -7,9 +7,7 @@ import it.distributedsystems.messages.raft.RequestVoteResponse;
 import it.distributedsystems.raft.*;
 import it.distributedsystems.tui.TUIUpdater;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -22,12 +20,13 @@ public class ElectionProcessor implements Runnable {
 
     //Response handling
     private final BlockingQueue<RequestVoteResponse> requestVoteResponses = new LinkedBlockingQueue<>();
-    private int acceptedCount = 1;//myself
-    private int deniedCount = 0;
+    private final Set<Integer> acceptedCount = new HashSet<>();
+    private final Set<Integer> deniedCount = new HashSet<>();
 
     public ElectionProcessor(List<Follower> followerHandlers) {
         this.followers = followerHandlers;
         this.executor = Executors.newFixedThreadPool(followerHandlers.size() + 1);
+        acceptedCount.add(BrokerSettings.getBrokerID());//add myself
     }
 
     /**
@@ -41,18 +40,18 @@ public class ElectionProcessor implements Runnable {
                 var response = requestVoteResponses.take();
 
                 if (response.isVoteGranted()) {
-                    acceptedCount++;
+                    acceptedCount.add(response.getBrokerId());
                 } else {
-                    deniedCount++;
+                    deniedCount.add(response.getBrokerId());
                 }
 
                 //Three possible ways of killing this thread:
-                if (acceptedCount > BrokerSettings.getNumOfNodes()/2) {//1) leader is elected, will call setLeader that stops the threads
+                if (acceptedCount.size() > BrokerSettings.getNumOfNodes()/2) {//1) leader is elected, will call setLeader that stops the threads
                     TUIUpdater.setLastMessage("YOU ARE ELECTED AS LEADER");
                     //You are ELECTED
                     BrokerConnection.getInstance().setLeader();
                     BrokerConnection.getInstance().resetElectionTimeout();
-                } else if (deniedCount > BrokerSettings.getNumOfNodes()/2) {//2) election failed, set electionFailed, father thread will stop everything
+                } else if (deniedCount.size() > BrokerSettings.getNumOfNodes()/2) {//2) election failed, set electionFailed, father thread will stop everything
                     //KILL, you are not elected
                     electionFailed.set(true);
                 }
@@ -65,7 +64,6 @@ public class ElectionProcessor implements Runnable {
     }
 
     public void handleRequestVoteResponses(String jsonMessage) throws InterruptedException {
-        TUIUpdater.setLastMessage("Received request vote responses: " + jsonMessage);
         RequestVoteResponse cmd = (RequestVoteResponse) GsonDeserializer.deserialize(jsonMessage);
         // Add the message to the shared queue
         requestVoteResponses.put(cmd);
@@ -119,18 +117,19 @@ public class ElectionProcessor implements Runnable {
         //set new term for this election
         BrokerState.setCurrentTerm(BrokerState.getCurrentTerm() + 1);
         //reset counters
-        acceptedCount = 1;
-        deniedCount = 0;
+        acceptedCount.clear();
+        acceptedCount.add(BrokerSettings.getBrokerID());
+        deniedCount.clear();
         interruptExecutor();
         //reset election status
         electionFailed.set(false);
     }
 
-    public int getAcceptedCount() {
+    public Set<Integer> getAcceptedCount() {
         return acceptedCount;
     }
 
-    public int getDeniedCount() {
+    public Set<Integer> getDeniedCount() {
         return deniedCount;
     }
 }
