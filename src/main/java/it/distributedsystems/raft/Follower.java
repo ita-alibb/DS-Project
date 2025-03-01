@@ -2,7 +2,6 @@ package it.distributedsystems.raft;
 
 import it.distributedsystems.connection.ReceiveJsonMessageCallback;
 import it.distributedsystems.connection.handler.SocketHandler;
-import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.messages.raft.LeaderIdentification;
 import it.distributedsystems.messages.raft.RequestVote;
@@ -13,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.LinkedList;
 
 /**
  * This class represent the follower. Used when the current node is the Leader.
@@ -47,11 +45,6 @@ public class Follower {
      */
     private final ReceiveJsonMessageCallback msgReceiveCallback;
 
-    /**
-     * Queue of lost AppendEntries. On connection empty by sending every element
-     */
-    private final LinkedList<AppendEntries> lostAppendEntries = new LinkedList<>();
-
     public Follower(BrokerAddress address, ReceiveJsonMessageCallback msgReceiveCallback) {
         this.followerAddress = address;
         this.nextIndex = 0;
@@ -77,11 +70,6 @@ public class Follower {
             followerHandler.sendMessage(new LeaderIdentification(BrokerSettings.getBrokerID(),BrokerState.getCurrentTerm(),
                     ReplicationLog.getLastLogLineIndex()));
 
-            //send every lost appendEntries
-            while (!lostAppendEntries.isEmpty()) {
-                followerHandler.sendMessage(lostAppendEntries.pop());
-            }
-
             this.nextIndex = ReplicationLog.getLastLogLineIndex() + 1;
             this.matchIndex = 0;
 
@@ -94,14 +82,25 @@ public class Follower {
         }
     }
 
-    public void sendMessage(BaseDeserializableMessage message) {
+    public void sendAppendEntries(AppendEntries appendEntries) {
         if (connectHandler()) {
-            followerHandler.sendMessage(message);
-        } else {
-            if (message instanceof AppendEntries appendEntries) {
-                if (!appendEntries.getLogLineStringBatch().isEmpty()) lostAppendEntries.add(appendEntries);
+            if (appendEntries == null) { throw new RuntimeException("Send null append entries");}
+            if (appendEntries.getFirstNewLineIndex() == nextIndex) {
+                followerHandler.sendMessage(appendEntries);
+            } else {
+                //Create custom appendEntries.
+                System.out.println("Reply to append entries for follower " + followerAddress.id + "did not arrive in time, create a new append entries");
+
+                var prevAndNewLog = ReplicationLog.getLogsFromStartIndex(nextIndex-1);
+                if (prevAndNewLog.isEmpty()) {
+                    System.out.println("GetLogsFromStartIndex returned empty logs for " + (nextIndex -1) + "in Follower " + followerAddress.id);
+                }
+                var newAppendEntries = new AppendEntries(appendEntries.getLeaderTerm(),appendEntries.getLeaderID());
+                newAppendEntries.setLeaderCommitIndex(appendEntries.getLeaderCommitIndex());
+                newAppendEntries.setPrevLogTerm(prevAndNewLog.getFirst().getTerm());
+                newAppendEntries.setPrevLogIndex(prevAndNewLog.getFirst().getIndex());
+                newAppendEntries.addNewLogLine(prevAndNewLog.subList(1, prevAndNewLog.size()));
             }
-            //System.out.println("Follower" + followerAddress.id + " is not connected, message not sent");
         }
     }
 
@@ -153,5 +152,9 @@ public class Follower {
 
     public int getMatchIndex() {
         return this.matchIndex;
+    }
+
+    public int getNextIndex() {
+        return nextIndex;
     }
 }

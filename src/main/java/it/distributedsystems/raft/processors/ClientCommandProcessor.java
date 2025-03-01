@@ -5,16 +5,12 @@ import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.queue.QueueResponse;
 import it.distributedsystems.messages.raft.AppendEntries;
-import it.distributedsystems.messages.raft.AppendEntriesResponse;
-import it.distributedsystems.messages.raft.UniqueMessageIdentifier;
 import it.distributedsystems.raft.BrokerSettings;
 import it.distributedsystems.raft.BrokerState;
 import it.distributedsystems.raft.LogLine;
 import it.distributedsystems.raft.ReplicationLog;
 import it.distributedsystems.tui.TUIUpdater;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

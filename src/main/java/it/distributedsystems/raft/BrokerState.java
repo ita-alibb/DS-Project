@@ -75,6 +75,11 @@ public class BrokerState {
         if (commitIndex < BrokerState.commitIndex) {
             System.out.println("Error, set commitIndex should be monotonically increasing!");
             return;
+        } else if (commitIndex == BrokerState.commitIndex) {
+            //it is not a new commit index, it is the same
+            if (BrokerState.lastApplied == BrokerState.commitIndex) {//if the last applied is already at commit index return
+                return;
+            }
         }
 
         BrokerState.commitIndex = commitIndex;

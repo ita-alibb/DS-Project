@@ -121,7 +121,7 @@ public class AppendEntries extends BaseDeserializableMessage {
             return lastLogLine.getIndex();
         }
 
-        return 1;
+        return prevLogIndex + 1;
     }
 
     public int getLeaderCommitIndex() {
@@ -140,6 +140,11 @@ public class AppendEntries extends BaseDeserializableMessage {
     public void addNewLogLine(LogLine logLine){
         this.logLineBatch.add(logLine.toString().strip());
         this.logLineObjBatch.add(logLine);
+    }
+
+    public void addNewLogLine(List<LogLine> logLine){
+        this.logLineBatch.addAll(logLine.stream().map(LogLine::toString).toList());
+        this.logLineObjBatch.addAll(logLine);
     }
 
     public void setLeaderCommitIndex(int leaderCommitIndex) {

@@ -58,12 +58,13 @@ public class RaftCommandProcessor implements Runnable{
 
                             /*If leaderCommit>commitIndex,*/
                             if (appendEntries.getLeaderCommitIndex() > BrokerState.getCommitIndex()) {
-                                var lastNewLogIndex = appendEntries.getLastNewLineIndex();
-
                                 //As stated in the paper set commitIndex= min(leaderCommit,index of last new entry)
-                                //If there are no new entry consider the current commit index
-                                BrokerState.setCommitIndex(Math.min(BrokerState.getCommitIndex(),
-                                        (lastNewLogIndex == -1) ? BrokerState.getCommitIndex() : lastNewLogIndex));
+                                BrokerState.setCommitIndex(
+                                        Math.min(
+                                        BrokerState.getCommitIndex(),
+                                        ReplicationLog.getLastLogLineIndex())
+                                );
+
                             }
                         } else {
                             // Send AppendEntries NACK to Leader
@@ -78,6 +79,7 @@ public class RaftCommandProcessor implements Runnable{
 
                     case AppendEntriesResponse appendEntriesResponse : {//Message received by a LEADER
                         //Receive ACK, increase indexes
+                        TUIUpdater.setLastMessage("AppendEntriesResponse received from broker: " + appendEntriesResponse.getBrokerId());
                         if (appendEntriesResponse.isSuccess()) {
                             //ACK received
                             //Update matchIndex
@@ -86,7 +88,7 @@ public class RaftCommandProcessor implements Runnable{
                                     appendEntriesResponse.getLastLogIndex()
                             );
 
-                            //Now that you have changed the match index for a Follower, chech the ocndition to update the commit index of the leaderyt
+                            //Now that you have changed the match index for a Follower, check the condition to update the commit index of the leader
                             new Thread(this::checkUpdateLeaderCommitIndex);
 
                         } else {
@@ -103,7 +105,10 @@ public class RaftCommandProcessor implements Runnable{
                         }
                     }; break;
 
-                    default: //TODO: unexpected message here.
+                    default: {
+                        //TODO: unexpected message here.
+                        System.out.println("UNEXPECTED MESSAGE ON RAFTCOMMANDPROCESSORS " + command.getDeserializerType());
+                    }; break;
                 }
 
             } catch (InterruptedException e) {
@@ -117,26 +122,31 @@ public class RaftCommandProcessor implements Runnable{
         // If there exists an N such that N>commitIndex, a majority
         // of matchIndex[i]≥N, and log[N].term==currentTerm:
         // set commitIndex=N
-        var currentMax = -1;
+        var currentMax = BrokerState.getCommitIndex();
+        var matchIndexes = BrokerConnection.getInstance().getFollowers().stream().map(Follower::getMatchIndex).toList();
         try{
-            for (int N = BrokerState.getCommitIndex(); N < ReplicationLog.getLastLogLineIndex(); N++) {
+            //+1 because the first one (== commitIndex) should be always true
+            for (int N = currentMax + 1; N < ReplicationLog.getLastLogLineIndex(); N++) {
                 var nCount = 0;
 
-                for (Follower f : BrokerConnection.getInstance().getFollowers()) {
-                    if (f.getMatchIndex() >= N) {
+                for (Integer matchIndex : matchIndexes) {
+                    if (matchIndex >= N) {
                         nCount++;
                     }
                 }
 
-                var nLog = ReplicationLog.getLog(N);
-                if (nCount > BrokerSettings.getNumOfNodes()/2 && nLog != null && nLog.getTerm() == BrokerState.getCurrentTerm()){
-                    currentMax = Math.max(N,currentMax);
+                if (nCount > (BrokerSettings.getNumOfNodes()/2)){
+                    var nLog = ReplicationLog.getLog(N);
+                    if (nLog != null && nLog.getTerm() == BrokerState.getCurrentTerm()) {
+                        currentMax = Math.max(N, currentMax);
+                    }
+                } else {
+                    break;//if nCount is < #Brokers/2 then it cannot ever been for greater N -> so stop the for
                 }
             }
 
-            if (currentMax > BrokerState.getCommitIndex()) {
-                BrokerState.setCommitIndex(currentMax);//When setting the commit index it automatically start a thread that take lastApplied to commitIndex
-            }
+
+            BrokerState.setCommitIndex(currentMax);//When setting the commit index it automatically start a thread that take lastApplied to commitIndex
         } catch (Exception e) {
             System.out.println("Unexpected exception while check update commit index " + e.getMessage());
         }

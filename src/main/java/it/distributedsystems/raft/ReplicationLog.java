@@ -3,16 +3,22 @@ package it.distributedsystems.raft;
 import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.raft.AppendEntries;
+import it.distributedsystems.messages.raft.PastClientInfos;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.input.ReversedLinesFileReader;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.LinkedList;
+import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.lang.System.exit;
 
@@ -36,7 +42,7 @@ public class ReplicationLog {
     private static final CSVFormat csvFormat = CSVFormat.DEFAULT
             .builder()
             .setDelimiter(delimiter)
-            .setHeader(FILE_HEADER)
+            .setHeader(FILE_HEADER.split(String.valueOf(delimiter)))
             .setSkipHeaderRecord(true)
             .build();
     //endregion
@@ -45,7 +51,8 @@ public class ReplicationLog {
     private static LogLine lastLogLine = null; //The LAST line in your LOG!
     //private static LogLine prevLogLine = null; //The log line sent by the leader in appendEntries!
     private final static int CACHE_SIZE = 100;
-    private static LinkedList<LogLine> cachedLogLines = new LinkedList<>();
+    private static final LinkedList<LogLine> cachedLogLines = new LinkedList<>();
+    private static final ReentrantReadWriteLock logUpdateLock = new ReentrantReadWriteLock();
     //endregion
 
     /**
@@ -63,16 +70,45 @@ public class ReplicationLog {
             if (file.exists()) {
                 //file already exist;
                 //Maybe a crash, Recompute all replication log until the last saved leader commit indexn
+                lastLogLine = getLastLogLineOnStartup();
                 return;
             }
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, false))) {
-                writer.write(FILE_HEADER);
-                writer.newLine();
+            // Create the file with just the header
+            try (FileWriter fileWriter = new FileWriter(file);
+                 CSVPrinter csvPrinter = new CSVPrinter(fileWriter, csvFormat)) {
+                // No need to manually write the header - the CSVPrinter will do it automatically
+                // because we set the header in the CSVFormat
             }
         } catch (IOException e) {
             System.err.println("Error writing to file: " + e.getMessage());
         }
+    }
+
+    /**
+     * Return the last log line
+     */
+    private static LogLine getLastLogLineOnStartup(){
+        File file = new File(LOG_FILE_PATH);
+
+        try (ReversedLinesFileReader reader = new ReversedLinesFileReader(file, StandardCharsets.UTF_8)) {
+            String line = reader.readLine();
+            if  (line != null && !line.equals(FILE_HEADER)) {
+                return new LogLine(line);
+            }
+            /*while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
+                try (CSVParser parser = CSVParser.parse(line, csvFormat)) {
+                    for (CSVRecord record : parser) {
+                        //read all records backward
+                    }
+                }
+            }*/
+        } catch (Exception e) {
+            System.out.println("Exception while reading file backward");
+            exit(-1);
+        }
+
+        return null;
     }
 
     /**
@@ -83,12 +119,11 @@ public class ReplicationLog {
     public static LogLine leaderAppendCommand(QueueCommand command) {
         //The Index count is incremented. Kept inside LogLine.getLastIndexCounter
         LogLine line = LogLine.CreateNewLogToAppend(BrokerState.getCurrentTerm(), command);
-        //Append to the cache
-        appendToCachedLogLine(line);
+
+        //Write to persistent file, populate also cache
+        writeLineToCSV(line);
         //set as LastLog Line
         ReplicationLog.lastLogLine = line;
-        //Write to persistent file
-        writeLineToCSV(line);
 
         return line;
     }
@@ -106,28 +141,47 @@ public class ReplicationLog {
         truncateLogAfterIndex(appendEntries.getPrevLogIndex());
 
         //Append all logLine
-        LogLine line = ReplicationLog.lastLogLine;
-        for (String logLine : appendEntries.getLogLineStringBatch()) {
-            line = new LogLine(logLine, true);
-            writeLineToCSV(line);
-            appendToCachedLogLine(line);
-        }
+        List<LogLine> lines = appendEntries.getLogLineStringBatch().stream().map(s -> new LogLine(s,true)).toList();
+        writeLineToCSV(lines);
 
         //Set the new lastLogLine
-        ReplicationLog.lastLogLine = line;
+        ReplicationLog.lastLogLine = lines.getLast();
     }
 
     private static void writeLineToCSV(LogLine line) {
+        logUpdateLock.writeLock().lock();
         try (FileWriter writer = new FileWriter(LOG_FILE_PATH, true);
              CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat)) {
 
-            csvPrinter.printRecord((LogLine) line);
+            csvPrinter.printRecord(line);
             csvPrinter.flush();
+            appendToCachedLogLine(line);
         } catch (IOException e) {
             System.err.println("Error while appending to file: " + e.getMessage());
             exit(0);
+        } finally {
+            logUpdateLock.writeLock().unlock();
         }
     }
+
+    private static void writeLineToCSV(List<LogLine> line) {
+        logUpdateLock.writeLock().lock();
+        try (FileWriter writer = new FileWriter(LOG_FILE_PATH, true);
+             CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat)) {
+
+            for (LogLine logLine : line) {
+                csvPrinter.printRecord(logLine);
+                csvPrinter.flush();
+                appendToCachedLogLine(logLine);
+            }
+        } catch (IOException e) {
+            System.err.println("Error while appending to file: " + e.getMessage());
+            exit(0);
+        } finally {
+            logUpdateLock.writeLock().unlock();
+        }
+    }
+
     /**
      * Reads all the contents of the CSV file and apply the command to the BrokerModel.
      * used when the commit index changes. Ensures that the lastApplied is in match with the commit index!
@@ -138,6 +192,7 @@ public class ReplicationLog {
 
         if (lastAppliedIndex >= lastLeaderCommitIndex) return;
 
+        logUpdateLock.readLock().lock();
         try (Reader reader = new FileReader(LOG_FILE_PATH);
              CSVParser csvParser = new CSVParser(reader, csvFormat)) {
 
@@ -149,7 +204,7 @@ public class ReplicationLog {
                 if (Integer.parseInt(record.get(0)) > lastLeaderCommitIndex) break;
 
                 //it's  lastApplied<=tmp.Index<=leaderCommitIndex --> Commit
-                BrokerModel.getInstance().processCommand((QueueCommand) GsonDeserializer.deserialize(record.get(3)));
+                BrokerModel.getInstance().processCommand((QueueCommand) GsonDeserializer.deserialize(record.get(2)));
                 BrokerState.setLastApplied(Integer.parseInt(record.get(0)));
             }
         } catch (FileNotFoundException e) {
@@ -158,6 +213,8 @@ public class ReplicationLog {
         } catch (IOException e) {
             System.err.println("Error while reading file: " + e.getMessage());
             exit(-1);
+        } finally {
+            logUpdateLock.readLock().unlock();
         }
     }
     public static int getLastLogLineIndex() {
@@ -187,6 +244,7 @@ public class ReplicationLog {
             return null;
         }
 
+        logUpdateLock.readLock().lock();
         //try using cache:
         var cacheHit = cachedLogLines.stream().filter(ll -> ll.getIndex() == logIndex).toList();
         if (!cacheHit.isEmpty()) {
@@ -205,8 +263,48 @@ public class ReplicationLog {
         } catch (IOException e) {
             System.err.println("Error while reading file: " + e.getMessage());
             exit(-1);
+        } finally {
+            logUpdateLock.readLock().unlock();
         }
         return null;
+    }
+
+    /**
+     * Get the log with specified index
+     */
+    public static List<LogLine> getLogsFromStartIndex(int startIndex) {
+        if (startIndex < 0) { //indexes starts from 1
+            return new ArrayList<>();
+        }
+
+        logUpdateLock.readLock().lock();
+        //try using cache:
+        var searchingInts = IntStream.rangeClosed(startIndex, lastLogLine.getIndex()).boxed().toList();
+        var cacheHit = cachedLogLines.stream().filter(ll -> searchingInts.contains(ll.getIndex()))
+                .sorted(Comparator.comparingInt(LogLine::getIndex)).toList();
+        if (!cacheHit.isEmpty() && cacheHit.size() == searchingInts.size()) {//found all
+            return cacheHit;
+        }
+
+        List<LogLine> logs = new ArrayList<>();
+
+        //Cache miss:
+        try (Reader reader = new FileReader(LOG_FILE_PATH);
+             CSVParser csvParser = new CSVParser(reader, csvFormat)) {
+
+            for (CSVRecord record : csvParser) {
+                if (record.size() > 1 && Integer.parseInt(record.get(0)) >= startIndex) {
+                    logs.add(new LogLine(Integer.parseInt(record.get(0)), Integer.parseInt(record.get(1)), record.get(2)));
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error while reading file: " + e.getMessage());
+            exit(-1);
+        } finally {
+            logUpdateLock.readLock().unlock();
+        }
+
+        return logs;
     }
 
     /**
@@ -242,5 +340,36 @@ public class ReplicationLog {
             cachedLogLines.poll();
             cachedLogLines.offer(logLine);
         }
+    }
+
+    /**
+     * Cold start from log
+     */
+    public static HashMap<Integer, PastClientInfos> getPastClientsInfos() {
+        logUpdateLock.readLock().lock();
+        var returnMap = new HashMap<Integer, PastClientInfos>();
+        try (Reader reader = new FileReader(LOG_FILE_PATH);
+             CSVParser csvParser = new CSVParser(reader, csvFormat)) {
+            for (CSVRecord record : csvParser) {
+                var queueCommand = (QueueCommand) GsonDeserializer.deserialize(record.get(2));
+                returnMap.put(
+                        queueCommand.getClientID(),
+                        new PastClientInfos(queueCommand.getClientID(), queueCommand.getCommandID(), null)
+                );
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("File does not exist: " + LOG_FILE_PATH);
+            exit(-1);
+        } catch (IOException e) {
+            System.err.println("Error while reading file: " + e.getMessage());
+            exit(-1);
+        } finally {
+            logUpdateLock.readLock().unlock();
+        }
+        return returnMap;
+    }
+
+    public static void cleanCache(){
+        cachedLogLines.clear();
     }
 }

@@ -96,6 +96,7 @@ public class TUIUpdater implements Runnable {
                         .map(Follower::getFollowerId)
                         .map(String::valueOf)
                         .collect(Collectors.joining(",")));
+                System.out.printf(BLUE + "Last log line Index:" + RESET + " %d Term: %d %n", ReplicationLog.getLastLogLineIndex(), ReplicationLog.getLastLogLineTerm());
                 System.out.printf("Last polled command: %s %n", BrokerConnection.getInstance().getLastQueueCommand());
                 System.out.println("──────────────────────────────────────────────────────────────────────");
             }

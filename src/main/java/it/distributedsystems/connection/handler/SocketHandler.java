@@ -32,7 +32,7 @@ public class SocketHandler implements Runnable {
     /**
      * This is the function called after receiving a message
      */
-    private ReceiveJsonMessageCallback msgReceiveCallback;
+    protected ReceiveJsonMessageCallback msgReceiveCallback;
 
     /**
      * Atomic boolean to be sure to killed the socketHandler
@@ -87,6 +87,7 @@ public class SocketHandler implements Runnable {
                 System.out.println("Exception closing socket: exception: " + e.getMessage());
             }
             killed.set(true);
+            customDisconnection();
         }
     }
 
@@ -100,6 +101,7 @@ public class SocketHandler implements Runnable {
         } catch (Exception e) {
             System.out.println("Exception on sending message from socket IP:"+ socket.getInetAddress() + " Port: " + socket.getPort()  + " " + e.getMessage());
             killed.set(true);
+            customDisconnection();
         }
     }
 
@@ -117,5 +119,13 @@ public class SocketHandler implements Runnable {
 
     public boolean isConnected(){
         return (this.socket != null && !this.socket.isClosed() && !killed.get());
+    }
+
+    /**
+     * To override by other class for custom behavior.
+     * WARNING: may be called twice
+     */
+    protected void customDisconnection(){
+        //None
     }
 }

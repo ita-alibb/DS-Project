@@ -5,6 +5,8 @@ import it.distributedsystems.connection.handler.ClientHandler;
 import it.distributedsystems.connection.handler.LeaderHandler;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.queue.QueueResponse;
+import it.distributedsystems.messages.raft.AppendEntries;
+import it.distributedsystems.messages.raft.PastClientInfos;
 import it.distributedsystems.raft.*;
 import it.distributedsystems.raft.processors.ClientCommandProcessor;
 import it.distributedsystems.raft.processors.ElectionProcessor;
@@ -50,6 +52,16 @@ public class BrokerConnection {
      * List of all connected Clients
      */
     private final List<ClientHandler> clientHandlers = new ArrayList<>();
+    /**
+     * List of all disconnected clients, kept by the Leader.
+     * Initialized by looking at the whole log.
+     */
+    private ConcurrentHashMap<Integer, PastClientInfos> pastClientInfos;
+
+    public PastClientInfos getPastClientInfos(int pastClientId) {
+        return pastClientInfos.get(pastClientId);
+    }
+
 
     /**
      * List of all connected Followers, used if leader
@@ -162,6 +174,10 @@ public class BrokerConnection {
     public void setLeader(){
         clientCommandProcessor = new ClientCommandProcessor();
         processPool.execute(clientCommandProcessor);
+
+        //cold start
+        pastClientInfos = new ConcurrentHashMap<>(ReplicationLog.getPastClientsInfos());
+
         BrokerSettings.setBrokerStatus(BrokerStatus.Leader);
         BrokerSettings.setLeaderAddress(BrokerSettings.getBrokerID());
 
@@ -170,11 +186,24 @@ public class BrokerConnection {
     }
 
     /**
-     * Call this method to revert this node from Leader to Folower
+     * Call this method to revert this node from Leader to Follower
      */
     public void setFollower() {
         BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
+        ReplicationLog.cleanCache();
         if (clientCommandProcessor != null) clientCommandProcessor.destroy();
+    }
+
+    /**
+     * Function to retrieve the next unique client ID
+     */
+    public int getNewClientId() {
+        var currentMax = Math.max(
+                pastClientInfos.keySet().stream().mapToInt(x -> x).max().orElse(-1),
+                clientHandlers.stream().mapToInt(ClientHandler::getClientId).max().orElse(-1)
+        );
+
+        return currentMax + 1;
     }
 
     /**
@@ -211,6 +240,17 @@ public class BrokerConnection {
     }
 
     /**
+     * Called on client disconnection to enable it for reconnection
+     */
+    public void disconnectClientHandler(PastClientInfos newPastClientInfos){
+        //Add the past client infos
+        pastClientInfos.put(newPastClientInfos.getClientId(), newPastClientInfos);
+
+        //Delete from current handlers
+        clientHandlers.removeIf(ch -> ch.getClientId() == newPastClientInfos.getClientId());
+    }
+
+    /**
      * Send QueueResponse to specific client Id
      */
     public void sendQueueResponseToClient(QueueResponse response) {
@@ -219,7 +259,7 @@ public class BrokerConnection {
             System.out.println("Client " + response.getClientID() + " not found, cannot send response: " + response.toJson());
             return;
         }
-
+        clientHandler.setLastResponse(response);
         clientHandler.sendMessage(response);
     }
 
@@ -283,12 +323,12 @@ public class BrokerConnection {
     /**
      * Send Message to every follower
      */
-    public void forwardAllFollowers(BaseDeserializableMessage message) {
+    public void forwardAllFollowers(AppendEntries message) {
         //Start it in a new thread to not stop the process execution
         ExecutorService exec = Executors.newFixedThreadPool(this.followerHandlers.size());
         try {
             for (final Follower fh : this.followerHandlers) {
-                exec.submit(() -> fh.sendMessage(message));
+                exec.submit(() -> fh.sendAppendEntries(message));
             }
         } finally {
             exec.shutdown();
@@ -296,11 +336,13 @@ public class BrokerConnection {
     }
 
     public void decreaseFollowerNextIndex(int followerId) {
-        followerHandlers.stream().filter(f -> f.getFollowerId() == followerId).findFirst().ifPresent(Follower::decreaseNextIndex);
+        followerHandlers.stream().filter(f -> f.getFollowerId() == followerId).findFirst()
+                .ifPresent(Follower::decreaseNextIndex);
     }
 
     public void increaseFollowerIndexes(int followerId, int lastReceivedIndex) {
-        followerHandlers.stream().filter(f -> f.getFollowerId() == followerId).findFirst().ifPresent(fw ->fw.increaseIndexes(lastReceivedIndex));
+        followerHandlers.stream().filter(f -> f.getFollowerId() == followerId).findFirst()
+                .ifPresent(fw ->fw.increaseIndexes(lastReceivedIndex));
     }
 
     public List<Follower> getFollowers() {
