@@ -147,10 +147,21 @@ public class ClientConnection implements Runnable{
                 retry = connectionResponse.isRedirect();
             } catch (Exception e) {//the current broker is down, try another one (should not happen at first start because we give the valid leader as argument of the program
                 System.out.println("Exception on trying to connect to Leader : '"+ e.getMessage() + "' , try with another Broker");
-                var address = otherBrokers.get(i).split(":");
-                i = (i +1) % otherBrokers.size();
-                this.serverIP = address[0];
-                this.serverPort = Integer.parseInt(address[1]);
+                if (otherBrokers.isEmpty()){
+                    System.out.println("No other broker to contact, wait and contact the same");
+                } else {
+                    var address = otherBrokers.get(i).split(":");
+                    i = (i +1) % otherBrokers.size();
+                    this.serverIP = address[0];
+                    this.serverPort = Integer.parseInt(address[1]);
+                }
+
+                try {
+                    Thread.sleep(WAIT_ELECTION_TIME);
+                } catch (InterruptedException e1) {
+                    System.out.println("Interrupted while waiting");
+                }
+
                 retry = true;
             }
         } while (retry);

@@ -115,9 +115,12 @@ public class InputReader implements Runnable {
 
     private void runTest(String filename) {
         var file = System.getProperty("user.dir") + "/" + filename + ".txt";
+        System.out.println("Started test with file: " + file);
+
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String command;
             while ((command = reader.readLine()) != null) {
+                System.out.println("Issued: " + command + " wait 100 ms for next command");
                 executeCommand(command);
                 Thread.sleep(100);
             }
@@ -127,6 +130,8 @@ public class InputReader implements Runnable {
             System.err.println("Error while reading file: " + e.getMessage());
         } catch (InterruptedException e) {
             System.err.println("Error while waiting 100 ms between executions: " + e.getMessage());
+        } finally {
+            System.out.println("Finished test with file: " + file);
         }
     }
 }

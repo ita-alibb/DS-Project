@@ -16,7 +16,7 @@ public class ElectionProcessor implements Runnable {
     private final ExecutorService executor;
     private final Queue<Future<?>> futureTask = new LinkedList<>();
     private final List<Follower> followers;
-    private final AtomicBoolean electionFailed = new AtomicBoolean(false);
+    //private final AtomicBoolean electionFailed = new AtomicBoolean(false);
 
     //Response handling
     private final BlockingQueue<RequestVoteResponse> requestVoteResponses = new LinkedBlockingQueue<>();
@@ -50,10 +50,10 @@ public class ElectionProcessor implements Runnable {
                     TUIUpdater.setLastMessage("YOU ARE ELECTED AS LEADER");
                     //You are ELECTED
                     BrokerConnection.getInstance().setLeader();
-                } else if (deniedCount.size() > BrokerSettings.getNumOfNodes()/2) {//2) election failed, set electionFailed, father thread will stop everything
-                    //KILL, you are not elected
-                    electionFailed.set(true);
-                }
+                }// else if (deniedCount.size() > BrokerSettings.getNumOfNodes()/2) {//2) election failed, set electionFailed, father thread will stop everything
+                    //You are not elected, let the election expire to add some time interval
+                    //electionFailed.set(false);
+                //}
             } catch (InterruptedException e) {//3) The father thread has been interrupted
                 System.out.println("Election interrupted");
                 Thread.currentThread().interrupt();
@@ -89,7 +89,7 @@ public class ElectionProcessor implements Runnable {
 
             //Keep waiting for eventually interruption
             while (true) {
-                if (Thread.currentThread().isInterrupted() || electionFailed.get()) {
+                if (Thread.currentThread().isInterrupted()/* || electionFailed.get()*/) {
                     //It has been interrupted or election Failed, stop every other child thread
                     interruptExecutor();
                     Thread.currentThread().interrupt();
@@ -115,13 +115,14 @@ public class ElectionProcessor implements Runnable {
         BrokerConnection.getInstance().resetElectionTimeout();
         //set new term for this election
         BrokerState.setCurrentTerm(BrokerState.getCurrentTerm() + 1);
+        BrokerState.setVotedFor(BrokerSettings.getBrokerID());
         //reset counters
         acceptedCount.clear();
         acceptedCount.add(BrokerSettings.getBrokerID());
         deniedCount.clear();
         interruptExecutor();
         //reset election status
-        electionFailed.set(false);
+        //electionFailed.set(false);
     }
 
     public Set<Integer> getAcceptedCount() {

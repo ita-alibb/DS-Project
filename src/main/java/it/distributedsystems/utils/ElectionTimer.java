@@ -2,14 +2,12 @@ package it.distributedsystems.utils;
 
 import it.distributedsystems.raft.BrokerSettings;
 import it.distributedsystems.raft.BrokerStatus;
-import it.distributedsystems.raft.Follower;
 
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static it.distributedsystems.raft.BrokerSettings.APPEND_ENTRIES_TIME;
 
@@ -32,7 +30,7 @@ public class ElectionTimer {
      * Return an always variable between an interval TIMEOUT
      */
     private long getTIMEOUT(){
-        return ThreadLocalRandom.current().nextInt(3*APPEND_ENTRIES_TIME, 5*APPEND_ENTRIES_TIME + 1);//random timeout from 5 to 10 times more than append entries frequency
+        return (long) BrokerSettings.getBrokerID() * APPEND_ENTRIES_TIME + ThreadLocalRandom.current().nextInt(3*APPEND_ENTRIES_TIME, 7*APPEND_ENTRIES_TIME + 1);//random timeout from 3 to 7 times more than append entries frequency
     }
 
     /**

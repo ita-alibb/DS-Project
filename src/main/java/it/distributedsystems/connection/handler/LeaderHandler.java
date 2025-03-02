@@ -1,6 +1,7 @@
 package it.distributedsystems.connection.handler;
 
 import com.sun.jdi.ClassNotPreparedException;
+import it.distributedsystems.connection.BrokerConnection;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.raft.LeaderIdentification;
@@ -25,6 +26,7 @@ public class LeaderHandler extends SocketHandler {
         if (msg instanceof RequestVote vote) {//Message from another follower (candidate) to RequestVote RPC
             // if conditions to vote, vote Yes else vote no
             var voteGranted = evaluateVoteGranted(vote);
+
             //send vote
             out.println(new RequestVoteResponse(BrokerSettings.getBrokerID(), BrokerState.getCurrentTerm(), voteGranted).toJson());
 
@@ -45,17 +47,28 @@ public class LeaderHandler extends SocketHandler {
         //if candidate term is less, it is outdated, not grant vote
         if (msg.getCandidateTerm() < BrokerState.getCurrentTerm()) return false;
 
+        // If candidate's term is higher, step down and reset votedFor
+        if (msg.getCandidateTerm() > BrokerState.getCurrentTerm()) {
+            BrokerState.setCurrentTerm(msg.getCandidateTerm());
+            BrokerConnection.getInstance().setFollower();
+            BrokerConnection.getInstance().resetElectionTimeout();
+        }
+
         //If already voted for someone else in this term reply false
         if (BrokerState.getVotedFor() != null && BrokerState.getVotedFor() != msg.getCandidateId()) return false;
 
         //if log is not up-to-date reply false
-        if (msg.getCandidateLastLogTerm() < ReplicationLog.getLastLogLineTerm()) return false;//compare term
+        boolean isLogUpToDate = (msg.getCandidateLastLogTerm() > ReplicationLog.getLastLogLineTerm()) ||//compare term
+                (msg.getCandidateLastLogTerm() == ReplicationLog.getLastLogLineTerm() && //compare index
+                        msg.getCandidateLastLogIndex() >= ReplicationLog.getLastLogLineIndex());
 
-        if (msg.getCandidateLastLogIndex() < ReplicationLog.getLastLogLineIndex()) return false;//compare index
+        if (!isLogUpToDate) {
+            return false;
+        }
 
         //if reach here the vote is granted
-        BrokerState.setCurrentTerm(msg.getCandidateTerm());
         BrokerState.setVotedFor(msg.getCandidateId());
+        BrokerConnection.getInstance().resetElectionTimeout(); // Reset election timeout since we voted
         return true;
     }
 
