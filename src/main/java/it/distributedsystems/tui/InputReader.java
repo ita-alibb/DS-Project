@@ -119,11 +119,14 @@ public class InputReader implements Runnable {
             String command;
             while ((command = reader.readLine()) != null) {
                 executeCommand(command);
+                Thread.sleep(100);
             }
         } catch (InvalidObjectException e) {
             System.err.println("Error while extracting the command: " + e.getMessage());
         } catch (IOException e) {
             System.err.println("Error while reading file: " + e.getMessage());
+        } catch (InterruptedException e) {
+            System.err.println("Error while waiting 100 ms between executions: " + e.getMessage());
         }
     }
 }

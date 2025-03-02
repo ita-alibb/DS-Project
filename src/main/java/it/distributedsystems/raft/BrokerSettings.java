@@ -21,7 +21,7 @@ public class BrokerSettings {
     private static BrokerAddress leaderAddress = null;
     private static List<BrokerAddress> knownBrokers;
 
-    public synchronized static BrokerStatus getBrokerStatus() {
+    public static BrokerStatus getBrokerStatus() {
         return brokerStatus;
     }
 
@@ -29,7 +29,7 @@ public class BrokerSettings {
         brokerStatus = newBrokerStatus;
     }
 
-    public synchronized static BrokerAddress getLeaderAddress(){
+    public static BrokerAddress getLeaderAddress(){
         return leaderAddress;
     }
 
@@ -40,7 +40,7 @@ public class BrokerSettings {
     /**
      * The list is composed of addresses of every other broker in this format "{IP}:{Port}"
      */
-    public synchronized static List<BrokerAddress> getBrokers(boolean excludeMyself) {
+    public static List<BrokerAddress> getBrokers(boolean excludeMyself) {
         if (excludeMyself) {
             //remove myself from the set of known brokers
             return new LinkedList<>(knownBrokers.stream().filter(b -> b.id != brokerAddress.id).toList());
@@ -57,7 +57,7 @@ public class BrokerSettings {
         return brokerAddress;
     }
 
-    public synchronized static String getBrokerIP(){
+    public static String getBrokerIP(){
         if (brokerAddress.IP == null) {
             try {
                 brokerAddress.IP = Inet4Address.getLocalHost().getHostAddress();
@@ -69,7 +69,7 @@ public class BrokerSettings {
         return brokerAddress.IP;
     }
 
-    public synchronized static int getNumOfNodes() {
+    public static int getNumOfNodes() {
         return numOfNodes;
     }
 
@@ -80,14 +80,14 @@ public class BrokerSettings {
     /**
      * Gets the port for Broker to Broker communication
      */
-    public synchronized static int getBtoBPort(){
+    public static int getBtoBPort(){
         return brokerAddress.BrokerServerPort;
     }
 
     /**
      * Gets the port for Client<=>Broker communication
      */
-    public synchronized static int getCtoBPort(){
+    public static int getCtoBPort(){
         return brokerAddress.ClientServerPort;
     }
 
@@ -99,7 +99,7 @@ public class BrokerSettings {
         brokerAddress = newBrokerAddress;
     }
 
-    protected synchronized static void setBrokers(List<BrokerAddress> newKnownBrokers) {
+    protected static void setBrokers(List<BrokerAddress> newKnownBrokers) {
 
         knownBrokers = newKnownBrokers;
 

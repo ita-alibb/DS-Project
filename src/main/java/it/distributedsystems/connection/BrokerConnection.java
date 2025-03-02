@@ -172,13 +172,16 @@ public class BrokerConnection {
      * Call this method if this node becomes the leader
      */
     public void setLeader(){
+        //Stop Election
+        BrokerSettings.setBrokerStatus(BrokerStatus.Leader);
+        resetElectionTimeout();
+
         clientCommandProcessor = new ClientCommandProcessor();
         processPool.execute(clientCommandProcessor);
 
         //cold start
         pastClientInfos = new ConcurrentHashMap<>(ReplicationLog.getPastClientsInfos());
 
-        BrokerSettings.setBrokerStatus(BrokerStatus.Leader);
         BrokerSettings.setLeaderAddress(BrokerSettings.getBrokerID());
 
         //Start the connection to every other broker (make them follower and identify as a LEADER)

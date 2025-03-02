@@ -50,7 +50,6 @@ public class ElectionProcessor implements Runnable {
                     TUIUpdater.setLastMessage("YOU ARE ELECTED AS LEADER");
                     //You are ELECTED
                     BrokerConnection.getInstance().setLeader();
-                    BrokerConnection.getInstance().resetElectionTimeout();
                 } else if (deniedCount.size() > BrokerSettings.getNumOfNodes()/2) {//2) election failed, set electionFailed, father thread will stop everything
                     //KILL, you are not elected
                     electionFailed.set(true);

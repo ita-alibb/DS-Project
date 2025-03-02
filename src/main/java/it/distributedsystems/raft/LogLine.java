@@ -70,7 +70,7 @@ public class LogLine {
      */
     @Override
     public String toString(){
-        return String.format("%d;%d;%s", index, term, command.toJson());
+        return String.format("%d;%d;%s", index, term, commandJson != null ? commandJson : command.toJson());
     }
 
     //Getters

@@ -2,7 +2,6 @@ package it.distributedsystems.connection;
 
 import it.distributedsystems.messages.*;
 import it.distributedsystems.messages.queue.*;
-import it.distributedsystems.tui.TUIUpdater;
 import it.distributedsystems.utils.BrokerAddress;
 
 import java.io.BufferedReader;
@@ -14,12 +13,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class handles the connection with the Broker net (the Leader)
  */
 public class ClientConnection implements Runnable{
     private static ClientConnection INSTANCE;
+    private static final long WAIT_ELECTION_TIME = 30_000;
 
     /**
      * The clientID, it's -1 at the beginning, then it is updated with the one sent from the leader (only one change per lifetime)
@@ -49,22 +50,34 @@ public class ClientConnection implements Runnable{
      */
     private BufferedReader in;
 
-    private final ExecutorService processResponseThread = Executors.newSingleThreadExecutor();
+    private final ExecutorService threadPool = Executors.newFixedThreadPool(3);
 
     /**
      * This list keeps tracks of sent commandIds, removed when ack is received
      */
     private final List<QueueCommand> sentCommands = Collections.synchronizedList(new ArrayList<>());
 
+    /**
+     * List of commands to send
+     */
+    private final LinkedBlockingQueue<QueueCommand> commandsToSend = new LinkedBlockingQueue<>();
+
     private String lastError = "";
     private Integer lastReadInt = null;
 
     private final LinkedBlockingQueue<QueueResponse> asynchronousResponseQueue = new LinkedBlockingQueue<>();
 
+    private final AtomicBoolean leaderAlive = new AtomicBoolean(false);
+    private static final ScheduledExecutorService reRunnerScheduler = Executors.newSingleThreadScheduledExecutor();
+
+
     private ClientConnection(String serverIp, String tcpPort, int clientID) {
         this.serverIP = serverIp;
         this.serverPort = Integer.parseInt(tcpPort);
         this.clientID = clientID;
+
+        // Start thread to process responses (not stop the listening on the socket)
+        this.threadPool.execute(this::processResponseAsync);
     }
 
     public static void setConnection(String serverIp, String tcpPort, int clientID) {
@@ -85,18 +98,16 @@ public class ClientConnection implements Runnable{
         // Initialize Listening thread
         System.out.println("Connection Thread started");
 
-        // Start thread to process responses (not stop the listening on the socket)
-        this.processResponseThread.execute(this::processResponseAsync);
+        // Initialize the connection. Contains endless thread
+        this.initConnection();
+        this.leaderAlive.set(true);
 
+        System.out.println("Connection established correctly, start listening");
 
-        while (true) {
-            // Initialize the connection. Contains endless thread
-            this.initConnection();
-
-            System.out.println("Connection established correctly, start listening");
-            // Listening to socket. Contains endless while, returns only in case of exception eg: disconnection of leader
-            this.listeningConnection();
-        }
+        // Start listening thread
+        this.threadPool.execute(this::listeningConnection);
+        // Start sending thread
+        this.threadPool.execute(this::commandSender);
     }
 
     private void initConnection() {
@@ -126,7 +137,7 @@ public class ClientConnection implements Runnable{
                         this.serverPort = connectionResponse.getLeaderPort();
                     } else {
                         System.out.println("The leader is not elected yet, retry after 30 seconds");
-                        Thread.sleep(30_000);
+                        Thread.sleep(WAIT_ELECTION_TIME);
                     }
                 } else {
                     clientID = connectionResponse.getClientID();
@@ -149,7 +160,7 @@ public class ClientConnection implements Runnable{
         try {
             String jsonResponse;
 
-            while((jsonResponse = in.readLine()) != null){
+            while((jsonResponse = this.in.readLine()) != null && leaderAlive.get()){
                 /*System.out.println("received: " + jsonResponse);*/
 
                 try {
@@ -165,10 +176,41 @@ public class ClientConnection implements Runnable{
             // break the loop and finally call the disconnection
             System.out.println("Error while waiting connection of the Leader");
         } finally {
+            if (leaderAlive.get()) {
+                //Re-run, re-try connection after 5 seconds if leader crash
+                reRunnerScheduler.schedule(getINSTANCE(), WAIT_ELECTION_TIME, TimeUnit.MILLISECONDS);
+            }
+            leaderAlive.set(false);
             try {
                 this.socket.close();
             } catch (IOException e) {
                 System.out.println("Exception closing socket: exception: " + e.getMessage());
+                this.socket = null;
+            }
+        }
+    }
+
+    private void commandSender(){
+        try {
+            while (leaderAlive.get()) {
+                var command = commandsToSend.take();
+
+                this.out.println(command.toJson());
+                this.sentCommands.add(command);
+            }
+        } catch (Exception e) {
+            System.out.println("Exception on sending request to server; exception: " + e.getMessage());
+        } finally {
+            if (leaderAlive.get()) {
+                //Re-run, re try connection after 5 seconds if leader crash
+                reRunnerScheduler.schedule(getINSTANCE(), WAIT_ELECTION_TIME, TimeUnit.MILLISECONDS);
+            }
+            leaderAlive.set(false);
+            try {
+                this.socket.close();
+            } catch (IOException e) {
+                System.out.println("Exception closing socket: exception: " + e.getMessage());
+                this.socket = null;
             }
         }
     }
@@ -201,17 +243,13 @@ public class ClientConnection implements Runnable{
         }
     }
     /**
-     * Synchronized method to be sure that the response is correct
-     * Method used to send the command to the server
-     *
-     * @param command the command to send
+     * Add the command to send to the queue
      */
     public synchronized void sendAsync(QueueCommand command) {
-        try {
-            this.out.println(command.toJson());
-            this.sentCommands.add(command);
-        } catch (Exception e) {
-            System.out.println("Exception on sending request to server; exception: " + e.getMessage());
+        try{
+            this.commandsToSend.put(command);
+        } catch (InterruptedException e) {
+            System.out.println("Exception while putting on queue");
         }
     }
 

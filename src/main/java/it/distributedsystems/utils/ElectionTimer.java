@@ -32,7 +32,7 @@ public class ElectionTimer {
      * Return an always variable between an interval TIMEOUT
      */
     private long getTIMEOUT(){
-        return ThreadLocalRandom.current().nextInt(3*BrokerSettings.getBrokerID()*APPEND_ENTRIES_TIME, 5*BrokerSettings.getBrokerID()*APPEND_ENTRIES_TIME + 1);//random timeout from 5 to 10 times more than append entries frequency
+        return ThreadLocalRandom.current().nextInt(3*APPEND_ENTRIES_TIME, 5*APPEND_ENTRIES_TIME + 1);//random timeout from 5 to 10 times more than append entries frequency
     }
 
     /**

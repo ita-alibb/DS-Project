@@ -4,10 +4,6 @@ import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.raft.AppendEntries;
 import it.distributedsystems.messages.raft.PastClientInfos;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
 import java.io.*;
@@ -17,7 +13,6 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.System.exit;
@@ -39,12 +34,6 @@ public class ReplicationLog {
     private static String LOG_FILE_PATH = System.getProperty("user.dir") + "/logs/" + LocalDate.now()+ "/";
     private static String STATE_FILE_PATH;
     private final static char delimiter = ';';
-    private static final CSVFormat csvFormat = CSVFormat.DEFAULT
-            .builder()
-            .setDelimiter(delimiter)
-            .setHeader(FILE_HEADER.split(String.valueOf(delimiter)))
-            .setSkipHeaderRecord(true)
-            .build();
     //endregion
 
     //region pervLogLine : lastLogLine appended to file and cache
@@ -69,16 +58,16 @@ public class ReplicationLog {
 
             if (file.exists()) {
                 //file already exist;
-                //Maybe a crash, Recompute all replication log until the last saved leader commit indexn
+                //Maybe a crash, Recompute all replication log until the last saved leader commit index
                 lastLogLine = getLastLogLineOnStartup();
                 return;
             }
 
             // Create the file with just the header
-            try (FileWriter fileWriter = new FileWriter(file);
-                 CSVPrinter csvPrinter = new CSVPrinter(fileWriter, csvFormat)) {
-                // No need to manually write the header - the CSVPrinter will do it automatically
-                // because we set the header in the CSVFormat
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))){
+                writer.write(FILE_HEADER);
+                writer.newLine();
+                writer.flush();
             }
         } catch (IOException e) {
             System.err.println("Error writing to file: " + e.getMessage());
@@ -96,13 +85,6 @@ public class ReplicationLog {
             if  (line != null && !line.equals(FILE_HEADER)) {
                 return new LogLine(line);
             }
-            /*while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
-                try (CSVParser parser = CSVParser.parse(line, csvFormat)) {
-                    for (CSVRecord record : parser) {
-                        //read all records backward
-                    }
-                }
-            }*/
         } catch (Exception e) {
             System.out.println("Exception while reading file backward");
             exit(-1);
@@ -150,11 +132,11 @@ public class ReplicationLog {
 
     private static void writeLineToCSV(LogLine line) {
         logUpdateLock.writeLock().lock();
-        try (FileWriter writer = new FileWriter(LOG_FILE_PATH, true);
-             CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat)) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
+            writer.write(line.toString());
+            writer.newLine();
+            writer.flush();
 
-            csvPrinter.printRecord(line);
-            csvPrinter.flush();
             appendToCachedLogLine(line);
         } catch (IOException e) {
             System.err.println("Error while appending to file: " + e.getMessage());
@@ -166,12 +148,12 @@ public class ReplicationLog {
 
     private static void writeLineToCSV(List<LogLine> line) {
         logUpdateLock.writeLock().lock();
-        try (FileWriter writer = new FileWriter(LOG_FILE_PATH, true);
-             CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat)) {
-
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
             for (LogLine logLine : line) {
-                csvPrinter.printRecord(logLine);
-                csvPrinter.flush();
+                writer.write(logLine.toString());
+                writer.newLine();
+                writer.flush();
+
                 appendToCachedLogLine(logLine);
             }
         } catch (IOException e) {
@@ -193,19 +175,20 @@ public class ReplicationLog {
         if (lastAppliedIndex >= lastLeaderCommitIndex) return;
 
         logUpdateLock.readLock().lock();
-        try (Reader reader = new FileReader(LOG_FILE_PATH);
-             CSVParser csvParser = new CSVParser(reader, csvFormat)) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
+            reader.readLine(); //discard header
 
             BrokerModel.getInstance().acquireLock();
-
-            for (CSVRecord record : csvParser) {
+            String line;
+            while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
+                var logLine = new LogLine(line);
                 //check index
-                if (Integer.parseInt(record.get(0)) <= lastAppliedIndex) continue;
-                if (Integer.parseInt(record.get(0)) > lastLeaderCommitIndex) break;
+                if (logLine.getIndex() <= lastAppliedIndex) continue;
+                if (logLine.getIndex() > lastLeaderCommitIndex) break;
 
                 //it's  lastApplied<=tmp.Index<=leaderCommitIndex --> Commit
-                BrokerModel.getInstance().processCommand((QueueCommand) GsonDeserializer.deserialize(record.get(2)));
-                BrokerState.setLastApplied(Integer.parseInt(record.get(0)));
+                BrokerModel.getInstance().processCommand(logLine.getCommand());
+                BrokerState.setLastApplied(logLine.getIndex());
             }
         } catch (FileNotFoundException e) {
             System.out.println("File does not exist: " + LOG_FILE_PATH);
@@ -252,12 +235,16 @@ public class ReplicationLog {
         }
 
         //Cache miss:
-        try (Reader reader = new FileReader(LOG_FILE_PATH);
-             CSVParser csvParser = new CSVParser(reader, csvFormat)) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
+            reader.readLine(); //discard header
 
-            for (CSVRecord record : csvParser) {
-                if (record.size() > 1 && Integer.parseInt(record.get(0)) == logIndex) {
-                    return new LogLine(Integer.parseInt(record.get(0)), Integer.parseInt(record.get(1)), record.get(2));
+            String line;
+
+            while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
+                var logLine = new LogLine(line, true);
+
+                if (logLine.getIndex() == logIndex) {
+                    return logLine;
                 }
             }
         } catch (IOException e) {
@@ -289,12 +276,14 @@ public class ReplicationLog {
         List<LogLine> logs = new ArrayList<>();
 
         //Cache miss:
-        try (Reader reader = new FileReader(LOG_FILE_PATH);
-             CSVParser csvParser = new CSVParser(reader, csvFormat)) {
+        //Start reading backwards. Add on start
+        try (ReversedLinesFileReader reader = new ReversedLinesFileReader(new File(LOG_FILE_PATH), StandardCharsets.UTF_8)) {
+            String line;
 
-            for (CSVRecord record : csvParser) {
-                if (record.size() > 1 && Integer.parseInt(record.get(0)) >= startIndex) {
-                    logs.add(new LogLine(Integer.parseInt(record.get(0)), Integer.parseInt(record.get(1)), record.get(2)));
+            while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
+
+                if (Integer.parseInt(line.split(";")[0]) >= startIndex) {
+                    logs.addFirst(new LogLine(line));
                 }
             }
         } catch (IOException e) {
@@ -348,10 +337,14 @@ public class ReplicationLog {
     public static HashMap<Integer, PastClientInfos> getPastClientsInfos() {
         logUpdateLock.readLock().lock();
         var returnMap = new HashMap<Integer, PastClientInfos>();
-        try (Reader reader = new FileReader(LOG_FILE_PATH);
-             CSVParser csvParser = new CSVParser(reader, csvFormat)) {
-            for (CSVRecord record : csvParser) {
-                var queueCommand = (QueueCommand) GsonDeserializer.deserialize(record.get(2));
+        try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
+            reader.readLine(); //discard header
+
+            String line;
+
+            while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
+                var queueCommand = (QueueCommand) GsonDeserializer.deserialize(line.split(";")[2]);
+
                 returnMap.put(
                         queueCommand.getClientID(),
                         new PastClientInfos(queueCommand.getClientID(), queueCommand.getCommandID(), null)
