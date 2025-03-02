@@ -8,8 +8,10 @@ import it.distributedsystems.messages.raft.AppendEntriesResponse;
 import it.distributedsystems.raft.*;
 import it.distributedsystems.tui.TUIUpdater;
 
+import java.util.Comparator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 
 import static java.lang.System.exit;
 
@@ -78,6 +80,7 @@ public class RaftCommandProcessor implements Runnable{
                     }; break;
 
                     case AppendEntriesResponse appendEntriesResponse : {//Message received by a LEADER
+                        System.out.println("RECEIVED APPENDENTRIESRESPONSE: " + appendEntriesResponse.toJson());
                         //Receive ACK, increase indexes
                         TUIUpdater.setLastMessage("AppendEntriesResponse received from broker: " + appendEntriesResponse.getBrokerId());
                         if (appendEntriesResponse.isSuccess()) {
@@ -122,33 +125,28 @@ public class RaftCommandProcessor implements Runnable{
         // If there exists an N such that N>commitIndex, a majority
         // of matchIndex[i]≥N, and log[N].term==currentTerm:
         // set commitIndex=N
-        var currentMax = BrokerState.getCommitIndex();
-        var matchIndexes = BrokerConnection.getInstance().getFollowers().stream().map(Follower::getMatchIndex).toList();
-        try{
-            //+1 because the first one (== commitIndex) should be always true
-            for (int N = currentMax + 1; N < ReplicationLog.getLastLogLineIndex(); N++) {
-                var nCount = 0;
+        var matchIndexes = BrokerConnection.getInstance().getFollowers().stream()
+                .map(Follower::getMatchIndex)
+                .sorted(Comparator.reverseOrder())
+                .toList(); //get indexes in decreasing order
 
-                for (Integer matchIndex : matchIndexes) {
-                    if (matchIndex >= N) {
-                        nCount++;
-                    }
-                }
+        // Calculate the size required for a majority
+        int majoritySize = (BrokerSettings.getNumOfNodes() / 2) + 1;
 
-                if (nCount > (BrokerSettings.getNumOfNodes()/2)){
-                    var nLog = ReplicationLog.getLog(N);
-                    if (nLog != null && nLog.getTerm() == BrokerState.getCurrentTerm()) {
-                        currentMax = Math.max(N, currentMax);
-                    }
-                } else {
-                    break;//if nCount is < #Brokers/2 then it cannot ever been for greater N -> so stop the for
-                }
-            }
+        // Get the value at the majority position
+        int candidateCommitIndex = matchIndexes.get(majoritySize - 1);
 
+        // If the candidate N is not greater than A, no solution exists
+        if (candidateCommitIndex <= BrokerState.getCommitIndex()) {
+            return;
+        }
 
-            BrokerState.setCommitIndex(currentMax);//When setting the commit index it automatically start a thread that take lastApplied to commitIndex
-        } catch (Exception e) {
-            System.out.println("Unexpected exception while check update commit index " + e.getMessage());
+        //Else we have a new commit index shared by at least N/2+1 followers
+        System.out.println("Checked incrementing commitIndex resulting to:" + candidateCommitIndex);
+        var nLog = ReplicationLog.getLog(candidateCommitIndex);
+        if (nLog != null && nLog.getTerm() == BrokerState.getCurrentTerm()) {//if the term of the new committed index is this term, update
+            //When setting the commit index it automatically start a thread that take lastApplied to commitIndex
+            BrokerState.setCommitIndex(candidateCommitIndex);
         }
     }
 

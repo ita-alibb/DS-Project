@@ -6,11 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ElectionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ElectionProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/ElectionTimer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/ElectionTimer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -257,7 +253,7 @@
       <workItem from="1740696117522" duration="4834000" />
       <workItem from="1740759641550" duration="9035000" />
       <workItem from="1740826907691" duration="16134000" />
-      <workItem from="1740932170663" duration="9405000" />
+      <workItem from="1740932170663" duration="10972000" />
     </task>
     <servers />
   </component>
