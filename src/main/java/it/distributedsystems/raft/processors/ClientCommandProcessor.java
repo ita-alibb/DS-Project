@@ -67,9 +67,13 @@ public class ClientCommandProcessor implements Runnable {
                 System.out.println("Log appended");
 
                 //2) !Send AppendEntries to every other broker! AppendEntries is sent periodically, here we create a batch!
-                currentBatchLock.lock();
-                currentAppendEntries.addNewLogLine(appendedLine);
-                currentBatchLock.unlock();
+                try {
+                    currentBatchLock.lock();
+                    currentAppendEntries.addNewLogLine(appendedLine);
+                } finally {
+                    currentBatchLock.unlock();
+                }
+
                 System.out.println("Log added to batch");
             } catch (InterruptedException e) {
                 System.out.println("Exception while waiting for new commands");
@@ -87,30 +91,33 @@ public class ClientCommandProcessor implements Runnable {
                 AppendEntries messageToSend;
 
                 currentBatchLock.lock();
-                //Batch of messages set previously
-                //Set commitIndex
-                currentAppendEntries.setLeaderCommitIndex(BrokerState.getCommitIndex());
 
-                //ensure prev index is first index +1
-                var firstNewLineIndex = currentAppendEntries.getFirstNewLineIndex();
-                if (firstNewLineIndex != currentAppendEntries.getPrevLogIndex() + 1 ) {
-                    System.out.println("Strange behavior " + firstNewLineIndex + "prev index= " + currentAppendEntries.getPrevLogIndex());
+                try{
+                    //Batch of messages set previously
+                    //Set commitIndex
+                    currentAppendEntries.setLeaderCommitIndex(BrokerState.getCommitIndex());
+
+                    //ensure prev index is first index +1
+                    var firstNewLineIndex = currentAppendEntries.getFirstNewLineIndex();
+                    if (firstNewLineIndex != currentAppendEntries.getPrevLogIndex() + 1 ) {
+                        System.out.println("Strange behavior " + firstNewLineIndex + "prev index= " + currentAppendEntries.getPrevLogIndex());
+                    }
+
+                    //Clone the append entries, send after releasing the lock.
+                    messageToSend = new AppendEntries(this.currentAppendEntries);
+
+                    //Set prevLog infos for next AppendEntries
+                    var newPrevLogLine = this.currentAppendEntries.getLastLogLineInBatch();
+                    if (newPrevLogLine != null) {//if not empty set the prevlog,
+                        this.currentAppendEntries.setPrevLogIndex(newPrevLogLine.getIndex());
+                        this.currentAppendEntries.setPrevLogTerm(newPrevLogLine.getTerm());
+                    }// else means that you just sent a heartbeat and not change previous log line
+
+                    //clear del batch
+                    this.currentAppendEntries.clearBatch();
+                } finally {
+                    currentBatchLock.unlock();
                 }
-
-                //Clone the append entries, send after releasing the lock.
-                messageToSend = new AppendEntries(this.currentAppendEntries);
-
-                //Set prevLog infos for next AppendEntries
-                var newPrevLogLine = this.currentAppendEntries.getLastLogLineInBatch();
-                if (newPrevLogLine != null) {//if not empty set the prevlog,
-                    this.currentAppendEntries.setPrevLogIndex(newPrevLogLine.getIndex());
-                    this.currentAppendEntries.setPrevLogTerm(newPrevLogLine.getTerm());
-                }// else means that you just sent a heartbeat and not change previous log line
-
-                //clear del batch
-                this.currentAppendEntries.clearBatch();
-
-                currentBatchLock.unlock();
 
                 //After releasing the lock, send to all followers
                 BrokerConnection.getInstance().forwardAllFollowers(messageToSend);
