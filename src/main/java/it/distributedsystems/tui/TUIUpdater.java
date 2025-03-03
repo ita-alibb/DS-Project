@@ -69,6 +69,7 @@ public class TUIUpdater implements Runnable {
      */
     private static void printBrokerViewInternal(){
         clearConsole();
+        System.out.println("Time: " + System.currentTimeMillis());
         System.out.println("──────────────────────────────────────────────────────────────────────");
 
         var la = BrokerSettings.getLeaderAddress();
@@ -89,23 +90,27 @@ public class TUIUpdater implements Runnable {
                             .collect(Collectors.joining(",")));
         } else {
             if (BrokerSettings.getBrokerStatus() == BrokerStatus.Leader) {
-
                 var followers = BrokerConnection.getInstance().getFollowers();
-                System.out.printf("Connected Followers: %s %n", followers.stream().
-                        filter(Follower::isConnected)
-                        .map(Follower::getFollowerId)
-                        .map(String::valueOf)
-                        .collect(Collectors.joining(",")));
-                System.out.printf(BLUE + "Last log line Index:" + RESET + " %d Term: %d %n", ReplicationLog.getLastLogLineIndex(), ReplicationLog.getLastLogLineTerm());
+                System.out.printf("Connected Followers: ---------------%n");
+                for (var follower : followers) {
+                    System.out.printf(YELLOW + "Follower Id: %d Follower MatchIndex: %d" + RESET + "%n", follower.getFollowerId(), follower.getMatchIndex());
+                }
+                System.out.printf("------------------------------------%n");
+
                 System.out.printf("Last polled command: %s %n", BrokerConnection.getInstance().getLastQueueCommand());
                 System.out.println("──────────────────────────────────────────────────────────────────────");
             }
 
+            System.out.printf(BLUE + "Last log line "+ RESET + "Index: %d Term: %d %n", ReplicationLog.getLastLogLineIndex(), ReplicationLog.getLastLogLineTerm());
             var queues = BrokerModel.getInstance().getQueues();
-            System.out.println(BLUE+"Queue Key: Values..."+RESET);
+            System.out.println();
+            System.out.println("Queues"+BLUE+"Key:"+ RESET + GREEN + " Values..."+RESET);
             for (var queueKey : queues.keySet()) {
-                System.out.printf(" %s : %s %n", queueKey, queues.get(queueKey).toString());
+                System.out.printf(BLUE + "%s :"+ RESET + GREEN + " %s"+ RESET + "%n", queueKey, queues.get(queueKey).toString());
+                System.out.println("-------------------------------------");
             }
+            System.out.println();
+
         }
 
         System.out.printf(GREEN+"Last message to show:"+RESET+" %s %n", lastMessage);

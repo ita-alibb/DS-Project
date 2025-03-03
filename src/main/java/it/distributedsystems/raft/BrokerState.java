@@ -83,9 +83,8 @@ public class BrokerState {
         }
 
         BrokerState.commitIndex = commitIndex;
-
         //If you update commit index you have to apply it to the model
-        new Thread(ReplicationLog::applyReplicationLog);
+        new Thread(ReplicationLog::applyReplicationLog).start();
     }
 
     public synchronized static int getLastApplied() {

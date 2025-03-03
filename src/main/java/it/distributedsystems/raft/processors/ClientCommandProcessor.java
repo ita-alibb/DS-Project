@@ -64,12 +64,13 @@ public class ClientCommandProcessor implements Runnable {
                 //RAFT:
                 //1) Append the command to your Log
                 LogLine appendedLine = ReplicationLog.leaderAppendCommand(lastClientCommand);
+                System.out.println("Log appended");
 
                 //2) !Send AppendEntries to every other broker! AppendEntries is sent periodically, here we create a batch!
                 currentBatchLock.lock();
                 currentAppendEntries.addNewLogLine(appendedLine);
                 currentBatchLock.unlock();
-
+                System.out.println("Log added to batch");
             } catch (InterruptedException e) {
                 System.out.println("Exception while waiting for new commands");
                 Thread.currentThread().interrupt();

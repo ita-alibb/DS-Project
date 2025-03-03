@@ -7,8 +7,6 @@ import it.distributedsystems.messages.queue.QueueCommand;
  * This class represent one line of the Log File. It keeps track of the log index
  */
 public class LogLine {
-    private static int lastInsertedIndex = 0;
-
     private final int index;
     private final int term;
     private transient final QueueCommand command;
@@ -60,8 +58,8 @@ public class LogLine {
      * Static constructor to create a NEW LOGLINE.
      * Increase the index counter!
      */
-    public static LogLine CreateNewLogToAppend(int epoch, QueueCommand command) {
-        return new LogLine(++lastInsertedIndex, epoch, command);
+    public static LogLine CreateNewLogToAppend(QueueCommand command) {
+        return new LogLine(ReplicationLog.getLastLogLineIndex() + 1, BrokerState.getCurrentTerm(), command);
     }
 
     /**
@@ -74,13 +72,6 @@ public class LogLine {
     }
 
     //Getters
-
-    /**
-     * The returned index is the last inserted index in the LogFile.
-     */
-    public static int getLastInsertedIndex() {
-        return lastInsertedIndex;
-    }
 
     public int getIndex() {
         return index;

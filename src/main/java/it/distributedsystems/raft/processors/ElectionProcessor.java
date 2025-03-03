@@ -46,8 +46,8 @@ public class ElectionProcessor implements Runnable {
                 }
 
                 //Three possible ways of killing this thread:
-                if (acceptedCount.size() > BrokerSettings.getNumOfNodes()/2) {//1) leader is elected, will call setLeader that stops the threads
-                    TUIUpdater.setLastMessage("YOU ARE ELECTED AS LEADER");
+                if (acceptedCount.size() > (BrokerSettings.getNumOfNodes()/2f)) {//1) leader is elected, will call setLeader that stops the threads
+                    System.out.println("YOU ARE ELECTED AS LEADER");
                     //You are ELECTED
                     BrokerConnection.getInstance().setLeader();
                 }// else if (deniedCount.size() > BrokerSettings.getNumOfNodes()/2) {//2) election failed, set electionFailed, father thread will stop everything
@@ -84,6 +84,9 @@ public class ElectionProcessor implements Runnable {
                 );
             }
 
+            //Add self vote
+            requestVoteResponses.put(new RequestVoteResponse(BrokerSettings.getBrokerID(), BrokerState.getCurrentTerm(), true));
+
             //collectResponses, inside the thread it sets the leader if get >N/2 responses.
             futureTask.add(executor.submit(this));
 
@@ -118,7 +121,6 @@ public class ElectionProcessor implements Runnable {
         BrokerState.setVotedFor(BrokerSettings.getBrokerID());
         //reset counters
         acceptedCount.clear();
-        acceptedCount.add(BrokerSettings.getBrokerID());
         deniedCount.clear();
         interruptExecutor();
         //reset election status

@@ -265,7 +265,7 @@ public class ClientConnection implements Runnable{
     }
 
     public List<QueueCommand> getSentCommands() {
-        return sentCommands;
+        return new ArrayList<>(sentCommands);
     }
 
     public String getLastError() {

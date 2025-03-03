@@ -12,9 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.IntStream;
 
+import static it.distributedsystems.raft.BrokerSettings.APPEND_ENTRIES_TIME;
 import static java.lang.System.exit;
 
 /**
@@ -31,8 +33,8 @@ import static java.lang.System.exit;
 public class ReplicationLog {
     //region File handling:
     public final static String FILE_HEADER = "Index;Epoch;JsonQueueCommand";
-    private static String LOG_FILE_PATH = System.getProperty("user.dir") + "/logs/" + LocalDate.now()+ "/";
-    private static String STATE_FILE_PATH;
+    protected static String LOG_FILE_PATH = System.getProperty("user.dir") + "/logs/" + LocalDate.now()+ "/";
+    protected static String STATE_FILE_PATH;
     private final static char delimiter = ';';
     //endregion
 
@@ -41,7 +43,7 @@ public class ReplicationLog {
     //private static LogLine prevLogLine = null; //The log line sent by the leader in appendEntries!
     private final static int CACHE_SIZE = 100;
     private static final LinkedList<LogLine> cachedLogLines = new LinkedList<>();
-    private static final ReentrantReadWriteLock logUpdateLock = new ReentrantReadWriteLock();
+    private static final ReentrantReadWriteLock logUpdateLock = new ReentrantReadWriteLock(true);
     //endregion
 
     /**
@@ -100,7 +102,7 @@ public class ReplicationLog {
      */
     public static LogLine leaderAppendCommand(QueueCommand command) {
         //The Index count is incremented. Kept inside LogLine.getLastIndexCounter
-        LogLine line = LogLine.CreateNewLogToAppend(BrokerState.getCurrentTerm(), command);
+        LogLine line = LogLine.CreateNewLogToAppend(command);
 
         //Write to persistent file, populate also cache
         writeLineToCSV(line);
@@ -131,17 +133,27 @@ public class ReplicationLog {
     }
 
     private static void writeLineToCSV(LogLine line) {
-        logUpdateLock.writeLock().lock();
+        System.out.println("Writing line to CSV: " + line + " Lock is hold:" + (logUpdateLock.isWriteLocked() ? "yes by n-threads " + logUpdateLock.getQueueLength() : "no"));
+        try {
+            if (!logUpdateLock.writeLock().tryLock(APPEND_ENTRIES_TIME, TimeUnit.MILLISECONDS)) {
+                System.out.println("Cannot get the lock in time");
+                return;
+            }
+        } catch(InterruptedException e) {
+            System.out.println("Interrupted while waiting for write lock");
+        }
+        System.out.println("Inside locked part");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
             writer.write(line.toString());
+            System.out.println("Written to file " + line.toString());
             writer.newLine();
-            writer.flush();
 
             appendToCachedLogLine(line);
         } catch (IOException e) {
             System.err.println("Error while appending to file: " + e.getMessage());
             exit(0);
         } finally {
+            System.out.println("Finished writing to file");
             logUpdateLock.writeLock().unlock();
         }
     }
@@ -150,9 +162,9 @@ public class ReplicationLog {
         logUpdateLock.writeLock().lock();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
             for (LogLine logLine : line) {
+                System.out.println("Written to file " + line.toString());
                 writer.write(logLine.toString());
                 writer.newLine();
-                writer.flush();
 
                 appendToCachedLogLine(logLine);
             }
@@ -171,6 +183,7 @@ public class ReplicationLog {
     public synchronized static void applyReplicationLog() {
         var lastLeaderCommitIndex = BrokerState.getCommitIndex();
         var lastAppliedIndex = BrokerState.getLastApplied();
+        System.out.println("Applying Replicated log from " + lastAppliedIndex + " to " + lastLeaderCommitIndex);
 
         if (lastAppliedIndex >= lastLeaderCommitIndex) return;
 
@@ -198,6 +211,7 @@ public class ReplicationLog {
             exit(-1);
         } finally {
             logUpdateLock.readLock().unlock();
+            BrokerModel.getInstance().releaseLock();
         }
     }
     public static int getLastLogLineIndex() {

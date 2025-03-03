@@ -33,7 +33,7 @@ public class BrokerSettingsBootstrapper extends BrokerSettings {
 
         setBrokerAddress(newBrokerAddress.stream().filter(ba -> ba.id == brokerId).findFirst().get());
         setBrokers(newBrokerAddress);
-        setNumOfNodes(newBrokerAddress.size() + 1);
+        setNumOfNodes(newBrokerAddress.size());
 
         restorePersistentState();
     }

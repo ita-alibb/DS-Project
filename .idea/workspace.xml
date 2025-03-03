@@ -5,8 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/test/java/it/distributedsystems/ReplicationLogTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/it/distributedsystems/testLog.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/brokerPortConfiguration.json" beforeDir="false" afterPath="$PROJECT_DIR$/brokerPortConfiguration.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerState.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerState.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/Follower.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/Follower.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/LogLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/LogLine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ClientCommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ClientCommandProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ElectionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ElectionProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/utils/BrokerSettingsBootstrapper.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,38 +50,40 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
-    &quot;Application.StartBroker.executor&quot;: &quot;Debug&quot;,
-    &quot;Application.StartBroker1.executor&quot;: &quot;Run&quot;,
-    &quot;Application.StartBroker2.executor&quot;: &quot;Debug&quot;,
-    &quot;Application.StartBroker3.executor&quot;: &quot;Run&quot;,
-    &quot;Application.StartBroker4.executor&quot;: &quot;Run&quot;,
-    &quot;Application.StartClient.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.GsonTest.BaseDeserializableMessageTest.executor&quot;: &quot;Debug&quot;,
-    &quot;JUnit.GsonTest.ConnectionMessageTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.GsonTest.QueueResponseTest.executor&quot;: &quot;Debug&quot;,
-    &quot;JUnit.GsonTest.executor&quot;: &quot;Run&quot;,
-    &quot;Maven.DS-Project-App [clean,package].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.rqs-cli-app [clean,package,-PBrokerApp].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.rqs-cli-app [clean,package].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.rqs-cli-app [test].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.rqs-cli-app [verify].executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;task/finish&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/aliba/Documents/GitHub/IS24-AM52&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Main.executor": "Run",
+    "Application.StartBroker.executor": "Debug",
+    "Application.StartBroker1.executor": "Debug",
+    "Application.StartBroker2.executor": "Debug",
+    "Application.StartBroker3.executor": "Run",
+    "Application.StartBroker4.executor": "Run",
+    "Application.StartClient.executor": "Run",
+    "JUnit.GsonTest.BaseDeserializableMessageTest.executor": "Debug",
+    "JUnit.GsonTest.ConnectionMessageTest.executor": "Run",
+    "JUnit.GsonTest.QueueResponseTest.executor": "Debug",
+    "JUnit.GsonTest.executor": "Run",
+    "JUnit.ReplicationLogTest.executor": "Run",
+    "JUnit.ReplicationLogTest.replicationTest.executor": "Debug",
+    "Maven.DS-Project-App [clean,package].executor": "Run",
+    "Maven.rqs-cli-app [clean,package,-PBrokerApp].executor": "Run",
+    "Maven.rqs-cli-app [clean,package].executor": "Run",
+    "Maven.rqs-cli-app [test].executor": "Run",
+    "Maven.rqs-cli-app [verify].executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "task/finish",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/aliba/Documents/GitHub/IS24-AM52",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\aliba\Documents\GitHub\DS-Project" />
@@ -84,7 +99,7 @@
       <command value="mvn clean package" />
     </option>
   </component>
-  <component name="RunManager" selected="Application.StartClient">
+  <component name="RunManager" selected="Application.StartBroker1">
     <configuration name="StartBroker1" type="Application" factoryName="Application" singleton="true">
       <option name="MAIN_CLASS_NAME" value="it.distributedsystems.BrokerApp" />
       <module name="rqs-cli-app" />
@@ -148,22 +163,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="GsonTest.BaseDeserializableMessageTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="rqs-cli-app" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="it.distributedsystems.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="it.distributedsystems" />
-      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.GsonTest" />
-      <option name="METHOD_NAME" value="BaseDeserializableMessageTest" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="GsonTest.ConnectionMessageTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="rqs-cli-app" />
       <extension name="coverage">
@@ -196,6 +195,37 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="ReplicationLogTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="rqs-cli-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="it.distributedsystems.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="it.distributedsystems" />
+      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.ReplicationLogTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ReplicationLogTest.replicationTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="rqs-cli-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="it.distributedsystems.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="it.distributedsystems" />
+      <option name="MAIN_CLASS_NAME" value="it.distributedsystems.ReplicationLogTest" />
+      <option name="METHOD_NAME" value="replicationTest" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <list>
       <item itemvalue="Application.StartBroker1" />
       <item itemvalue="Application.StartBroker2" />
@@ -203,17 +233,19 @@
       <item itemvalue="Application.StartBroker4" />
       <item itemvalue="Application.StartBroker5" />
       <item itemvalue="Application.StartClient" />
+      <item itemvalue="JUnit.ReplicationLogTest" />
+      <item itemvalue="JUnit.ReplicationLogTest.replicationTest" />
       <item itemvalue="JUnit.GsonTest" />
-      <item itemvalue="JUnit.GsonTest.BaseDeserializableMessageTest" />
       <item itemvalue="JUnit.GsonTest.ConnectionMessageTest" />
       <item itemvalue="JUnit.GsonTest.QueueResponseTest" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.ReplicationLogTest.replicationTest" />
+        <item itemvalue="JUnit.ReplicationLogTest" />
         <item itemvalue="JUnit.GsonTest.QueueResponseTest" />
         <item itemvalue="JUnit.GsonTest" />
         <item itemvalue="JUnit.GsonTest.ConnectionMessageTest" />
-        <item itemvalue="JUnit.GsonTest.BaseDeserializableMessageTest" />
       </list>
     </recent_temporary>
   </component>
@@ -253,7 +285,8 @@
       <workItem from="1740696117522" duration="4834000" />
       <workItem from="1740759641550" duration="9035000" />
       <workItem from="1740826907691" duration="16134000" />
-      <workItem from="1740932170663" duration="10972000" />
+      <workItem from="1740932170663" duration="17097000" />
+      <workItem from="1740995699268" duration="12713000" />
     </task>
     <servers />
   </component>
@@ -280,25 +313,55 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java</url>
-          <line>173</line>
+          <line>174</line>
           <option name="timeStamp" value="22" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java</url>
-          <line>241</line>
+          <line>242</line>
           <option name="timeStamp" value="25" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java</url>
-          <line>284</line>
-          <option name="timeStamp" value="30" />
+          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java</url>
+          <line>85</line>
+          <option name="timeStamp" value="38" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/BrokerState.java</url>
+          <line>74</line>
+          <option name="timeStamp" value="43" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java</url>
+          <line>38</line>
+          <option name="timeStamp" value="44" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java</url>
-          <line>83</line>
-          <option name="timeStamp" value="38" />
+          <line>183</line>
+          <option name="timeStamp" value="47" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java</url>
+          <line>135</line>
+          <option name="timeStamp" value="48" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java</url>
+          <line>142</line>
+          <option name="timeStamp" value="49" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java</url>
+          <line>138</line>
+          <option name="timeStamp" value="50" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+    <watches-manager>
+      <configuration name="Application">
+        <watch expression="BrokerState.setCommitIndex(1)" language="JAVA" custom="it.distributedsystems.raft.BrokerState" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>

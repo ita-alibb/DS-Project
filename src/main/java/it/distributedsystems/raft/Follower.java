@@ -89,7 +89,7 @@ public class Follower {
                 followerHandler.sendMessage(appendEntries);
             } else {
                 //Create custom appendEntries.
-                System.out.println("Reply to append entries for follower " + followerAddress.id + "did not arrive in time, create a new append entries");
+                System.out.println("Reply to append entries for follower " + followerAddress.id + " did not arrive in time, create a new append entries");
 
                 var prevAndNewLog = ReplicationLog.getLogsFromStartIndex(nextIndex-1);
                 if (prevAndNewLog.isEmpty()) {

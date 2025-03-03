@@ -328,6 +328,8 @@ public class BrokerConnection {
      */
     public void forwardAllFollowers(AppendEntries message) {
         //Start it in a new thread to not stop the process execution
+        if (this.followerHandlers.isEmpty()) return;
+
         ExecutorService exec = Executors.newFixedThreadPool(this.followerHandlers.size());
         try {
             for (final Follower fh : this.followerHandlers) {
@@ -353,6 +355,7 @@ public class BrokerConnection {
     }
 
     public void registerResponse(QueueResponse response) {
+        if (clientCommandProcessor == null || BrokerSettings.getBrokerStatus() != BrokerStatus.Leader) return; //not the leader, nothing to forward
         clientCommandProcessor.handleResponseQueueCallback(response);
     }
 }

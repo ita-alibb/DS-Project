@@ -40,6 +40,7 @@ public class RaftCommandProcessor implements Runnable{
 
                 switch (command) {
                     case AppendEntries appendEntries : {//Message received by a FOLLOWER
+                        System.out.println("RECEIVED APPENDENTRIES: " + appendEntries.toJson());
                         TUIUpdater.setLastMessage("AppendEntries received");
                         //Even if the append entries will be refused, the leader is active
                         BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
@@ -63,10 +64,9 @@ public class RaftCommandProcessor implements Runnable{
                                 //As stated in the paper set commitIndex= min(leaderCommit,index of last new entry)
                                 BrokerState.setCommitIndex(
                                         Math.min(
-                                        BrokerState.getCommitIndex(),
+                                        appendEntries.getLeaderCommitIndex(),
                                         ReplicationLog.getLastLogLineIndex())
                                 );
-
                             }
                         } else {
                             // Send AppendEntries NACK to Leader
@@ -92,7 +92,7 @@ public class RaftCommandProcessor implements Runnable{
                             );
 
                             //Now that you have changed the match index for a Follower, check the condition to update the commit index of the leader
-                            new Thread(this::checkUpdateLeaderCommitIndex);
+                            checkUpdateLeaderCommitIndex();
 
                         } else {
                             //NACK received
@@ -131,10 +131,12 @@ public class RaftCommandProcessor implements Runnable{
                 .toList(); //get indexes in decreasing order
 
         // Calculate the size required for a majority
-        int majoritySize = (BrokerSettings.getNumOfNodes() / 2) + 1;
+        int majoritySize = ((BrokerSettings.getNumOfNodes() - 1) / 2);//-1 because it is for sure replicated by me, the leader
 
         // Get the value at the majority position
         int candidateCommitIndex = matchIndexes.get(majoritySize - 1);
+
+        System.out.println("Checked incrementing commitIndex resulting to:" + candidateCommitIndex);
 
         // If the candidate N is not greater than A, no solution exists
         if (candidateCommitIndex <= BrokerState.getCommitIndex()) {
@@ -142,7 +144,6 @@ public class RaftCommandProcessor implements Runnable{
         }
 
         //Else we have a new commit index shared by at least N/2+1 followers
-        System.out.println("Checked incrementing commitIndex resulting to:" + candidateCommitIndex);
         var nLog = ReplicationLog.getLog(candidateCommitIndex);
         if (nLog != null && nLog.getTerm() == BrokerState.getCurrentTerm()) {//if the term of the new committed index is this term, update
             //When setting the commit index it automatically start a thread that take lastApplied to commitIndex
