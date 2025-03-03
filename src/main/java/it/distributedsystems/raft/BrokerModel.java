@@ -91,6 +91,7 @@ public class BrokerModel {
      * Create a queue with the provided queueKey
      */
     private void createQueue(String queueKey) {
+        if (this.queues.containsKey(queueKey)) return;
         this.queues.put(queueKey, new IndexedQueue());
     }
 
