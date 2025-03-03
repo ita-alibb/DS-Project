@@ -133,18 +133,8 @@ public class ReplicationLog {
     }
 
     private static void writeLineToCSV(LogLine line) {
-        try {
-            if (!logUpdateLock.writeLock().tryLock(APPEND_ENTRIES_TIME, TimeUnit.MILLISECONDS)) {
-                System.out.println("LOCK DEBUG: Cannot get the lock in time");
-                return;
-            }
-        } catch(InterruptedException e) {
-            System.out.println("LOCK DEBUG: Interrupted while waiting for write lock");
-            return;
-        }
-
+        logUpdateLock.writeLock().lock();
         System.err.println("LOCK DEBUG: writeLineToCSV single acquired the WRITE lock");
-        System.out.println("Inside locked part");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
             writer.write(line.toString());
             System.out.println("Written to file " + line.toString());
