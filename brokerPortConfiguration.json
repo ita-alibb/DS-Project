@@ -4,5 +4,29 @@
     "IP": "localhost",
     "ClientServerPort": 6100,
     "BrokerServerPort": 6101
+  },
+  {
+    "id": 2,
+    "IP": "localhost",
+    "ClientServerPort": 6200,
+    "BrokerServerPort": 6201
+  },
+  {
+    "id": 3,
+    "IP": "localhost",
+    "ClientServerPort": 6300,
+    "BrokerServerPort": 6301
+  },
+  {
+    "id": 4,
+    "IP": "localhost",
+    "ClientServerPort": 6400,
+    "BrokerServerPort": 6401
+  },
+  {
+    "id": 5,
+    "IP": "localhost",
+    "ClientServerPort": 6500,
+    "BrokerServerPort": 6501
   }
 ]
