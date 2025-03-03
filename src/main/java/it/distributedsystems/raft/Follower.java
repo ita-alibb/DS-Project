@@ -100,6 +100,10 @@ public class Follower {
                 newAppendEntries.setPrevLogTerm(prevAndNewLog.getFirst().getTerm());
                 newAppendEntries.setPrevLogIndex(prevAndNewLog.getFirst().getIndex());
                 newAppendEntries.addNewLogLine(prevAndNewLog.subList(1, prevAndNewLog.size()));
+
+                System.out.println("Sended appendEntries for follower " + followerAddress.id + ": " + newAppendEntries.toJson());
+                //Send the new append entries
+                followerHandler.sendMessage(newAppendEntries);
             }
         }
     }

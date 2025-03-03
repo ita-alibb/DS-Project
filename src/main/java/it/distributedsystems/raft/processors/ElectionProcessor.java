@@ -5,11 +5,9 @@ import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.raft.RequestVote;
 import it.distributedsystems.messages.raft.RequestVoteResponse;
 import it.distributedsystems.raft.*;
-import it.distributedsystems.tui.TUIUpdater;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ElectionProcessor implements Runnable {
     //Thread handling

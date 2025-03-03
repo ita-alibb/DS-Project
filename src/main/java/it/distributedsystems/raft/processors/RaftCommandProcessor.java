@@ -134,7 +134,7 @@ public class RaftCommandProcessor implements Runnable{
         int majoritySize = ((BrokerSettings.getNumOfNodes() - 1) / 2);//-1 because it is for sure replicated by me, the leader
 
         // Get the value at the majority position
-        int candidateCommitIndex = matchIndexes.get(majoritySize - 1);
+        int candidateCommitIndex = matchIndexes.get(Math.max(majoritySize - 1, 0));
 
         System.out.println("Checked incrementing commitIndex resulting to:" + candidateCommitIndex);
 
