@@ -63,7 +63,7 @@ public class ClientConnection implements Runnable{
     private final LinkedBlockingQueue<QueueCommand> commandsToSend = new LinkedBlockingQueue<>();
 
     private String lastError = "";
-    private Integer lastReadInt = null;
+    private List<Integer> lastReadInts = new ArrayList<>();
 
     private final LinkedBlockingQueue<QueueResponse> asynchronousResponseQueue = new LinkedBlockingQueue<>();
 
@@ -240,7 +240,7 @@ public class ClientConnection implements Runnable{
                 var response = this.asynchronousResponseQueue.take();
 
                 if (response.getData() != null) { //this means it is a response to ReadData: Show the data
-                    lastReadInt = response.getData();
+                    lastReadInts.add(response.getData());
                 }
 
                 lastError = response.getError() == null ?
@@ -272,8 +272,8 @@ public class ClientConnection implements Runnable{
         return lastError;
     }
 
-    public Integer getLastReadInt() {
-        return lastReadInt;
+    public List<Integer> getLastReadInts() {
+        return new ArrayList<>(lastReadInts);
     }
 
     public BrokerAddress getBrokerAddress() {

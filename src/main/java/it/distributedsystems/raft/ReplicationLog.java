@@ -133,15 +133,17 @@ public class ReplicationLog {
     }
 
     private static void writeLineToCSV(LogLine line) {
-        System.out.println("Writing line to CSV: " + line + " Lock is hold:" + (logUpdateLock.isWriteLocked() ? "yes by n-threads " + logUpdateLock.getQueueLength() : "no"));
         try {
             if (!logUpdateLock.writeLock().tryLock(APPEND_ENTRIES_TIME, TimeUnit.MILLISECONDS)) {
-                System.out.println("Cannot get the lock in time");
+                System.out.println("LOCK DEBUG: Cannot get the lock in time");
                 return;
             }
         } catch(InterruptedException e) {
-            System.out.println("Interrupted while waiting for write lock");
+            System.out.println("LOCK DEBUG: Interrupted while waiting for write lock");
+            return;
         }
+
+        System.err.println("LOCK DEBUG: writeLineToCSV single acquired the WRITE lock");
         System.out.println("Inside locked part");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
             writer.write(line.toString());
@@ -155,11 +157,13 @@ public class ReplicationLog {
         } finally {
             System.out.println("Finished writing to file");
             logUpdateLock.writeLock().unlock();
+            System.err.println("LOCK DEBUG: writeLineToCSV single released the WRITE lock");
         }
     }
 
     private static void writeLineToCSV(List<LogLine> line) {
         logUpdateLock.writeLock().lock();
+        System.err.println("LOCK DEBUG: writeLineToCSV List acquired the WRITE lock");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
             for (LogLine logLine : line) {
                 System.out.println("Written to file " + line.toString());
@@ -173,47 +177,77 @@ public class ReplicationLog {
             exit(0);
         } finally {
             logUpdateLock.writeLock().unlock();
+            System.err.println("LOCK DEBUG: writeLineToCSV list released the WRITE lock");
         }
+    }
+
+    /**
+     * Safe way to apply replication log in a separate thread
+     */
+    public static void applyReplicationLogAsync() {
+        Thread applyThread = new Thread(() -> {
+            try {
+                applyReplicationLog();
+            } catch (Exception e) {
+
+            }
+        });
+
+        applyThread.setName("LogApplicator-" + System.currentTimeMillis());
+        applyThread.start();
     }
 
     /**
      * Reads all the contents of the CSV file and apply the command to the BrokerModel.
      * used when the commit index changes. Ensures that the lastApplied is in match with the commit index!
      */
-    public synchronized static void applyReplicationLog() {
+    private synchronized static void applyReplicationLog() {
         var lastLeaderCommitIndex = BrokerState.getCommitIndex();
         var lastAppliedIndex = BrokerState.getLastApplied();
-        System.out.println("Applying Replicated log from " + lastAppliedIndex + " to " + lastLeaderCommitIndex);
 
-        if (lastAppliedIndex >= lastLeaderCommitIndex) return;
+        try{
+            logUpdateLock.readLock().lock();
+            System.err.println("LOCK DEBUG: applyReplicationLog acquired the READ lock");
 
-        logUpdateLock.readLock().lock();
-        try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
-            reader.readLine(); //discard header
+            System.out.println("Applying Replicated log from " + lastAppliedIndex + " to " + lastLeaderCommitIndex);
 
-            BrokerModel.getInstance().acquireLock();
-            String line;
-            while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
-                var logLine = new LogLine(line);
-                //check index
-                if (logLine.getIndex() <= lastAppliedIndex) continue;
-                if (logLine.getIndex() > lastLeaderCommitIndex) break;
+            if (lastAppliedIndex >= lastLeaderCommitIndex) return;
+            try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
+                reader.readLine(); //discard header
 
-                //it's  lastApplied<=tmp.Index<=leaderCommitIndex --> Commit
-                BrokerModel.getInstance().processCommand(logLine.getCommand());
-                BrokerState.setLastApplied(logLine.getIndex());
+                // Track if we've acquired the broker model lock
+                try {
+                    BrokerModel.getInstance().acquireLock();
+
+                    String line;
+                    while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
+                        var logLine = new LogLine(line);
+                        //check index
+                        if (logLine.getIndex() <= lastAppliedIndex) continue;
+                        if (logLine.getIndex() > lastLeaderCommitIndex) break;
+
+                        //it's  lastApplied<=tmp.Index<=leaderCommitIndex --> Commit
+                        BrokerModel.getInstance().processCommand(logLine.getCommand());
+                        BrokerState.setLastApplied(logLine.getIndex());
+                    }
+                } catch (Exception e) {
+                    System.out.println("Exception while applying line: " + e.getMessage());
+                }finally {
+                    BrokerModel.getInstance().releaseLock();
+                }
+            } catch (FileNotFoundException e) {
+                System.out.println("File does not exist: " + LOG_FILE_PATH);
+                exit(-1);
+            } catch (IOException e) {
+                System.err.println("Error while reading file: " + e.getMessage());
+                exit(-1);
             }
-        } catch (FileNotFoundException e) {
-            System.out.println("File does not exist: " + LOG_FILE_PATH);
-            exit(-1);
-        } catch (IOException e) {
-            System.err.println("Error while reading file: " + e.getMessage());
-            exit(-1);
         } finally {
             logUpdateLock.readLock().unlock();
-            BrokerModel.getInstance().releaseLock();
+            System.err.println("LOCK DEBUG: ApplyReplicationLog unlocked the READ logUpdateLock");
         }
     }
+
     public static int getLastLogLineIndex() {
         return lastLogLine != null ? lastLogLine.getIndex() : 0;
     }
@@ -242,30 +276,34 @@ public class ReplicationLog {
         }
 
         logUpdateLock.readLock().lock();
-        //try using cache:
-        var cacheHit = cachedLogLines.stream().filter(ll -> ll.getIndex() == logIndex).toList();
-        if (!cacheHit.isEmpty()) {
-            return cacheHit.getLast();
-        }
-
-        //Cache miss:
-        try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
-            reader.readLine(); //discard header
-
-            String line;
-
-            while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
-                var logLine = new LogLine(line, true);
-
-                if (logLine.getIndex() == logIndex) {
-                    return logLine;
-                }
+        try{
+            System.err.println("LOCK DEBUG: getLog acquired the READ lock");
+            //try using cache:
+            var cacheHit = cachedLogLines.stream().filter(ll -> ll.getIndex() == logIndex).toList();
+            if (!cacheHit.isEmpty()) {
+                return cacheHit.getLast();
             }
-        } catch (IOException e) {
-            System.err.println("Error while reading file: " + e.getMessage());
-            exit(-1);
+
+            //Cache miss:
+            try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
+                reader.readLine(); //discard header
+
+                String line;
+
+                while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
+                    var logLine = new LogLine(line, true);
+
+                    if (logLine.getIndex() == logIndex) {
+                        return logLine;
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Error while reading file: " + e.getMessage());
+                exit(-1);
+            }
         } finally {
             logUpdateLock.readLock().unlock();
+            System.err.println("LOCK DEBUG: getLog released the READ lock");
         }
         return null;
     }
@@ -279,35 +317,40 @@ public class ReplicationLog {
         }
 
         logUpdateLock.readLock().lock();
-        //try using cache:
-        var searchingInts = IntStream.rangeClosed(startIndex, lastLogLine.getIndex()).boxed().toList();
-        var cacheHit = cachedLogLines.stream().filter(ll -> searchingInts.contains(ll.getIndex()))
-                .sorted(Comparator.comparingInt(LogLine::getIndex)).toList();
-        if (!cacheHit.isEmpty() && cacheHit.size() == searchingInts.size()) {//found all
-            return cacheHit;
-        }
+        try{
+            System.err.println("LOCK DEBUG: getLogsFromStartIndex acquired the READ lock");
 
-        List<LogLine> logs = new ArrayList<>();
-
-        //Cache miss:
-        //Start reading backwards. Add on start
-        try (ReversedLinesFileReader reader = new ReversedLinesFileReader(new File(LOG_FILE_PATH), StandardCharsets.UTF_8)) {
-            String line;
-
-            while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
-
-                if (Integer.parseInt(line.split(";")[0]) >= startIndex) {
-                    logs.addFirst(new LogLine(line));
-                }
+            //try using cache:
+            var searchingInts = IntStream.rangeClosed(startIndex, lastLogLine.getIndex()).boxed().toList();
+            var cacheHit = cachedLogLines.stream().filter(ll -> searchingInts.contains(ll.getIndex()))
+                    .sorted(Comparator.comparingInt(LogLine::getIndex)).toList();
+            if (!cacheHit.isEmpty() && cacheHit.size() == searchingInts.size()) {//found all
+                return cacheHit;
             }
-        } catch (IOException e) {
-            System.err.println("Error while reading file: " + e.getMessage());
-            exit(-1);
+
+            List<LogLine> logs = new ArrayList<>();
+
+            //Cache miss:
+            //Start reading backwards. Add on start
+            try (ReversedLinesFileReader reader = new ReversedLinesFileReader(new File(LOG_FILE_PATH), StandardCharsets.UTF_8)) {
+                String line;
+
+                while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
+
+                    if (Integer.parseInt(line.split(";")[0]) >= startIndex) {
+                        logs.addFirst(new LogLine(line));
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Error while reading file: " + e.getMessage());
+                exit(-1);
+            }
+
+            return logs;
         } finally {
             logUpdateLock.readLock().unlock();
+            System.err.println("LOCK DEBUG: getLogsFromStartIndex released the READ lock");
         }
-
-        return logs;
     }
 
     /**
@@ -339,10 +382,10 @@ public class ReplicationLog {
     }
 
     private static void appendToCachedLogLine(LogLine logLine) {
-        if (!cachedLogLines.offer(logLine)){
+        if (cachedLogLines.size() > CACHE_SIZE){
             cachedLogLines.poll();
-            cachedLogLines.offer(logLine);
         }
+        cachedLogLines.offer(logLine);
     }
 
     /**
@@ -350,6 +393,8 @@ public class ReplicationLog {
      */
     public static HashMap<Integer, PastClientInfos> getPastClientsInfos() {
         logUpdateLock.readLock().lock();
+        System.err.println("LOCK DEBUG: getPastClientInfos acquired the READ lock");
+
         var returnMap = new HashMap<Integer, PastClientInfos>();
         try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
             reader.readLine(); //discard header
@@ -372,6 +417,7 @@ public class ReplicationLog {
             exit(-1);
         } finally {
             logUpdateLock.readLock().unlock();
+            System.err.println("LOCK DEBUG: getPastClientInfo released the READ lock");
         }
         return returnMap;
     }

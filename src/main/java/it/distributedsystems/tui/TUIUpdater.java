@@ -58,7 +58,8 @@ public class TUIUpdater implements Runnable {
         var ba = ClientConnection.getINSTANCE().getBrokerAddress();
         System.out.println("──────────────────────────────────────────────────────────────────────");
         System.out.printf("UserID: %d            Leader IP: %s Leader Port: %d                     %n", ClientConnection.getINSTANCE().getClientId(), ba.IP, ba.ClientServerPort);
-        System.out.println("Last Read Int: "+ ClientConnection.getINSTANCE().getLastReadInt());
+        System.out.println("Last Read Int: "+ ClientConnection.getINSTANCE().getLastReadInts().stream().map(String::valueOf)
+                .collect(Collectors.joining(",")));
         System.out.println("List of not ack commands: " + ClientConnection.getINSTANCE().getSentCommands().stream().map(BaseDeserializableMessage::toJson).collect(Collectors.joining(", ")));
         System.out.println("Last Error: "+ ClientConnection.getINSTANCE().getLastError());
         printCommands();
@@ -104,13 +105,14 @@ public class TUIUpdater implements Runnable {
             System.out.printf(BLUE + "Last log line "+ RESET + "Index: %d Term: %d %n", ReplicationLog.getLastLogLineIndex(), ReplicationLog.getLastLogLineTerm());
             var queues = BrokerModel.getInstance().getQueues();
             System.out.println();
-            System.out.println("Queues"+BLUE+"Key:"+ RESET + GREEN + " Values..."+RESET);
+            System.out.println("Queues:");
+            System.out.println(BLUE+"Key:"+ RESET + GREEN + " Values..."+RESET);
+            System.out.println("-------------------------------------");
             for (var queueKey : queues.keySet()) {
                 System.out.printf(BLUE + "%s :"+ RESET + GREEN + " %s"+ RESET + "%n", queueKey, queues.get(queueKey).toString());
                 System.out.println("-------------------------------------");
             }
             System.out.println();
-
         }
 
         System.out.printf(GREEN+"Last message to show:"+RESET+" %s %n", lastMessage);
