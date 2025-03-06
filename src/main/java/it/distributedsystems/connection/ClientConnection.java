@@ -2,6 +2,7 @@ package it.distributedsystems.connection;
 
 import it.distributedsystems.messages.*;
 import it.distributedsystems.messages.queue.*;
+import it.distributedsystems.tui.TUIUpdater;
 import it.distributedsystems.utils.BrokerAddress;
 
 import java.io.BufferedReader;
@@ -206,6 +207,7 @@ public class ClientConnection implements Runnable{
             while (leaderAlive.get()) {
                 var command = commandsToSend.take();
 
+                System.out.println(TUIUpdater.BLUE + "Sent command ID: " + command.getCommandID() + TUIUpdater.RESET);
                 this.out.println(command.toJson());
                 this.sentCommands.add(command);
             }

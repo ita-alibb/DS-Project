@@ -40,7 +40,9 @@ public class RaftCommandProcessor implements Runnable{
 
                 switch (command) {
                     case AppendEntries appendEntries : {//Message received by a FOLLOWER
-                        System.out.println("RECEIVED APPENDENTRIES: " + appendEntries.toJson());
+                        System.out.printf("Received AppendEntries:  prevLogIndex/Term: %d/%d, lastIndex in batch: %d %n",
+                                appendEntries.getPrevLogIndex(),appendEntries.getPrevLogTerm(), appendEntries.getLastNewLineIndex());
+
                         TUIUpdater.setLastMessage("AppendEntries received");
                         //Even if the append entries will be refused, the leader is active
                         BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
@@ -56,7 +58,8 @@ public class RaftCommandProcessor implements Runnable{
                                     BrokerSettings.getBrokerID(),
                                     BrokerState.getCurrentTerm(),
                                     true,
-                                    ReplicationLog.getLastLogLineIndex()
+                                    ReplicationLog.getLastLogLineIndex(),
+                                    ReplicationLog.getLastLogLineTerm()
                             ));
 
                             /*If leaderCommit>commitIndex,*/
@@ -74,16 +77,16 @@ public class RaftCommandProcessor implements Runnable{
                                     BrokerSettings.getBrokerID(),
                                     BrokerState.getCurrentTerm(),
                                     false,
-                                    ReplicationLog.getLastLogLineIndex()
+                                    ReplicationLog.getLastLogLineIndex(),
+                                    ReplicationLog.getLastLogLineTerm()
                             ));
                         }
                     }; break;
 
                     case AppendEntriesResponse appendEntriesResponse : {//Message received by a LEADER
-                        System.out.println("RECEIVED APPENDENTRIESRESPONSE: " + appendEntriesResponse.toJson());
                         //Receive ACK, increase indexes
-                        TUIUpdater.setLastMessage("AppendEntriesResponse received from broker: " + appendEntriesResponse.getBrokerId());
                         if (appendEntriesResponse.isSuccess()) {
+                            System.out.println("AppendEntriesResponse received from broker: " + appendEntriesResponse.getBrokerId() + " with success");
                             //ACK received
                             //Update matchIndex
                             BrokerConnection.getInstance().increaseFollowerIndexes(
@@ -93,8 +96,9 @@ public class RaftCommandProcessor implements Runnable{
 
                             //Now that you have changed the match index for a Follower, check the condition to update the commit index of the leader
                             checkUpdateLeaderCommitIndex();
-
                         } else {
+                            System.out.printf("AppendEntriesResponse received from broker: " + appendEntriesResponse.getBrokerId() + " with not success, follower last log index/term : %d/%d %n",
+                                    appendEntriesResponse.getLastLogIndex(), appendEntriesResponse.getLastLogTerm());
                             //NACK received
                             // If RPC request or response contains term T>currentTerm:
                             // set current Term = T,convert to follower
@@ -104,7 +108,9 @@ public class RaftCommandProcessor implements Runnable{
                             }
 
                             //else decrease the Follower nextIndex
-                            BrokerConnection.getInstance().decreaseFollowerNextIndex(appendEntriesResponse.getBrokerId());
+                            BrokerConnection.getInstance().decreaseFollowerNextIndex(appendEntriesResponse.getBrokerId(),
+                                    appendEntriesResponse.getLastLogIndex(),
+                                    appendEntriesResponse.getLastLogTerm());
                         }
                     }; break;
 

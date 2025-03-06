@@ -110,7 +110,7 @@ public class AppendEntries extends BaseDeserializableMessage {
             return lastLogLine.getIndex();
         }
 
-        return 0;
+        return prevLogIndex;
     }
 
     public int getFirstNewLineIndex() {

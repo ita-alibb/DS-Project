@@ -10,7 +10,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InvalidObjectException;
-import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
@@ -37,6 +36,10 @@ public class InputReader implements Runnable {
             do {
                 input = scanner.nextLine();
             } while (input == null);
+
+            if (input.isEmpty()){
+                return;
+            }
 
             if (input.startsWith("test")) {
                 runTest(input);
@@ -120,7 +123,7 @@ public class InputReader implements Runnable {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String command;
             while ((command = reader.readLine()) != null) {
-                System.out.println("Issued: " + command + " wait 100 ms for next command");
+                System.out.println(TUIUpdater.YELLOW + "Issued: " + command + " wait 100 ms for next command"+ TUIUpdater.RESET);
                 executeCommand(command);
                 Thread.sleep(100);
             }

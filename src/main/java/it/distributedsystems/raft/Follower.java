@@ -140,13 +140,19 @@ public class Follower {
         }
     }
 
-    public void decreaseNextIndex() {
+    public void decreaseNextIndex(int lastIndex, int lastTerm) {
         //TODO: Raft paper proposes an optimization to decrease not by 1, but
         // send some metadata on NACK and set it in a more precise but complex way
 
         //Keeps track of the next index to send. So at startup will be 1 (0+1), never go less than 1.
-        if (this.nextIndex == 1) return; //do not go less than 1
-        this.nextIndex = this.nextIndex - 1;
+        if (this.nextIndex == 1 || this.matchIndex > lastIndex) return; //do not go less than 1
+
+        var matchingLog = ReplicationLog.getLog(lastIndex);
+        if (matchingLog != null && matchingLog.getTerm() == lastTerm ) {
+            this.nextIndex = lastIndex + 1;
+        } else {
+            this.nextIndex = this.nextIndex - 1;
+        }
     }
 
     public void increaseIndexes(int lastReceivedIndex) {

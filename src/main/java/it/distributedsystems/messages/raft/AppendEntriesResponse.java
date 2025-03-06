@@ -8,13 +8,15 @@ public class AppendEntriesResponse extends BaseDeserializableMessage {
     private final int currentTerm; //Term used by the follower to update the leader if it results not as up to date as the follower
     private final boolean success; //If True it is a ACK, if false it is not accepted
     private final int lastLogIndex; // the last log index from the follower
+    private final int lastLogTerm; // the last log term from the follower
 
-    public AppendEntriesResponse(int brokerId, int term, boolean success, int lastLogIndex) {
+    public AppendEntriesResponse(int brokerId, int term, boolean success, int lastLogIndex, int lastLogTerm) {
         super(MessageDeserializerType.APPEND_ENTRIES_RESPONSE);
         this.brokerId = brokerId;
         this.currentTerm = term;
         this.success = success;
         this.lastLogIndex = lastLogIndex;
+        this.lastLogTerm = lastLogTerm;
     }
 
     public int getBrokerId() {
@@ -31,5 +33,9 @@ public class AppendEntriesResponse extends BaseDeserializableMessage {
 
     public int getLastLogIndex() {
         return lastLogIndex;
+    }
+
+    public int getLastLogTerm() {
+        return lastLogTerm;
     }
 }

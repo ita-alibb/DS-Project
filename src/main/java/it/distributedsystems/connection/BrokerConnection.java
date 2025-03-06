@@ -340,9 +340,9 @@ public class BrokerConnection {
         }
     }
 
-    public void decreaseFollowerNextIndex(int followerId) {
+    public void decreaseFollowerNextIndex(int followerId, int lastIndex, int lastTerm) {
         followerHandlers.stream().filter(f -> f.getFollowerId() == followerId).findFirst()
-                .ifPresent(Follower::decreaseNextIndex);
+                .ifPresent(fw -> fw.decreaseNextIndex(lastIndex, lastTerm));
     }
 
     public void increaseFollowerIndexes(int followerId, int lastReceivedIndex) {
