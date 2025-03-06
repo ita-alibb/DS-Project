@@ -45,11 +45,11 @@ public class AppendEntries extends BaseDeserializableMessage {
     /**
      * List of append entries, contains LogLineString
      */
-    private final List<String> logLineBatch;
+    private final List<String> logLineBatch = new ArrayList<>();
     /**
      * Transient property to operate with Obj when creating the batch
      */
-    private transient final List<LogLine> logLineObjBatch;
+    private transient final List<LogLine> logLineObjBatch = new ArrayList<>();
     private int leaderCommitIndex;
 
     public AppendEntries(int leaderTerm, int leaderID) {
@@ -58,8 +58,6 @@ public class AppendEntries extends BaseDeserializableMessage {
         this.leaderID = leaderID;
         this.prevLogIndex = ReplicationLog.getLastLogLineIndex();
         this.prevLogTerm = ReplicationLog.getLastLogLineTerm();
-        this.logLineBatch = new ArrayList<>();
-        this.logLineObjBatch = new ArrayList<>();
         this.leaderCommitIndex = -1;
     }
 
@@ -72,9 +70,7 @@ public class AppendEntries extends BaseDeserializableMessage {
         this.leaderID = currentBatchMessage.leaderID;
         this.prevLogIndex = currentBatchMessage.prevLogIndex;
         this.prevLogTerm = currentBatchMessage.prevLogTerm;
-        this.logLineBatch = new ArrayList<>();
         this.logLineBatch.addAll(currentBatchMessage.logLineBatch);
-        this.logLineObjBatch = new ArrayList<>();
         this.leaderCommitIndex = currentBatchMessage.leaderCommitIndex;
     }
 
@@ -95,7 +91,7 @@ public class AppendEntries extends BaseDeserializableMessage {
     }
 
     public LogLine getLastLogLineInBatch() {
-        if (!logLineObjBatch.isEmpty()) {
+        if (logLineObjBatch != null && !logLineObjBatch.isEmpty()) {
             return logLineObjBatch.getLast();
         } else {
             return null;
@@ -103,9 +99,9 @@ public class AppendEntries extends BaseDeserializableMessage {
     }
 
     public int getLastNewLineIndex() {
-        if (!logLineObjBatch.isEmpty()) {
+        if (logLineObjBatch != null && !logLineObjBatch.isEmpty()) {
             return logLineObjBatch.getLast().getIndex();
-        } else if (!logLineBatch.isEmpty()) {
+        } else if (logLineBatch != null && !logLineBatch.isEmpty()) {
             var lastLogLine = new LogLine(logLineBatch.getLast());
             return lastLogLine.getIndex();
         }
@@ -114,9 +110,9 @@ public class AppendEntries extends BaseDeserializableMessage {
     }
 
     public int getFirstNewLineIndex() {
-        if (!logLineObjBatch.isEmpty()) {
+        if (logLineObjBatch != null && !logLineObjBatch.isEmpty()) {
             return logLineObjBatch.getLast().getIndex();
-        } else if (!logLineBatch.isEmpty()) {
+        } else if (logLineBatch != null && !logLineBatch.isEmpty()) {
             var lastLogLine = new LogLine(logLineBatch.getFirst());
             return lastLogLine.getIndex();
         }
@@ -133,18 +129,18 @@ public class AppendEntries extends BaseDeserializableMessage {
     }
 
     public void clearBatch(){
-        this.logLineBatch.clear();
-        this.logLineObjBatch.clear();
+        if (logLineBatch != null) this.logLineBatch.clear();
+        if (logLineObjBatch != null) this.logLineObjBatch.clear();
     }
 
     public void addNewLogLine(LogLine logLine){
-        this.logLineBatch.add(logLine.toString().strip());
-        this.logLineObjBatch.add(logLine);
+        if (logLineBatch != null) this.logLineBatch.add(logLine.toString().strip());
+        if (logLineObjBatch != null) this.logLineObjBatch.add(logLine);
     }
 
     public void addNewLogLine(List<LogLine> logLine){
-        this.logLineBatch.addAll(logLine.stream().map(LogLine::toString).toList());
-        this.logLineObjBatch.addAll(logLine);
+        if (logLineBatch != null) this.logLineBatch.addAll(logLine.stream().map(LogLine::toString).toList());
+        if (logLineObjBatch != null) this.logLineObjBatch.addAll(logLine);
     }
 
     public void setLeaderCommitIndex(int leaderCommitIndex) {
