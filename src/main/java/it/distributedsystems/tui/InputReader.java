@@ -3,7 +3,13 @@ package it.distributedsystems.tui;
 import it.distributedsystems.connection.ClientConnection;
 import it.distributedsystems.messages.queue.CommandType;
 import it.distributedsystems.messages.queue.QueueCommand;
+import it.distributedsystems.raft.BrokerModel;
+import it.distributedsystems.raft.LogLine;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
@@ -11,7 +17,7 @@ import java.util.concurrent.*;
  * This class is used to read the input stream.
  */
 public class InputReader implements Runnable {
-    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Scanner scanner;
 
     private InputReader() {
@@ -23,6 +29,7 @@ public class InputReader implements Runnable {
      */
     @Override
     public void run() {
+        var exception = false;
         try {
             //Choose Strategy
             String input;
@@ -30,10 +37,24 @@ public class InputReader implements Runnable {
                 input = scanner.nextLine();
             } while (input == null);
 
+            if (input.isEmpty()){
+                return;
+            }
+
+            if (input.startsWith("test")) {
+                runTest(input);
+                return;
+            }
+
             this.executeCommand(input);
         } catch (Exception e) {
-            System.out.println("Error: incorrect command");
-            System.out.print("> ");
+            exception = true;
+        } finally {
+            TUIUpdater.printClientViewInternal();//reprint view
+            if (exception) {
+                System.out.println("Error: incorrect command");
+                System.out.print("> ");
+            }
             readLine();
         }
     }
@@ -50,7 +71,7 @@ public class InputReader implements Runnable {
      * @param input     The command given by the player
      */
     private void executeCommand(String input) {
-        QueueCommand command;
+        QueueCommand command = null;
         boolean error = false;
 
         var args = input.split("\\s+");
@@ -61,7 +82,7 @@ public class InputReader implements Runnable {
                 if (args.length != 2) {
                     error = true;
                 } else {
-                    command = new QueueCommand(ClientConnection.getClientId(), CommandType.CREATE_QUEUE,args[1],null);
+                    command = new QueueCommand(ClientConnection.getINSTANCE().getClientId(), CommandType.CREATE_QUEUE,args[1],null);
                 }
             }; break;
 
@@ -71,7 +92,7 @@ public class InputReader implements Runnable {
                     error = true;
                 } else {
                     //TODO: al momento parseInt non e' safe, io farei una versione safe che restituisce null in caso non sia parsable
-                    command = new QueueCommand(ClientConnection.getClientId(),CommandType.APPEND_DATA,args[1],Integer.parseInt(args[2]));
+                    command = new QueueCommand(ClientConnection.getINSTANCE().getClientId(),CommandType.APPEND_DATA,args[1],Integer.parseInt(args[2]));
                 }
             }; break;
 
@@ -80,10 +101,9 @@ public class InputReader implements Runnable {
                 if (args.length != 2) {
                     error = true;
                 } else {
-                    command = new QueueCommand(ClientConnection.getClientId(),CommandType.READ_DATA,args[1],null);
+                    command = new QueueCommand(ClientConnection.getINSTANCE().getClientId(),CommandType.READ_DATA,args[1],null);
                 }
             }; break;
-
             default: error = true;
         }
 
@@ -92,8 +112,29 @@ public class InputReader implements Runnable {
             System.out.print("> ");
         } else {
             //send the command
-            //TODO: ClientConnection.send(command);
+            ClientConnection.getINSTANCE().sendAsync(command);
         }
-        readLine();
+    }
+
+    private void runTest(String filename) {
+        var file = System.getProperty("user.dir") + "/" + filename + ".txt";
+        System.out.println("Started test with file: " + file);
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String command;
+            while ((command = reader.readLine()) != null) {
+                System.out.println(TUIUpdater.YELLOW + "Issued: " + command + " wait 100 ms for next command"+ TUIUpdater.RESET);
+                executeCommand(command);
+                Thread.sleep(100);
+            }
+        } catch (InvalidObjectException e) {
+            System.err.println("Error while extracting the command: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("Error while reading file: " + e.getMessage());
+        } catch (InterruptedException e) {
+            System.err.println("Error while waiting 100 ms between executions: " + e.getMessage());
+        } finally {
+            System.out.println("Finished test with file: " + file);
+        }
     }
 }

@@ -5,13 +5,15 @@ import it.distributedsystems.messages.BaseDeserializableMessage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class is used to handle the socket connected to my ServerSocket
  */
-public abstract class SocketHandler implements Runnable {
+public class SocketHandler implements Runnable {
     /**
      * The connected socket
      */
@@ -30,13 +32,35 @@ public abstract class SocketHandler implements Runnable {
     /**
      * This is the function called after receiving a message
      */
-    private final ReceiveJsonMessageCallback msgReceiveCallback;
+    protected ReceiveJsonMessageCallback msgReceiveCallback;
 
-    public SocketHandler(Socket socket, PrintWriter out, BufferedReader in, ReceiveJsonMessageCallback msgReceiveCallback){
+    /**
+     * Atomic boolean to be sure to killed the socketHandler
+     */
+    private final AtomicBoolean killed;
+
+    public SocketHandler(Socket socket) throws IOException {
+        this.socket = socket;
+        this.out = new PrintWriter(socket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.msgReceiveCallback = null;
+        killed = new AtomicBoolean(false);
+    }
+
+    public SocketHandler(Socket socket, PrintWriter out, BufferedReader in) throws IOException {
         this.socket = socket;
         this.out = out;
         this.in = in;
+        this.msgReceiveCallback = null;
+        killed = new AtomicBoolean(false);
+    }
+
+    public SocketHandler(Socket socket, ReceiveJsonMessageCallback msgReceiveCallback) throws IOException {
+        this.socket = socket;
+        this.out = new PrintWriter(socket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.msgReceiveCallback = msgReceiveCallback;
+        killed = new AtomicBoolean(false);
     }
 
     /**
@@ -57,7 +81,13 @@ public abstract class SocketHandler implements Runnable {
             // break the loop and finally call the disconnection
         } finally {
             System.out.println("Client disconnected from socket IP:"+ socket.getInetAddress() + " Port: " + socket.getPort());
-            //TODO: better handling of disconnection?
+            try {
+                this.socket.close();
+            } catch (IOException e) {
+                System.out.println("Exception closing socket: exception: " + e.getMessage());
+            }
+            killed.set(true);
+            customDisconnection();
         }
     }
 
@@ -70,6 +100,32 @@ public abstract class SocketHandler implements Runnable {
             this.out.println(message.toJson());
         } catch (Exception e) {
             System.out.println("Exception on sending message from socket IP:"+ socket.getInetAddress() + " Port: " + socket.getPort()  + " " + e.getMessage());
+            killed.set(true);
+            customDisconnection();
         }
+    }
+
+    /**
+     * Used to set the callback
+     */
+    public void setMsgReceiveCallback(ReceiveJsonMessageCallback msgReceiveCallback) {
+        if (this.msgReceiveCallback != null) {
+            System.out.println("Cannot re set CallBack");
+            return;
+        }
+
+        this.msgReceiveCallback = msgReceiveCallback;
+    }
+
+    public boolean isConnected(){
+        return (this.socket != null && !this.socket.isClosed() && !killed.get());
+    }
+
+    /**
+     * To override by other class for custom behavior.
+     * WARNING: may be called twice
+     */
+    protected void customDisconnection(){
+        //None
     }
 }

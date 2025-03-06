@@ -8,4 +8,8 @@ public enum MessageDeserializerType {
     CONNECTION_RESPONSE,
     //Broker<->Broker messages
     APPEND_ENTRIES,
+    LEADER_IDENTIFICATION,
+    APPEND_ENTRIES_RESPONSE,//both for ACK and NACK
+    REQUEST_VOTE,
+    REQUEST_VOTE_RESPONSE
 }

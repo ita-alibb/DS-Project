@@ -3,16 +3,33 @@ package it.distributedsystems;
 import it.distributedsystems.connection.ClientConnection;
 
 import it.distributedsystems.tui.InputReader;
+import it.distributedsystems.tui.TUIUpdater;
 
 public class ClientApp {
     public static void main(String[] args) {
+        //get client id if passed as parameters for restore after crash
+        int clientID = (args.length > 2 && args[2] != null) ? Integer.parseInt(args[2]) : -1;
+        try {
+            clientID = (args.length > 2 && args[2] != null) ? Integer.parseInt(args[2]) : -1;
+        } catch (Exception e) {
+            clientID = -1;
+        }
+
         //initialize connection
-        var connection = new ClientConnection(args[0], args[1]);
+        ClientConnection.setConnection(args[0], args[1], clientID);
 
         //start listening thread
-        new Thread(connection).start();
+        new Thread(ClientConnection.getINSTANCE()).start();
 
         //start input reader
         InputReader.readLine();
+
+        //Print tui
+        boolean fullHistory = args.length == 4 ? Boolean.parseBoolean(args[3]) : (
+                args.length != 3 || clientID != -1 || Boolean.parseBoolean(args[2])
+                );
+
+        var updater = new TUIUpdater(true, fullHistory);
+        new Thread(updater).start();
     }
 }

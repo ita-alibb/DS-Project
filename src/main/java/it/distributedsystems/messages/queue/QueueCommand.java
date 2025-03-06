@@ -11,7 +11,7 @@ public class QueueCommand extends ConnectionMessage {
      * Every instance of the base command will have a unique Id
      * (unique for every sender e.g. every client, senderID+commandID will be globally unique)
      */
-    public final int commandID;
+    private final int commandID;
 
     private final CommandType type;
     private final String queueKey;
@@ -31,6 +31,17 @@ public class QueueCommand extends ConnectionMessage {
         this.type = type;
         this.queueKey = queueKey;
         this.data = data; // not null only for AppendData
+    }
+
+    /**
+     * Clone QueueCommand
+     */
+    public QueueCommand(QueueCommand toCopy) {
+        super(toCopy.getClientID(), MessageDeserializerType.QUEUE_COMMAND);
+        this.commandID = toCopy.getCommandID();
+        this.type = toCopy.getType();
+        this.queueKey = toCopy.getQueueKey();
+        this.data = toCopy.getData();
     }
 
     public int getCommandID() {

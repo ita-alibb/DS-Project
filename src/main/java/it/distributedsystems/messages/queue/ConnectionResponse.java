@@ -1,6 +1,7 @@
 package it.distributedsystems.messages.queue;
 
 import it.distributedsystems.messages.MessageDeserializerType;
+import it.distributedsystems.utils.BrokerAddress;
 
 import java.util.List;
 
@@ -31,11 +32,17 @@ public class ConnectionResponse extends ConnectionMessage {
     /**
      * Constructor for Redirect response
      */
-    public ConnectionResponse(String leaderIP, int leaderPort) {
+    public ConnectionResponse(BrokerAddress leaderAddress) {
         super(-1, MessageDeserializerType.CONNECTION_RESPONSE);
         this.isRedirect = true;
-        this.leaderIP = leaderIP;
-        this.leaderPort = leaderPort;
+
+        if (leaderAddress != null) {
+            this.leaderIP = leaderAddress.IP;
+            this.leaderPort = leaderAddress.ClientServerPort;
+        } else {
+            this.leaderIP = null;
+            this.leaderPort = -1;
+        }
     }
 
     /**

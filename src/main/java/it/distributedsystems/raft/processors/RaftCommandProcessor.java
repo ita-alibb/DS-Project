@@ -1,0 +1,176 @@
+package it.distributedsystems.raft.processors;
+
+import it.distributedsystems.connection.BrokerConnection;
+import it.distributedsystems.messages.BaseDeserializableMessage;
+import it.distributedsystems.messages.GsonDeserializer;
+import it.distributedsystems.messages.raft.AppendEntries;
+import it.distributedsystems.messages.raft.AppendEntriesResponse;
+import it.distributedsystems.raft.*;
+import it.distributedsystems.tui.TUIUpdater;
+
+import java.util.Comparator;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
+
+import static java.lang.System.exit;
+
+public class RaftCommandProcessor implements Runnable{
+    /**
+     * Centralized queue that receives every message from the Brokers.
+     * If I am the leader I can receive only ACKs from other Followers.
+     * If I am a follower I can receive only AppendEntries (the CommitConfirmation is intrinsic in the next AppendEntries, you will get the eventually updated commitIndex) from Leader.
+     * During errors:
+     * A leader can receive a NACK from a follower. In that case a special AppendEntries will be sent to him.
+     */
+    private final BlockingQueue<BaseDeserializableMessage> raftCommandsQueue = new LinkedBlockingQueue<>();
+
+    public RaftCommandProcessor() {
+    }
+
+    /**
+     * Thread that process the message
+     */
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                // Take command from the queue and process them
+                var command = raftCommandsQueue.take();
+
+                switch (command) {
+                    case AppendEntries appendEntries : {//Message received by a FOLLOWER
+                        System.out.printf("Received AppendEntries:  prevLogIndex/Term: %d/%d, lastIndex in batch: %d %n",
+                                appendEntries.getPrevLogIndex(),appendEntries.getPrevLogTerm(), appendEntries.getLastNewLineIndex());
+
+                        TUIUpdater.setLastMessage("AppendEntries received");
+                        //Even if the append entries will be refused, the leader is active
+                        BrokerConnection.getInstance().setFollower();
+                        BrokerState.setCurrentTerm(appendEntries.getLeaderTerm());
+
+                        if (testAppendEntries(appendEntries)) {
+                            //Replicate all log.
+                            ReplicationLog.followerLogReconciliation(appendEntries);
+
+                            // Send AppendEntries ACK to Leader
+                            BrokerConnection.getInstance().sendMessageToLeader(new AppendEntriesResponse(
+                                    BrokerSettings.getBrokerID(),
+                                    BrokerState.getCurrentTerm(),
+                                    true,
+                                    ReplicationLog.getLastLogLineIndex(),
+                                    ReplicationLog.getLastLogLineTerm()
+                            ));
+
+                            /*If leaderCommit>commitIndex,*/
+                            if (appendEntries.getLeaderCommitIndex() > BrokerState.getCommitIndex()) {
+                                //As stated in the paper set commitIndex= min(leaderCommit,index of last new entry)
+                                BrokerState.setCommitIndex(
+                                        Math.min(
+                                        appendEntries.getLeaderCommitIndex(),
+                                        ReplicationLog.getLastLogLineIndex())
+                                );
+                            }
+                        } else {
+                            // Send AppendEntries NACK to Leader
+                            BrokerConnection.getInstance().sendMessageToLeader(new AppendEntriesResponse(
+                                    BrokerSettings.getBrokerID(),
+                                    BrokerState.getCurrentTerm(),
+                                    false,
+                                    ReplicationLog.getLastLogLineIndex(),
+                                    ReplicationLog.getLastLogLineTerm()
+                            ));
+                        }
+                    }; break;
+
+                    case AppendEntriesResponse appendEntriesResponse : {//Message received by a LEADER
+                        //Receive ACK, increase indexes
+                        if (appendEntriesResponse.isSuccess()) {
+                            System.out.println("AppendEntriesResponse received from broker: " + appendEntriesResponse.getBrokerId() + " with success");
+                            //ACK received
+                            //Update matchIndex
+                            BrokerConnection.getInstance().increaseFollowerIndexes(
+                                    appendEntriesResponse.getBrokerId(),
+                                    appendEntriesResponse.getLastLogIndex()
+                            );
+
+                            //Now that you have changed the match index for a Follower, check the condition to update the commit index of the leader
+                            checkUpdateLeaderCommitIndex();
+                        } else {
+                            System.out.printf("AppendEntriesResponse received from broker: " + appendEntriesResponse.getBrokerId() + " with not success, follower last log index/term : %d/%d %n",
+                                    appendEntriesResponse.getLastLogIndex(), appendEntriesResponse.getLastLogTerm());
+                            //NACK received
+                            // If RPC request or response contains term T>currentTerm:
+                            // set current Term = T,convert to follower
+                            if (appendEntriesResponse.getCurrentTerm() > BrokerState.getCurrentTerm()) {
+                                BrokerState.setCurrentTerm(appendEntriesResponse.getCurrentTerm());
+                                BrokerConnection.getInstance().setFollower();
+                            }
+
+                            //else decrease the Follower nextIndex
+                            BrokerConnection.getInstance().decreaseFollowerNextIndex(appendEntriesResponse.getBrokerId(),
+                                    appendEntriesResponse.getLastLogIndex(),
+                                    appendEntriesResponse.getLastLogTerm());
+                        }
+                    }; break;
+
+                    default: {
+                        //TODO: unexpected message here.
+                        System.out.println("UNEXPECTED MESSAGE ON RAFTCOMMANDPROCESSORS " + command.getDeserializerType());
+                    }; break;
+                }
+
+            } catch (InterruptedException e) {
+                System.out.println("Exception while waiting for new RAFT commands");
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void checkUpdateLeaderCommitIndex() {
+        // If there exists an N such that N>commitIndex, a majority
+        // of matchIndex[i]≥N, and log[N].term==currentTerm:
+        // set commitIndex=N
+        var matchIndexes = BrokerConnection.getInstance().getFollowers().stream()
+                .map(Follower::getMatchIndex)
+                .sorted(Comparator.reverseOrder())
+                .toList(); //get indexes in decreasing order
+
+        // Calculate the size required for a majority
+        int majoritySize = ((BrokerSettings.getNumOfNodes() - 1) / 2);//-1 because it is for sure replicated by me, the leader
+
+        // Get the value at the majority position
+        int candidateCommitIndex = matchIndexes.get(Math.max(majoritySize - 1, 0));
+
+        System.out.println("Checked incrementing commitIndex resulting to:" + candidateCommitIndex);
+
+        // If the candidate N is not greater than A, no solution exists
+        if (candidateCommitIndex <= BrokerState.getCommitIndex()) {
+            return;
+        }
+
+        //Else we have a new commit index shared by at least N/2+1 followers
+        var nLog = ReplicationLog.getLog(candidateCommitIndex);
+        if (nLog != null && nLog.getTerm() == BrokerState.getCurrentTerm()) {//if the term of the new committed index is this term, update
+            //When setting the commit index it automatically start a thread that take lastApplied to commitIndex
+            BrokerState.setCommitIndex(candidateCommitIndex);
+        }
+    }
+
+    private boolean
+    testAppendEntries(AppendEntries appendEntries) {
+        if (appendEntries == null) exit(-1);
+        if (appendEntries.getLeaderTerm() < BrokerState.getCurrentTerm()) return false;
+        if (appendEntries.getPrevLogIndex() == 0 && ReplicationLog.getLastLogLineIndex() == 0) return true;//special case, log file is empty for both leader and follower, the follower cannot check the log 0.
+        LogLine prevLogLine = ReplicationLog.getLog(appendEntries.getPrevLogIndex());
+        if (prevLogLine == null || prevLogLine.getTerm() != appendEntries.getPrevLogTerm()) return false;
+        return true;
+    }
+    /**
+     * Call back function called by every ClientHandler upon receiving of a message
+     */
+    public void handleRaftMessageCallback(String jsonMessage) throws InterruptedException {
+         BaseDeserializableMessage cmd = GsonDeserializer.deserialize(jsonMessage);
+        // Add the message to the shared queue of clients
+        raftCommandsQueue.put(cmd);
+    }
+}

@@ -8,7 +8,7 @@ import it.distributedsystems.messages.MessageDeserializerType;
  * This class represent the response sent from the Leader to the client after a QueueCommand.
  * Does not contain the clientID because if the client receives it, this means is for him.
  */
-public class QueueResponse extends BaseDeserializableMessage {
+public class QueueResponse extends ConnectionMessage {
     /**
      * The id of the command to which the response refers
      */
@@ -27,8 +27,8 @@ public class QueueResponse extends BaseDeserializableMessage {
     /**
      * Error response Constructor
      */
-    public QueueResponse(int commandId, String error) {
-        super(MessageDeserializerType.QUEUE_RESPONSE);
+    public QueueResponse(int clientId, int commandId, String error) {
+        super(clientId, MessageDeserializerType.QUEUE_RESPONSE);
         this.commandId = commandId;
         this.error = error;
         this.data = null;
@@ -37,8 +37,8 @@ public class QueueResponse extends BaseDeserializableMessage {
     /**
      * Positive response constructor, data may be null
      */
-    public QueueResponse(int commandId, Integer data) {
-        super(MessageDeserializerType.QUEUE_RESPONSE);
+    public QueueResponse(int clientId, int commandId, Integer data) {
+        super(clientId, MessageDeserializerType.QUEUE_RESPONSE);
         this.commandId = commandId;
         this.data = data;
         this.error = null;
