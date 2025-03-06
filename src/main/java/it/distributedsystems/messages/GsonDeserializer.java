@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import it.distributedsystems.messages.queue.*;
 import it.distributedsystems.messages.raft.*;
 
+import static java.lang.System.exit;
+
 public class GsonDeserializer {
     /**
      * Global deserializer, then needs to check for instance to get the type
@@ -26,6 +28,7 @@ public class GsonDeserializer {
             };
         } catch (Exception e) {
             System.out.println("Exception in deserialize for string: " +json +"Error: " + e.getMessage());
+            exit(-1);
             return null;
         }
     }

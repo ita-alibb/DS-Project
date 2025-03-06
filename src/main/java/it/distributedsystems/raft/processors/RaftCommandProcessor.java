@@ -156,7 +156,8 @@ public class RaftCommandProcessor implements Runnable{
         }
     }
 
-    private boolean testAppendEntries(AppendEntries appendEntries) {
+    private boolean
+    testAppendEntries(AppendEntries appendEntries) {
         if (appendEntries == null) exit(-1);
         if (appendEntries.getLeaderTerm() < BrokerState.getCurrentTerm()) return false;
         if (appendEntries.getPrevLogIndex() == 0 && ReplicationLog.getLastLogLineIndex() == 0) return true;//special case, log file is empty for both leader and follower, the follower cannot check the log 0.

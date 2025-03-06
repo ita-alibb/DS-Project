@@ -1,500 +1,500 @@
-C queue47
-A queue47 181
-C queue59
-C queue85
-R queue47
-R queue59
-R queue47
-C queue53
-R queue53
-C queue6
-R queue53
-A queue6 950
-R queue47
-C queue20
-R queue6
-A queue6 413
-R queue20
-A queue47 722
-A queue6 222
-C queue12
-A queue59 682
-R queue59
-A queue12 411
-R queue59
-A queue85 816
-C queue51
-R queue85
-R queue51
-A queue85 137
-C queue41
-C queue2
-A queue41 913
-A queue51 584
-A queue85 592
-R queue2
-A queue12 680
-C queue31
-A queue53 407
-R queue2
-R queue31
-C queue96
-A queue96 331
-A queue12 793
-A queue2 304
-R queue51
-R queue2
-R queue85
-R queue20
-A queue47 626
-A queue20 835
-A queue6 960
-A queue20 720
-C queue86
-R queue47
-R queue47
-A queue12 228
-C queue93
-R queue47
-C queue65
-R queue2
-A queue65 854
-R queue41
-C queue49
-C queue40
-R queue59
-A queue31 582
-A queue31 571
-R queue31
-C queue48
-C queue89
-C queue52
-R queue53
-A queue41 702
-C queue74
-C queue83
-R queue74
-A queue2 852
-C queue72
-R queue12
-R queue52
-C queue88
-R queue52
-R queue85
-A queue85 222
-R queue6
-R queue6
-A queue85 115
-R queue47
-A queue83 667
-R queue41
-A queue85 211
-C queue42
-A queue12 904
-A queue47 271
-R queue51
 C queue78
-C queue55
-A queue59 22
-R queue40
-A queue52 795
-A queue48 369
-A queue52 208
-A queue88 432
-R queue6
-C queue46
-R queue96
-R queue65
-A queue85 843
-A queue55 515
-A queue12 461
-C queue25
-R queue42
-A queue96 980
-C queue82
-A queue49 300
-R queue78
-C queue80
-R queue74
-A queue52 733
-R queue72
-A queue20 624
-A queue25 257
-C queue15
-A queue25 959
-A queue65 65
-A queue86 173
-A queue83 106
-A queue41 816
-R queue83
-A queue20 360
-A queue48 331
-A queue31 288
-R queue52
-A queue40 764
-A queue82 28
-C queue63
-A queue47 878
-A queue48 429
-R queue74
-A queue88 678
-R queue78
-R queue86
-C queue69
-R queue52
-A queue89 72
-R queue51
-A queue74 534
-A queue85 687
-R queue96
-A queue49 771
-R queue55
-A queue52 981
-R queue96
-R queue20
-R queue51
-R queue93
-C queue64
-C queue92
-A queue52 82
-R queue46
-A queue83 105
-R queue40
-A queue59 757
-A queue96 582
-A queue59 802
-R queue96
-A queue12 955
-A queue85 613
-R queue2
-A queue82 412
-R queue96
-A queue55 880
-A queue55 679
-A queue47 318
-C queue73
-R queue92
-R queue82
-R queue48
-A queue65 259
-R queue64
-R queue85
-R queue92
-A queue96 238
-A queue92 188
-R queue12
-R queue48
-R queue82
-A queue65 227
-R queue47
-C queue60
-A queue2 879
-A queue53 29
-R queue65
-A queue52 953
-A queue78 72
-C queue98
-C queue79
-A queue96 569
-R queue60
-A queue48 666
-C queue33
-A queue15 991
-R queue31
-R queue48
-C queue28
-C queue8
-C queue5
-A queue79 727
-R queue65
-A queue40 130
-R queue92
-A queue86 298
-R queue42
-R queue93
-A queue72 391
-A queue52 685
-A queue53 123
-C queue38
-C queue18
-R queue47
-R queue88
-R queue79
-A queue46 69
-R queue73
-A queue33 17
-C queue17
-R queue41
-A queue92 500
-A queue48 496
-R queue5
-A queue25 336
-R queue6
-A queue8 278
-A queue89 772
-A queue85 72
-A queue74 388
-R queue49
-R queue89
-R queue83
-R queue31
-A queue6 262
-C queue56
-A queue48 68
-R queue86
-A queue56 267
-A queue96 872
-R queue82
-R queue2
-R queue42
-A queue65 564
-C queue10
-A queue72 869
-A queue98 781
-R queue53
-R queue48
-A queue88 296
-A queue2 287
-A queue8 800
-C queue4
-C queue3
-A queue93 667
-A queue25 19
-R queue42
-R queue80
-R queue52
-A queue49 209
-A queue86 550
-A queue83 994
-R queue49
-A queue79 298
-C queue26
-R queue85
-A queue6 544
-R queue15
-A queue49 312
-R queue59
-R queue20
-R queue60
-C queue14
-A queue80 336
-R queue69
-R queue55
-R queue52
-A queue80 24
-R queue5
-A queue86 230
 C queue44
-R queue12
-A queue53 403
-R queue65
-A queue3 92
-A queue31 579
-A queue42 182
-R queue12
-R queue17
-R queue63
-R queue8
-R queue82
-R queue38
-C queue19
-R queue10
-C queue36
-R queue3
-R queue25
-R queue65
-R queue40
-A queue65 518
-R queue3
-R queue10
-A queue12 878
-A queue10 823
-A queue42 588
-A queue63 356
-A queue83 403
-A queue59 546
-A queue78 744
-A queue69 572
-A queue44 435
-R queue88
-C queue39
-A queue64 67
-C queue7
-A queue10 615
-A queue74 905
-C queue94
-A queue28 709
-A queue85 23
-C queue87
-C queue70
-A queue64 906
-A queue42 797
-R queue15
-A queue52 559
-R queue41
-A queue19 416
-R queue4
-A queue47 44
-C queue62
-A queue40 697
-R queue87
-R queue85
-A queue3 695
-R queue3
-A queue63 399
-A queue82 89
-A queue69 496
-A queue14 473
-R queue17
-A queue31 345
-R queue93
-A queue14 927
-R queue41
-A queue31 316
-R queue69
-R queue10
-R queue62
-A queue42 29
-A queue56 777
-A queue38 339
-C queue22
-R queue28
-A queue22 44
-R queue14
-A queue82 975
-C queue24
-A queue98 116
-R queue4
-R queue53
-C queue90
-A queue36 273
-A queue93 560
-R queue87
-R queue5
-R queue63
-A queue42 379
-R queue74
-A queue79 423
-A queue5 269
-R queue82
-A queue8 577
-A queue36 259
-R queue98
-R queue15
-A queue44 826
-A queue22 288
-R queue79
-A queue53 881
-R queue96
-R queue53
-A queue46 864
-R queue70
-C queue57
-R queue79
-A queue40 615
-R queue62
-R queue90
-A queue22 907
-A queue33 665
-A queue52 306
-R queue8
-A queue94 565
-R queue12
-A queue5 697
-C queue29
-A queue62 741
-A queue14 449
-A queue74 169
-A queue33 842
-A queue22 251
-R queue86
-A queue8 313
-R queue85
-A queue48 889
-C queue99
-A queue7 238
-A queue55 912
-C queue11
-R queue31
-R queue74
-R queue41
-A queue10 901
-R queue92
-A queue70 99
-R queue85
-A queue26 449
-A queue24 443
-R queue72
-A queue70 506
-R queue65
-R queue98
-A queue17 696
-C queue66
-A queue39 492
-R queue42
-A queue20 102
-A queue69 38
-A queue83 101
-A queue87 336
-A queue42 352
-A queue39 743
-A queue24 914
-C queue37
-A queue55 879
-R queue42
-C queue23
-R queue22
+R queue78
+R queue78
+A queue78 140
+A queue78 653
 R queue44
-R queue24
-A queue48 281
-R queue31
-A queue11 347
-R queue42
-R queue22
-R queue42
-A queue41 617
-A queue42 893
-R queue82
-A queue66 59
-R queue23
-R queue96
-R queue56
-R queue64
-A queue73 782
-R queue53
-C queue84
-R queue7
-R queue82
-R queue40
-A queue20 905
-A queue42 356
-C queue50
-A queue70 792
-R queue14
-R queue79
-A queue89 454
-R queue49
-C queue45
-A queue50 764
-A queue18 680
-A queue86 585
-R queue51
-R queue14
-A queue87 26
-R queue50
-A queue22 840
-C queue1
-R queue24
+A queue78 32
+A queue78 601
+R queue44
+R queue78
+A queue78 329
+R queue78
+R queue78
+A queue44 502
+R queue78
+A queue44 863
+R queue78
+C queue69
+A queue44 543
+R queue78
 C queue91
-A queue59 312
-R queue57
-R queue36
-R queue98
-A queue26 842
-R queue15
-R queue37
-R queue63
-A queue85 412
-A queue25 930
-R queue79
+C queue16
 R queue44
+A queue69 312
+R queue16
+R queue78
+R queue69
+A queue78 371
+R queue16
+A queue69 809
+C queue38
+C queue29
+A queue78 761
+A queue29 108
+R queue44
+C queue12
+R queue29
+A queue16 331
+A queue69 311
+R queue12
+R queue69
+R queue38
+A queue16 469
+C queue41
+A queue38 174
+A queue12 766
+R queue29
+C queue75
+R queue78
+R queue16
+C queue5
+C queue31
+C queue2
+R queue91
+C queue76
+A queue16 836
+A queue29 189
+R queue29
+C queue68
+R queue29
+R queue75
+A queue44 110
+R queue68
+A queue69 504
+A queue44 375
+R queue44
+A queue41 851
+R queue76
+R queue69
+A queue12 141
+R queue5
+A queue91 479
+A queue69 468
+A queue31 185
+R queue31
+A queue44 632
+A queue29 950
+R queue5
+A queue76 543
+R queue2
+R queue12
+A queue69 544
+A queue69 555
+R queue68
+A queue41 896
+R queue5
+A queue44 798
+A queue16 906
+R queue41
+A queue29 679
+R queue38
+A queue44 744
+A queue38 934
+R queue5
+A queue29 19
+A queue41 641
+R queue2
+A queue69 749
+R queue5
+R queue38
+A queue78 41
+R queue41
+A queue44 436
+A queue91 212
+A queue12 166
+A queue5 687
+R queue29
+R queue31
+R queue41
+A queue68 996
+A queue29 718
+R queue2
+A queue75 696
+A queue31 859
+A queue69 259
+A queue44 897
+R queue12
+A queue2 629
+A queue91 307
+A queue91 629
+A queue76 95
+R queue5
+A queue38 7
+R queue31
+R queue38
+R queue44
+A queue41 522
+R queue12
+R queue12
+R queue12
+R queue31
+R queue2
+R queue38
+A queue12 830
+A queue76 887
+R queue5
+R queue29
+A queue91 19
+A queue69 934
+R queue29
+R queue44
+R queue44
+A queue2 356
+R queue41
+A queue41 756
+R queue68
+A queue38 186
+A queue69 277
+A queue31 575
+R queue16
+R queue68
+R queue44
+R queue41
+A queue12 671
+R queue75
+A queue5 941
+R queue78
+R queue69
+A queue12 270
+R queue29
+R queue69
+A queue76 915
+R queue76
+A queue41 247
+A queue12 231
+R queue44
+R queue91
+R queue5
+R queue91
+A queue69 154
+R queue2
+R queue2
+A queue31 256
+R queue78
+A queue38 229
+A queue41 528
+R queue91
+A queue16 885
+R queue75
+A queue38 69
+R queue5
+R queue38
+A queue41 359
+R queue12
+R queue76
+R queue5
+R queue91
+R queue29
+R queue75
+A queue2 162
+R queue91
+R queue2
+A queue41 381
+R queue31
+R queue2
+A queue12 287
+R queue31
+A queue5 915
+R queue68
+A queue69 776
+A queue41 344
+R queue69
+A queue16 432
+R queue68
+A queue69 848
+R queue75
+R queue2
+R queue5
+A queue76 12
+R queue31
+R queue29
+R queue91
+A queue31 681
+R queue31
+A queue2 765
+R queue91
+R queue76
+A queue69 794
+A queue2 314
+A queue2 191
+R queue78
+A queue31 632
+R queue5
+A queue75 849
+A queue78 164
+A queue44 769
+R queue29
+A queue41 682
+A queue69 185
+A queue2 277
+A queue76 891
+R queue75
+R queue69
+R queue16
+R queue29
+A queue41 510
+R queue68
+R queue38
+A queue69 477
+A queue78 778
+A queue5 969
+A queue91 288
+A queue41 539
+A queue2 739
+A queue12 880
+A queue38 745
+R queue91
+R queue41
+A queue44 43
+R queue75
+A queue78 233
+A queue31 675
+A queue16 773
+A queue75 342
+R queue5
+R queue76
+A queue38 105
+A queue68 282
+A queue68 247
+A queue31 704
+A queue38 115
+A queue69 746
+R queue5
+A queue2 85
+R queue16
+R queue29
+A queue38 390
+R queue5
+R queue16
+A queue44 763
+R queue31
+R queue76
+R queue12
+A queue31 670
+R queue78
+A queue44 814
+R queue69
+A queue5 93
+A queue5 893
+R queue31
+R queue12
+A queue2 579
+A queue68 237
+R queue16
+R queue38
+A queue44 338
+R queue31
+A queue41 220
+A queue91 230
+R queue2
+R queue75
+A queue12 789
+R queue38
+A queue68 186
+A queue12 422
+R queue5
+A queue78 435
+R queue31
+A queue38 530
+A queue16 154
+A queue91 606
+A queue31 582
+R queue75
+R queue12
+A queue12 218
+R queue5
+R queue2
+R queue31
+A queue2 2
+R queue91
+R queue5
+A queue12 754
+R queue31
+R queue76
+R queue44
+A queue91 312
+A queue12 180
+R queue31
+A queue69 429
+R queue68
+A queue12 280
+R queue5
+A queue12 356
+R queue78
+A queue76 810
+A queue91 303
+A queue91 65
+R queue16
+R queue31
+R queue12
+R queue75
+R queue38
+A queue38 223
+R queue2
+R queue12
+R queue38
+R queue2
+A queue78 464
+A queue2 438
+R queue76
+R queue91
+R queue31
+A queue75 758
+R queue68
+R queue2
+A queue69 485
+A queue12 630
+R queue29
+A queue16 988
+R queue91
+R queue76
+R queue91
+A queue69 7
+R queue2
+R queue69
+A queue29 53
+A queue5 793
+A queue69 370
+A queue44 366
+A queue16 412
+A queue76 330
+A queue76 713
+A queue68 36
+R queue41
+A queue5 261
+A queue31 848
+R queue38
+R queue12
+A queue78 839
+A queue29 511
+R queue78
+R queue76
+R queue91
+R queue16
+A queue12 441
+A queue75 640
+A queue78 490
+R queue31
+A queue69 553
+A queue38 283
+R queue2
+A queue41 377
+R queue69
+A queue12 727
+R queue68
+R queue16
+R queue2
+R queue91
+R queue68
+A queue38 723
+R queue78
+R queue38
+A queue12 201
+R queue5
+R queue16
+R queue31
+A queue41 129
+R queue68
+R queue38
+R queue91
+R queue68
+R queue68
+R queue16
+A queue41 520
+A queue75 593
+R queue29
+A queue5 274
+R queue38
+R queue91
+A queue44 335
+R queue75
+R queue78
+A queue76 798
+A queue69 672
+A queue69 816
+R queue2
+A queue41 482
+A queue29 599
+R queue12
+R queue41
+A queue41 506
+R queue78
+A queue16 434
+R queue68
+A queue12 107
+A queue12 706
+A queue12 162
+A queue5 48
+R queue41
+R queue16
+R queue2
+R queue44
+R queue75
+R queue29
+R queue44
+R queue76
+R queue68
+R queue31
+R queue68
+R queue31
+R queue29
+A queue2 288
+R queue78
+A queue68 727
+R queue76
+A queue91 562
+R queue41
+R queue69
+R queue29
+A queue5 221
+R queue16
+R queue2
+A queue31 413
+A queue38 944
+A queue29 977
+A queue5 269
+A queue5 462
+R queue78
+A queue2 360
+A queue38 397
+A queue44 875
+A queue91 709
+R queue44
+A queue5 439
+A queue44 468
+A queue16 300
+A queue31 600
+R queue44
+A queue31 574
+R queue2
+A queue68 861
+R queue75
+A queue31 676
+A queue68 513
+A queue5 733
+R queue38
+A queue31 982
+R queue5
+R queue44
+A queue5 346
+R queue31
+R queue68
+A queue12 153
+R queue76
+A queue2 536
+A queue2 717
+A queue76 265
+A queue68 468
+A queue12 493
+A queue29 769
+R queue16
+A queue68 722
+R queue91
+R queue38
+R queue41
+R queue38
+A queue78 892
+R queue76
+R queue16

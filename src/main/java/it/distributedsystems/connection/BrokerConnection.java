@@ -6,6 +6,7 @@ import it.distributedsystems.connection.handler.LeaderHandler;
 import it.distributedsystems.messages.BaseDeserializableMessage;
 import it.distributedsystems.messages.queue.QueueResponse;
 import it.distributedsystems.messages.raft.AppendEntries;
+import it.distributedsystems.messages.raft.AppendEntriesResponse;
 import it.distributedsystems.messages.raft.PastClientInfos;
 import it.distributedsystems.raft.*;
 import it.distributedsystems.raft.processors.ClientCommandProcessor;
@@ -260,7 +261,7 @@ public class BrokerConnection {
     public void sendQueueResponseToClient(QueueResponse response) {
         var clientHandler = this.clientHandlers.stream().filter(ch -> ch.getClientId() == response.getClientID()).findFirst().orElse(null);
         if (clientHandler == null) {
-            System.out.println("Client " + response.getClientID() + " not found, cannot send response: " + response.toJson());
+            System.out.println("Client " + response.getClientID() + " not found, cannot send response with ID: " + response.getCommandId());
             return;
         }
         clientHandler.setLastResponse(response);
@@ -314,9 +315,9 @@ public class BrokerConnection {
     /**
      * Send message to Leader
      */
-    public void sendMessageToLeader(BaseDeserializableMessage response) {
+    public void sendMessageToLeader(AppendEntriesResponse response) {
         if (leaderHandler == null) {
-            System.out.println("Leader is not connected, did not send message: " + response.toJson());
+            System.out.println("Leader is not connected, did not send AppendEntries Response");
             return;
         }
 

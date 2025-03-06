@@ -84,12 +84,12 @@ public class TUIUpdater implements Runnable {
 
         var ba = BrokerSettings.getBrokerAddress();
         System.out.printf("BrokerID: %d | Broker IP: %s | Broker Port: %d %n",ba.id, ba.IP, ba.ClientServerPort);
-        System.out.printf("Broker Status: "+RED+"%s"+RESET+"   BrokerEpoch: %d  BrokerTimeout: "+YELLOW+"%s"+RESET+" %n", BrokerSettings.getBrokerStatus(), BrokerState.getCurrentTerm(), BrokerConnection.getInstance().getWaitTimeForCurrentTimer());
+        System.out.printf("Broker Status: "+YELLOW+"%s"+RESET+"   BrokerEpoch: %d  BrokerTimeout: "+YELLOW+"%s"+RESET+" %n", BrokerSettings.getBrokerStatus(), BrokerState.getCurrentTerm(), BrokerConnection.getInstance().getWaitTimeForCurrentTimer());
         System.out.printf("Broker CommitIndex: %d   LastApplied: %d  VotedForInCurrentTerm: %d %n", BrokerState.getCommitIndex(),BrokerState.getLastApplied(), BrokerState.getVotedFor());
         System.out.println("──────────────────────────────────────────────────────────────────────");
 
         if (BrokerSettings.getBrokerStatus() == BrokerStatus.Candidate){
-            System.out.println(GREEN+"Election in progress..."+RESET);
+            System.out.println(YELLOW+"Election in progress..."+RESET);
             System.out.printf("#ofBrokers: %d   BrokerVotes-> Accept: %s  Deny: %s %n", BrokerSettings.getNumOfNodes(),
                     BrokerConnection.getInstance().getAcceptedCount().stream().map(String::valueOf)
                             .collect(Collectors.joining(",")),
@@ -98,9 +98,9 @@ public class TUIUpdater implements Runnable {
         } else {
             if (BrokerSettings.getBrokerStatus() == BrokerStatus.Leader) {
                 var followers = BrokerConnection.getInstance().getFollowers();
-                System.out.printf("Connected Followers: ---------------%n");
+                System.out.printf("Followers: ---------------%n");
                 for (var follower : followers) {
-                    System.out.printf(YELLOW + "Follower Id: %d Follower MatchIndex: %d" + RESET + "%n", follower.getFollowerId(), follower.getMatchIndex());
+                    System.out.printf(follower.isConnected() ? GREEN : RED  + "Follower Id: %d Follower MatchIndex: %d" + RESET + "%n", follower.getFollowerId(), follower.getMatchIndex());
                 }
                 System.out.printf("------------------------------------%n");
 
@@ -108,15 +108,14 @@ public class TUIUpdater implements Runnable {
                 System.out.println("──────────────────────────────────────────────────────────────────────");
             }
 
-            System.out.printf(BLUE + "Last log line "+ RESET + "Index: %d Term: %d %n", ReplicationLog.getLastLogLineIndex(), ReplicationLog.getLastLogLineTerm());
+            System.out.printf(YELLOW + "Last log line "+ RESET + "Index: %d Term: %d %n", ReplicationLog.getLastLogLineIndex(), ReplicationLog.getLastLogLineTerm());
             var queues = BrokerModel.getInstance().getQueues();
             System.out.println();
             System.out.println("Queues:");
-            System.out.println(BLUE+"Key:"+ RESET + GREEN + " Values..."+RESET);
+            System.out.println(BLUE+"Key:"+ RESET + YELLOW + " Values..."+RESET);
             System.out.println("-------------------------------------");
             for (var queueKey : queues.keySet()) {
-                System.out.printf(BLUE + "%s :"+ RESET + GREEN + " %s"+ RESET + "%n", queueKey, queues.get(queueKey).toString());
-                System.out.println("-------------------------------------");
+                System.out.printf(BLUE + "%s :"+ RESET + YELLOW + " %s"+ RESET + "%n", queueKey, queues.get(queueKey).toString());
             }
             System.out.println();
         }

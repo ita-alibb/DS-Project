@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ClientConnection implements Runnable{
     private static ClientConnection INSTANCE;
-    private static final long WAIT_ELECTION_TIME = 30_000;
+    private static final long WAIT_ELECTION_TIME = 10_000;
 
     /**
      * The clientID, it's -1 at the beginning, then it is updated with the one sent from the leader (only one change per lifetime)
@@ -62,6 +62,7 @@ public class ClientConnection implements Runnable{
      * List of commands to send
      */
     private final LinkedBlockingQueue<QueueCommand> commandsToSend = new LinkedBlockingQueue<>();
+    private QueueCommand bufferedCommand = null;
 
     private String lastError = "";
     private List<Integer> lastReadInts = new ArrayList<>();
@@ -113,7 +114,9 @@ public class ClientConnection implements Runnable{
 
     private void initConnection() {
         ConnectionResponse connectionResponse;
-        int i=0;
+        int i= (otherBrokers != null && !otherBrokers.isEmpty()) ? getOtherBrokers().indexOf(this.serverIP+":"+this.serverPort) : 0;
+        if (i == -1) i = 0;
+
         boolean retry = false;
         do {
             try {
@@ -204,8 +207,20 @@ public class ClientConnection implements Runnable{
 
     private void commandSender(){
         try {
+            if (bufferedCommand != null) {
+                System.out.println(TUIUpdater.BLUE + "Sent command ID: " + bufferedCommand.getCommandID() + TUIUpdater.RESET);
+                this.out.println(bufferedCommand.toJson());
+                this.sentCommands.add(bufferedCommand);
+                bufferedCommand = null;
+            }
+
             while (leaderAlive.get()) {
                 var command = commandsToSend.take();
+
+                if (!leaderAlive.get()) {
+                    bufferedCommand = command;
+                    return;
+                }
 
                 System.out.println(TUIUpdater.BLUE + "Sent command ID: " + command.getCommandID() + TUIUpdater.RESET);
                 this.out.println(command.toJson());

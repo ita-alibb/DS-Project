@@ -6,8 +6,8 @@ def generate_commands(filename, num_lines=500):
     queues = set()
     commands = []
     
-    for _ in range(num_lines):
-        if not queues or random.random() < 0.3:  # Create a new queue 30% of the time
+    while (len(commands) < num_lines):
+        if not queues or random.random() < 0.3 and len(queues) < 15:  # Create a new queue 30% of the time
             queue_name = f"queue{random.randint(1, 100)}"
             if queue_name not in queues:
                 commands.append(f"C {queue_name}")

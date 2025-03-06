@@ -101,7 +101,7 @@ public class Follower {
                 newAppendEntries.setPrevLogIndex(prevAndNewLog.getFirst().getIndex());
                 newAppendEntries.addNewLogLine(prevAndNewLog.subList(1, prevAndNewLog.size()));
 
-                System.out.println("Sended appendEntries for follower " + followerAddress.id + ": " + newAppendEntries.toJson());
+                System.out.println("Sent appendEntries for follower " + followerAddress.id + "-> from index:" + newAppendEntries.getFirstNewLineIndex() + " to index: " + newAppendEntries.getLastNewLineIndex());
                 //Send the new append entries
                 followerHandler.sendMessage(newAppendEntries);
             }
@@ -141,11 +141,17 @@ public class Follower {
     }
 
     public void decreaseNextIndex(int lastIndex, int lastTerm) {
-        //TODO: Raft paper proposes an optimization to decrease not by 1, but
+        // Raft paper proposes an optimization to decrease not by 1, but
         // send some metadata on NACK and set it in a more precise but complex way
 
         //Keeps track of the next index to send. So at startup will be 1 (0+1), never go less than 1.
         if (this.nextIndex == 1 || this.matchIndex > lastIndex) return; //do not go less than 1
+
+        if (lastIndex == 0) {
+            this.matchIndex = 0;
+            this.nextIndex = 1;
+            return;
+        }
 
         var matchingLog = ReplicationLog.getLog(lastIndex);
         if (matchingLog != null && matchingLog.getTerm() == lastTerm ) {

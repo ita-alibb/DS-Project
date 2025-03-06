@@ -134,10 +134,10 @@ public class ReplicationLog {
 
     private static void writeLineToCSV(LogLine line) {
         logUpdateLock.writeLock().lock();
-        System.err.println("LOCK DEBUG: writeLineToCSV single acquired the WRITE lock");
+        //System.err.println("LOCK DEBUG: writeLineToCSV single acquired the WRITE lock");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
             writer.write(line.toString());
-            System.out.println("Written to file " + line.toString());
+            //System.out.println("Written to file " + line.toString());
             writer.newLine();
 
             appendToCachedLogLine(line);
@@ -147,16 +147,16 @@ public class ReplicationLog {
         } finally {
             System.out.println("Finished writing to file");
             logUpdateLock.writeLock().unlock();
-            System.err.println("LOCK DEBUG: writeLineToCSV single released the WRITE lock");
+            //System.err.println("LOCK DEBUG: writeLineToCSV single released the WRITE lock");
         }
     }
 
     private static void writeLineToCSV(List<LogLine> line) {
         logUpdateLock.writeLock().lock();
-        System.err.println("LOCK DEBUG: writeLineToCSV List acquired the WRITE lock");
+        //System.err.println("LOCK DEBUG: writeLineToCSV List acquired the WRITE lock");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
             for (LogLine logLine : line) {
-                System.out.println("Written to file " + line.toString());
+                //System.out.println("Written to file " + line.toString());
                 writer.write(logLine.toString());
                 writer.newLine();
 
@@ -167,7 +167,7 @@ public class ReplicationLog {
             exit(0);
         } finally {
             logUpdateLock.writeLock().unlock();
-            System.err.println("LOCK DEBUG: writeLineToCSV list released the WRITE lock");
+            //System.err.println("LOCK DEBUG: writeLineToCSV list released the WRITE lock");
         }
     }
 
@@ -197,7 +197,7 @@ public class ReplicationLog {
 
         try{
             logUpdateLock.readLock().lock();
-            System.err.println("LOCK DEBUG: applyReplicationLog acquired the READ lock");
+            //System.err.println("LOCK DEBUG: applyReplicationLog acquired the READ lock");
 
             System.out.println("Applying Replicated log from " + lastAppliedIndex + " to " + lastLeaderCommitIndex);
 
@@ -234,7 +234,7 @@ public class ReplicationLog {
             }
         } finally {
             logUpdateLock.readLock().unlock();
-            System.err.println("LOCK DEBUG: ApplyReplicationLog unlocked the READ logUpdateLock");
+            //System.err.println("LOCK DEBUG: ApplyReplicationLog unlocked the READ logUpdateLock");
         }
     }
 
@@ -267,7 +267,7 @@ public class ReplicationLog {
 
         logUpdateLock.readLock().lock();
         try{
-            System.err.println("LOCK DEBUG: getLog acquired the READ lock");
+            //System.err.println("LOCK DEBUG: getLog acquired the READ lock");
             //try using cache:
             var cacheHit = cachedLogLines.stream().filter(ll -> ll.getIndex() == logIndex).toList();
             if (!cacheHit.isEmpty()) {
@@ -291,7 +291,7 @@ public class ReplicationLog {
             }
         } finally {
             logUpdateLock.readLock().unlock();
-            System.err.println("LOCK DEBUG: getLog released the READ lock");
+            //System.err.println("LOCK DEBUG: getLog released the READ lock");
         }
         return null;
     }
@@ -306,7 +306,7 @@ public class ReplicationLog {
 
         logUpdateLock.readLock().lock();
         try{
-            System.err.println("LOCK DEBUG: getLogsFromStartIndex acquired the READ lock");
+            //System.err.println("LOCK DEBUG: getLogsFromStartIndex acquired the READ lock");
 
             //try using cache:
             var searchingInts = IntStream.rangeClosed(startIndex, Math.min(lastLogLine.getIndex(), startIndex + 100)).boxed().toList();
@@ -339,7 +339,7 @@ public class ReplicationLog {
             return logs;
         } finally {
             logUpdateLock.readLock().unlock();
-            System.err.println("LOCK DEBUG: getLogsFromStartIndex released the READ lock");
+            //System.err.println("LOCK DEBUG: getLogsFromStartIndex released the READ lock");
         }
     }
 
@@ -383,7 +383,7 @@ public class ReplicationLog {
      */
     public static HashMap<Integer, PastClientInfos> getPastClientsInfos() {
         logUpdateLock.readLock().lock();
-        System.err.println("LOCK DEBUG: getPastClientInfos acquired the READ lock");
+        //System.err.println("LOCK DEBUG: getPastClientInfos acquired the READ lock");
 
         var returnMap = new HashMap<Integer, PastClientInfos>();
         try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
@@ -407,7 +407,7 @@ public class ReplicationLog {
             exit(-1);
         } finally {
             logUpdateLock.readLock().unlock();
-            System.err.println("LOCK DEBUG: getPastClientInfo released the READ lock");
+            //System.err.println("LOCK DEBUG: getPastClientInfo released the READ lock");
         }
         return returnMap;
     }
