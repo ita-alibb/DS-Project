@@ -6,7 +6,15 @@
   <component name="ChangeListManager">
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntries.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntries.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/handler/LeaderHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/Follower.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/Follower.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ClientCommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/ClientCommandProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testFile1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/testFile1.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testFile2.txt" beforeDir="false" afterPath="$PROJECT_DIR$/testFile2.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testFileGenerator.py" beforeDir="false" afterPath="$PROJECT_DIR$/testFileGenerator.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -278,7 +286,7 @@
       <workItem from="1741017412946" duration="8070000" />
       <workItem from="1741087636344" duration="1380000" />
       <workItem from="1741110510874" duration="5443000" />
-      <workItem from="1741251826544" duration="14881000" />
+      <workItem from="1741251826544" duration="16623000" />
     </task>
     <servers />
   </component>

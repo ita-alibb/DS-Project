@@ -193,6 +193,7 @@ public class BrokerConnection {
      */
     public void setFollower() {
         BrokerSettings.setBrokerStatus(BrokerStatus.Follower);
+        this.resetElectionTimeout();
         ReplicationLog.cleanCache();
         if (clientCommandProcessor != null) clientCommandProcessor.destroy();
     }
@@ -285,7 +286,6 @@ public class BrokerConnection {
                     handler = new LeaderHandler(brokerSocket);
 
                     setFollower();
-                    resetElectionTimeout();
 
                     //Reach here if the constructor does not throw exception (The leader is contacting you)
                     handler.setMsgReceiveCallback(raftCommandsProcessor::handleRaftMessageCallback);

@@ -91,7 +91,7 @@ public class Follower {
                 //Create custom appendEntries.
                 System.out.println("Reply to append entries for follower " + followerAddress.id + " did not arrive in time, create a new append entries");
 
-                var prevAndNewLog = ReplicationLog.getLogsFromStartIndex(nextIndex-1);
+                var prevAndNewLog = ReplicationLog.getLogsFromStartIndex(nextIndex-1);//cap to 100 elements
                 if (prevAndNewLog.isEmpty()) {
                     System.out.println("GetLogsFromStartIndex returned empty logs for " + (nextIndex -1) + "in Follower " + followerAddress.id);
                 }

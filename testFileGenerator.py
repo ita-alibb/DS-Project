@@ -2,7 +2,7 @@ import sys
 import random
 import os
 
-def generate_commands(filename, num_lines=1000):
+def generate_commands(filename, num_lines=500):
     queues = set()
     commands = []
     

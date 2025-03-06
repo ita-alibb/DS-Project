@@ -309,7 +309,7 @@ public class ReplicationLog {
             System.err.println("LOCK DEBUG: getLogsFromStartIndex acquired the READ lock");
 
             //try using cache:
-            var searchingInts = IntStream.rangeClosed(startIndex, lastLogLine.getIndex()).boxed().toList();
+            var searchingInts = IntStream.rangeClosed(startIndex, Math.min(lastLogLine.getIndex(), startIndex + 100)).boxed().toList();
             var cacheHit = cachedLogLines.stream().filter(ll -> searchingInts.contains(ll.getIndex()))
                     .sorted(Comparator.comparingInt(LogLine::getIndex)).toList();
             if (!cacheHit.isEmpty() && cacheHit.size() == searchingInts.size()) {//found all
@@ -324,9 +324,11 @@ public class ReplicationLog {
                 String line;
 
                 while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
-
-                    if (Integer.parseInt(line.split(";")[0]) >= startIndex) {
+                    var index = Integer.parseInt(line.split(";")[0]);
+                    if (index >= startIndex && index < startIndex + 100) {
                         logs.addFirst(new LogLine(line));
+                    } else {
+                        break;
                     }
                 }
             } catch (IOException e) {

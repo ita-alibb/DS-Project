@@ -5,10 +5,7 @@ import it.distributedsystems.messages.GsonDeserializer;
 import it.distributedsystems.messages.queue.QueueCommand;
 import it.distributedsystems.messages.queue.QueueResponse;
 import it.distributedsystems.messages.raft.AppendEntries;
-import it.distributedsystems.raft.BrokerSettings;
-import it.distributedsystems.raft.BrokerState;
-import it.distributedsystems.raft.LogLine;
-import it.distributedsystems.raft.ReplicationLog;
+import it.distributedsystems.raft.*;
 import it.distributedsystems.tui.TUIUpdater;
 
 import java.util.concurrent.BlockingQueue;
@@ -20,6 +17,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static it.distributedsystems.raft.BrokerSettings.APPEND_ENTRIES_TIME;
+import static java.lang.System.exit;
 
 public class ClientCommandProcessor implements Runnable {
     private final AppendEntries currentAppendEntries;
@@ -117,6 +115,13 @@ public class ClientCommandProcessor implements Runnable {
                     this.currentAppendEntries.clearBatch();
                 } finally {
                     currentBatchLock.unlock();
+                }
+
+                if (!alive.get()) return;
+
+                if (BrokerSettings.getBrokerStatus() != BrokerStatus.Leader) {
+                    System.out.println("Not leader tried to send appendEntries");
+                    exit(-1);
                 }
 
                 //After releasing the lock, send to all followers

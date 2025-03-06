@@ -51,7 +51,6 @@ public class LeaderHandler extends SocketHandler {
         if (msg.getCandidateTerm() > BrokerState.getCurrentTerm()) {
             BrokerState.setCurrentTerm(msg.getCandidateTerm());
             BrokerConnection.getInstance().setFollower();
-            BrokerConnection.getInstance().resetElectionTimeout();
         }
 
         //If already voted for someone else in this term reply false
