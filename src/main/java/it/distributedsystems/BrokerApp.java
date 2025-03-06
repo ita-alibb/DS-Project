@@ -16,7 +16,9 @@ public class BrokerApp {
         ReplicationLog.initializeLogFile();
 
         //Print TUI
-        var updater = new TUIUpdater(false);
+        var fullHistory = args.length == 1 || args[1] == null || Boolean.parseBoolean(args[1]);
+
+        var updater = new TUIUpdater(false, fullHistory);
         new Thread(updater).start();
     }
 }

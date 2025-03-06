@@ -18,14 +18,16 @@ public class TUIUpdater implements Runnable {
     public static final String BLUE = "\u001B[34m";
     //endregion
     private final boolean isClient;
+    private static boolean fullHistory = true;
 
     private static String lastMessage = "";
     public synchronized static void setLastMessage(String newLast) {
         lastMessage = newLast;
     }
 
-    public TUIUpdater(boolean isClient) {
+    public TUIUpdater(boolean isClient, boolean fullHistoryParam) {
         this.isClient = isClient;
+        fullHistory = fullHistoryParam;
     }
 
     /**
@@ -123,20 +125,25 @@ public class TUIUpdater implements Runnable {
      * Method to clear the console before a new TUI is printed. Usually, this method is called before each update, obviously only if the update wants the terminal to be updated.
      */
     private static void clearConsole(){
-        System.out.println();
-        System.out.println("####################################################################");
-        System.out.println();
-        /*try {
-            final String os = System.getProperty("os.name");
-            if (os.contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+        if (fullHistory) {
+            System.out.println();
+            System.out.println();
+            System.out.println("####################FULL HISTORY SET TO TRUE, DO NOT CLEAR####################");
+            System.out.println();
+            System.out.println();
+        } else {
+            try {
+                final String os = System.getProperty("os.name");
+                if (os.contains("Windows")) {
+                    new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+                }
+                else {
+                    Runtime.getRuntime().exec("clear");
+                }
+            } catch (Exception e) {
+                System.out.println("\033[H\033[2J");
             }
-            else {
-                Runtime.getRuntime().exec("clear");
-            }
-        } catch (Exception e) {
-            System.out.println("\033[H\033[2J");
-        }*/
+        }
     }
 
     private static void printCommands(){

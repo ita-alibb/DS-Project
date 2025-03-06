@@ -7,13 +7,9 @@
     <list default="true" id="124e09f1-ad79-4ce8-938b-bd0f9422de9e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/brokerPortConfiguration.json" beforeDir="false" afterPath="$PROJECT_DIR$/brokerPortConfiguration.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/BrokerConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/connection/ClientConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntries.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntries.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntriesResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/messages/raft/AppendEntriesResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/Follower.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/Follower.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/processors/RaftCommandProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/InputReader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/BrokerApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/ClientApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/ClientApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/raft/ReplicationLog.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/distributedsystems/tui/TUIUpdater.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -286,7 +282,7 @@
       <workItem from="1741017412946" duration="8070000" />
       <workItem from="1741087636344" duration="1380000" />
       <workItem from="1741110510874" duration="5443000" />
-      <workItem from="1741251826544" duration="7690000" />
+      <workItem from="1741251826544" duration="8986000" />
     </task>
     <servers />
   </component>

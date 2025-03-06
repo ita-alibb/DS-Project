@@ -275,9 +275,7 @@ public class ReplicationLog {
             }
 
             //Cache miss:
-            try (BufferedReader reader = new BufferedReader(new FileReader(LOG_FILE_PATH))) {
-                reader.readLine(); //discard header
-
+            try (ReversedLinesFileReader reader = new ReversedLinesFileReader(new File(LOG_FILE_PATH), StandardCharsets.UTF_8)) {
                 String line;
 
                 while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
