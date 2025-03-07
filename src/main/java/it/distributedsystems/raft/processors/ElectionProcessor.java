@@ -82,11 +82,11 @@ public class ElectionProcessor implements Runnable {
                 );
             }
 
-            //Add self vote
-            requestVoteResponses.put(new RequestVoteResponse(BrokerSettings.getBrokerID(), BrokerState.getCurrentTerm(), true));
-
             //collectResponses, inside the thread it sets the leader if get >N/2 responses.
             futureTask.add(executor.submit(this));
+
+            //Add self vote
+            requestVoteResponses.put(new RequestVoteResponse(BrokerSettings.getBrokerID(), BrokerState.getCurrentTerm(), true));
 
             //Keep waiting for eventually interruption
             while (true) {
