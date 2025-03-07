@@ -20,6 +20,7 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.*;
 
@@ -279,7 +280,9 @@ public class BrokerConnection {
             try {
                 Socket brokerSocket = this.brokerServerSocket.accept();
                 LeaderHandler handler;
-                TUIUpdater.setLastMessage("New broker connected: " + brokerSocket.getInetAddress());
+                System.out.println("New broker connected: " + brokerSocket.getInetAddress());
+
+                if (leaderHandler != null && Objects.equals(brokerSocket.getInetAddress().toString(), leaderHandler.getInetAddress())) continue; //reconnection from same live leader
 
                 //Establishing connection
                 try{

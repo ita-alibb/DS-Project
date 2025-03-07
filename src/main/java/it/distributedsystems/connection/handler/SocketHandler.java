@@ -128,4 +128,12 @@ public class SocketHandler implements Runnable {
     protected void customDisconnection(){
         //None
     }
+
+    public String getInetAddress(){
+        if (isConnected()) {
+            return socket.getInetAddress().toString();
+        }
+
+        return "";
+    }
 }

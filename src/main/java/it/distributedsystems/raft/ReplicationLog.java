@@ -325,8 +325,9 @@ public class ReplicationLog {
 
                 while ((line = reader.readLine()) != null && !line.equals(FILE_HEADER)) {
                     var index = Integer.parseInt(line.split(";")[0]);
-                    if (index >= startIndex && index < startIndex + 100) {
-                        logs.addFirst(new LogLine(line));
+
+                    if (index >= startIndex) {
+                        if (index <= startIndex + 100) logs.addFirst(new LogLine(line));
                     } else {
                         break;
                     }

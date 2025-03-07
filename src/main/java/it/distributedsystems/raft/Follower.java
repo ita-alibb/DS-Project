@@ -97,9 +97,15 @@ public class Follower {
                 }
                 var newAppendEntries = new AppendEntries(appendEntries.getLeaderTerm(),appendEntries.getLeaderID());
                 newAppendEntries.setLeaderCommitIndex(appendEntries.getLeaderCommitIndex());
-                newAppendEntries.setPrevLogTerm(prevAndNewLog.getFirst().getTerm());
-                newAppendEntries.setPrevLogIndex(prevAndNewLog.getFirst().getIndex());
-                newAppendEntries.addNewLogLine(prevAndNewLog.subList(1, prevAndNewLog.size()));
+                if ((nextIndex - 1) == 0) {
+                    newAppendEntries.setPrevLogTerm(prevAndNewLog.getFirst().getTerm());
+                    newAppendEntries.setPrevLogIndex(0);
+                    newAppendEntries.addNewLogLine(prevAndNewLog);
+                } else {
+                    newAppendEntries.setPrevLogTerm(prevAndNewLog.getFirst().getTerm());
+                    newAppendEntries.setPrevLogIndex(prevAndNewLog.getFirst().getIndex());
+                    newAppendEntries.addNewLogLine(prevAndNewLog.subList(1, prevAndNewLog.size()));
+                }
 
                 System.out.println("Sent appendEntries for follower " + followerAddress.id + "-> from index:" + newAppendEntries.getFirstNewLineIndex() + " to index: " + newAppendEntries.getLastNewLineIndex());
                 //Send the new append entries

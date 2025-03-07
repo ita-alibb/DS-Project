@@ -100,7 +100,7 @@ public class TUIUpdater implements Runnable {
                 var followers = BrokerConnection.getInstance().getFollowers();
                 System.out.printf("Followers: ---------------%n");
                 for (var follower : followers) {
-                    System.out.printf(follower.isConnected() ? GREEN : RED  + "Follower Id: %d Follower MatchIndex: %d" + RESET + "%n", follower.getFollowerId(), follower.getMatchIndex());
+                    System.out.printf((follower.isConnected() ? GREEN : RED)  + "Follower Id: %d Follower MatchIndex: %d" + RESET + "%n", follower.getFollowerId(), follower.getMatchIndex());
                 }
                 System.out.printf("------------------------------------%n");
 

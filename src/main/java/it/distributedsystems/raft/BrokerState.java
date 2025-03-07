@@ -68,7 +68,7 @@ public class BrokerState {
     }
 
     public synchronized static int getCommitIndex() {
-        return commitIndex;
+        return BrokerState.commitIndex;
     }
 
     public synchronized static void setCommitIndex(int commitIndex) {
